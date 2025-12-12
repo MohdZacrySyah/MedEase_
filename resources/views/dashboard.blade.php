@@ -78,7 +78,7 @@
             <h2><i class="fas fa-info-circle"></i> Informasi Penting</h2>
         </div>
         <div class="info-grid-modern">
-            {{-- Kartu Notifikasi --}}
+            {{-- Kartu Notifikasi (Jadwal & Antrian) --}}
             <div class="info-card">
                 <div class="card-gradient-bg card-notification-bg"></div>
                 <div class="card-content-modern">
@@ -95,11 +95,23 @@
                                 <div class="info-text">
                                     <span class="label">Jadwal Konsultasi</span>
                                     <span class="value">{{ $notifikasiHariIni->nama_layanan }}</span>
+                                    
+                                    {{-- BAGIAN MODIFIKASI: Menampilkan Antrian & Estimasi --}}
                                     @if ($notifikasiHariIni->no_antrian)
-                                        <span class="queue-badge">
-                                            <i class="fas fa-ticket-alt"></i> 
-                                            No. {{ $notifikasiHariIni->no_antrian }}
-                                        </span>
+                                        <div class="queue-container">
+                                            <span class="queue-badge">
+                                                <i class="fas fa-ticket-alt"></i> 
+                                                No. {{ $notifikasiHariIni->no_antrian }}
+                                            </span>
+
+                                            {{-- Menampilkan Estimasi Waktu jika ada --}}
+                                            @if(isset($notifikasiHariIni->estimasi_dilayani))
+                                                <span class="queue-badge estimation-badge">
+                                                    <i class="fas fa-clock"></i> 
+                                                    Estimasi: {{ \Carbon\Carbon::parse($notifikasiHariIni->estimasi_dilayani)->format('H:i') }} WIB
+                                                </span>
+                                            @endif
+                                        </div>
                                     @else
                                         <span class="pending-badge">
                                             <i class="fas fa-clock"></i> 
@@ -250,6 +262,7 @@
     </div>
 
 @endsection
+
 @push('styles')
 <style>
     * { 
@@ -327,12 +340,6 @@
         position: relative;
         z-index: 1;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        /* animation: float 3s ease-in-out infinite; */
-    }
-    
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
     }
 
     .header-text {
@@ -546,7 +553,6 @@
         flex-shrink: 0;
         z-index: 1;
         box-shadow: 0 8px 25px rgba(57, 166, 22, 0.35);
-        /* animation: float 3s ease-in-out infinite; */
     }
 
     .stat-info-icon {
@@ -587,7 +593,6 @@
         font-size: 80px;
         color: rgba(57, 166, 22, 0.08);
         z-index: 0;
-        /* animation: float 4s ease-in-out infinite; */
     }
 
     /* ===== INFO SECTION PREMIUM ===== */
@@ -654,7 +659,6 @@
         font-size: 24px;
         color: white;
         opacity: 0.15;
-        /* animation: float 4s ease-in-out infinite; */
     }
 
     .tips-icon-header {
@@ -757,7 +761,16 @@
         line-height: 1.6;
     }
 
-    .queue-badge, .pending-badge {
+    /* ===== QUEUE & ESTIMATION STYLE ===== */
+    .queue-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .queue-badge, .pending-badge, .estimation-badge {
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -765,12 +778,16 @@
         border-radius: 25px;
         font-size: 0.85rem;
         font-weight: 600;
-        margin-top: 10px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
     .queue-badge {
         background: var(--grad);
+        color: white;
+    }
+
+    .estimation-badge {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
         color: white;
     }
 
@@ -790,7 +807,6 @@
         font-size: 3.5rem;
         margin-bottom: 18px;
         opacity: 0.3;
-        /* animation: float 3s ease-in-out infinite; */
     }
 
     .empty-state p {

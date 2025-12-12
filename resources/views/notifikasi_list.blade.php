@@ -157,40 +157,13 @@
         animation: pulse-ring 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
     
-    .pulse-1 { 
-        width: 100%; 
-        height: 100%; 
-        animation-delay: 0s; 
-    }
-    
-    .pulse-2 { 
-        width: 120%; 
-        height: 120%; 
-        animation-delay: 0.8s; 
-    }
-    
-    .pulse-3 { 
-        width: 140%; 
-        height: 140%; 
-        animation-delay: 1.6s; 
-    }
+    .pulse-1 { width: 100%; height: 100%; animation-delay: 0s; }
+    .pulse-2 { width: 120%; height: 120%; animation-delay: 0.8s; }
+    .pulse-3 { width: 140%; height: 140%; animation-delay: 1.6s; }
     
     @keyframes pulse-ring {
         from { transform: scale(0.9); opacity: 1; }
         to { transform: scale(1.5); opacity: 0; }
-    }
-
-    .section-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin: 40px 0 20px 0;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .section-title i {
-        font-size: 1.3rem;
     }
 
     .notifikasi-list-ringkas {
@@ -238,6 +211,7 @@
         opacity: 0.85;
     }
     
+    /* Warna Status Pembatalan */
     .status-cancellation .card-left-accent,
     .status-cancellation .date-box {
         background: linear-gradient(135deg, var(--danger-color), #c0392b) !important;
@@ -400,11 +374,18 @@
         font-weight: 600;
     }
 
+    /* BADGE STYLES */
+    .badges-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
     .queue-badge {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
-        padding: 10px 18px;
+        gap: 8px;
+        padding: 8px 16px;
         background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.25));
         border: 1px solid rgba(16, 185, 129, 0.3);
         color: #065f46;
@@ -412,6 +393,13 @@
         font-size: 0.9rem;
         font-weight: 700;
         width: fit-content;
+    }
+
+    /* 🔥 STYLE UNTUK ESTIMASI WAKTU 🔥 */
+    .queue-badge.estimation {
+        background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(52, 152, 219, 0.25));
+        border-color: rgba(52, 152, 219, 0.3);
+        color: #1d4ed8;
     }
 
     .queue-badge.pending {
@@ -558,6 +546,7 @@
         box-shadow: 0 12px 35px rgba(57, 166, 22, 0.45);
     }
 
+    /* MODAL STYLES */
     .modal {
         display: none;
         position: fixed;
@@ -1024,12 +1013,14 @@
                 $jadwalDate = \Carbon\Carbon::parse($item->date);
             @endphp
             
+            {{-- 🔥 ATTRIBUTE DATA ESTIMASI DITAMBAHKAN DI SINI UNTUK MODAL 🔥 --}}
             <div class="notifikasi-item-ringkas open-modal-trigger {{ $statusClass }} {{ $isUnread ? 'unread-glow' : 'read-dim' }}" 
                  style="animation-delay: {{ $index * 0.1 }}s"
                  data-notifikasi-id="{{ $item->type === 'notification' ? $item->id : '' }}"
                  data-modal-type="{{ $item->type }}"
                  data-tanggal="{{ $jadwalDate->isoFormat('dddd, D MMMM YYYY') }}"
                  data-antrian="{{ $item->no_antrian }}"
+                 data-estimasi="{{ isset($item->estimasi_dilayani) ? \Carbon\Carbon::parse($item->estimasi_dilayani)->format('H:i') . ' WIB' : '' }}"
                  data-layanan="{{ $item->layanan }}"
                  data-dokter="{{ $item->dokter_name }}"
                  data-is-batal="{{ $isCancellation ? 'true' : 'false' }}"
@@ -1072,9 +1063,19 @@
                                 @php
                                     $isPending = $item->no_antrian === '-';
                                 @endphp
-                                <div class="queue-badge {{ $isPending ? 'pending' : '' }}">
-                                    <i class="fas {{ $isPending ? 'fa-clock' : 'fa-ticket-alt' }}"></i>
-                                    <span>{{ $isPending ? 'Menunggu Antrian' : 'Antrian #' . $item->no_antrian }}</span>
+                                <div class="badges-container">
+                                    <div class="queue-badge {{ $isPending ? 'pending' : '' }}">
+                                        <i class="fas {{ $isPending ? 'fa-clock' : 'fa-ticket-alt' }}"></i>
+                                        <span>{{ $isPending ? 'Menunggu Antrian' : 'Antrian #' . $item->no_antrian }}</span>
+                                    </div>
+
+                                    {{-- 🔥 BADGE ESTIMASI WAKTU DI DAFTAR 🔥 --}}
+                                    @if(isset($item->estimasi_dilayani) && $item->estimasi_dilayani)
+                                        <div class="queue-badge estimation">
+                                            <i class="fas fa-clock"></i>
+                                            <span>Estimasi: {{ \Carbon\Carbon::parse($item->estimasi_dilayani)->format('H:i') }} WIB</span>
+                                        </div>
+                                    @endif
                                 </div>
                             @else
                                 <div class="queue-badge">
@@ -1115,7 +1116,7 @@
     </div>
 </div>
 
-{{-- MODAL TIKET (SAMA SEPERTI SEBELUMNYA) --}}
+{{-- MODAL TIKET --}}
 <div id="detailModal" class="modal">
     <div class="modal-overlay-bg"></div>
     <div class="modal-content">
@@ -1156,6 +1157,15 @@
                         </div>
                     </div>
                     
+                    {{-- 🔥 ROW ESTIMASI DI MODAL (HIDDEN DEFAULT) 🔥 --}}
+                    <div class="detail-row" id="modalEstimasiRow" style="display: none;">
+                        <i class="fas fa-clock"></i>
+                        <div class="detail-content">
+                            <span class="detail-label">Estimasi Dilayani</span>
+                            <span class="detail-value" id="modalEstimasi"></span>
+                        </div>
+                    </div>
+                    
                     <div class="detail-row">
                         <i class="fas fa-stethoscope"></i>
                         <div class="detail-content">
@@ -1186,7 +1196,7 @@
                 <div class="footer-icon">
                     <i class="fas fa-info-circle"></i>
                 </div>
-                <p id="modalFooterText">Harap datang sesuai jadwal</p>
+                <p id="modalFooterText">Harap datang sesuai jadwal yang telah ditentukan</p>
             </div>
             
             <div class="ticket-barcode">
@@ -1227,6 +1237,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const antrianEl = document.getElementById('modalAntrian');
         const ticketCard = document.getElementById('modalTicketCard');
         const messageRow = document.getElementById('modalMessageRow');
+        const estimasiRow = document.getElementById('modalEstimasiRow');
         const isCancellation = data.isBatal === 'true';
 
         ticketCard.classList.remove('cancellation-style');
@@ -1235,6 +1246,14 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('modalLayanan').textContent = data.layanan;
         document.getElementById('modalDokter').textContent = data.dokter.split('(')[0].trim();
         
+        // 🔥 LOGIKA MENAMPILKAN ESTIMASI DI MODAL 🔥
+        if (data.estimasi) {
+            document.getElementById('modalEstimasi').textContent = data.estimasi;
+            estimasiRow.style.display = 'flex';
+        } else {
+            estimasiRow.style.display = 'none';
+        }
+        
         if (isCancellation) {
             ticketCard.classList.add('cancellation-style');
             antrianEl.textContent = 'BATAL';
@@ -1242,6 +1261,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('modalTicketType').textContent = 'Pesan Pembatalan';
             document.getElementById('modalMessage').textContent = data.pesan;
             messageRow.style.display = 'flex';
+            estimasiRow.style.display = 'none'; // Sembunyikan estimasi jika batal
             document.getElementById('modalFooterText').textContent = '⚠️ Mohon segera buat jadwal baru';
         } else {
             antrianEl.textContent = data.antrian === '-' ? 'N/A' : data.antrian;

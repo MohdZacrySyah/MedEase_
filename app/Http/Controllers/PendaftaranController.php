@@ -25,7 +25,7 @@ class PendaftaranController extends Controller
                 if (!$item->tenaga_medis_id) {
                     return $item['layanan'] . '-';
                 }
-                return $item['layanan'] . '-' . $item['tenaga_medis_id'];
+                return $item['layanan'] . '-' . $item->tenaga_medis_id;
             });
         
         return view('daftar', compact('jadwals'));
@@ -60,6 +60,20 @@ class PendaftaranController extends Controller
         
         $jadwal->load('tenagaMedis');
         
+        // 🔥 TAMBAHAN: Ambil tanggal yang ditutup (Closed Dates)
+        // Agar Frontend bisa mematikan tanggal ini di kalender
+        $closedDates = [];
+        if ($jadwal->tenaga_medis_id) {
+            $closedDates = DoctorAvailability::where('tenaga_medis_id', $jadwal->tenaga_medis_id)
+                ->where('is_available', false) // Cari yang TIDAK tersedia
+                ->whereDate('date', '>=', Carbon::today())
+                ->pluck('date')
+                ->map(function($date) {
+                    return Carbon::parse($date)->format('Y-m-d');
+                })
+                ->toArray();
+        }
+
         $user = Auth::user();
 
         return response()->json([
@@ -71,12 +85,13 @@ class PendaftaranController extends Controller
             'user_name'      => $user?->name ?? '',
             'user_alamat'    => $user?->alamat ?? '',
             'user_tgl_lahir' => $user?->tanggal_lahir ?? '',
-            'enabled_days'   => $hariDiizinkan
+            'enabled_days'   => $hariDiizinkan,
+            'closed_dates'   => $closedDates // ✅ Dikirim ke view agar JS bisa men-disable tanggal
         ]);
     }
 
     /**
-     * ✅ Get daftar tanggal yang ditutup dokter (untuk disable di kalender)
+     * Get daftar tanggal yang ditutup dokter (untuk disable di kalender)
      *
      * @param  int  $jadwalPraktekId
      * @return \Illuminate\Http\JsonResponse
@@ -86,7 +101,6 @@ class PendaftaranController extends Controller
         try {
             $jadwalPraktek = JadwalPraktek::findOrFail($jadwalPraktekId);
             
-            // ✅ Field database adalah 'date' (bukan 'closed_date')
             $closedDates = DoctorAvailability::where('tenaga_medis_id', $jadwalPraktek->tenaga_medis_id)
                                               ->where('is_available', false)
                                               ->whereDate('date', '>=', Carbon::today())
@@ -144,11 +158,12 @@ class PendaftaranController extends Controller
         $jadwalPraktek = JadwalPraktek::findOrFail($validatedData['jadwal_praktek_id']);
         $tenagaMedisId = $jadwalPraktek->tenaga_medis_id;
         
-        // ✅ VALIDASI 1: Cek apakah tanggal ini ditutup dokter
-        // ⚠️ PERBAIKAN: Ganti 'closed_date' jadi 'date'
+        // ==========================================
+        // 🔥 VALIDASI 1: CEK TANGGAL DITUTUP/LIBUR 🔥
+        // ==========================================
         $availability = DoctorAvailability::where('tenaga_medis_id', $tenagaMedisId)
             ->whereDate('date', $jadwalDipilih)
-            ->where('is_available', false)
+            ->where('is_available', false) // Cek jika is_available = 0 (False)
             ->first();
 
         if ($availability) {
@@ -158,12 +173,13 @@ class PendaftaranController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'jadwal_dipilih' => '❌ Maaf, dokter tidak tersedia pada tanggal ' . 
-                        $tanggalFormatted . '. Alasan: ' . $reason . '. Silakan pilih tanggal lain.'
+                    'jadwal_dipilih' => '❌ Maaf, jadwal pada tanggal ' . $tanggalFormatted . ' DITUTUP/DIBATALKAN. Alasan: ' . $reason . '. Silakan pilih tanggal lain.'
                 ]);
         }
 
-        // ✅ VALIDASI 2: Cek apakah hari sesuai dengan jadwal praktek dokter
+        // ==========================================
+        // ✅ VALIDASI 2: CEK HARI PRAKTEK
+        // ==========================================
         $hariDipilih = Carbon::parse($jadwalDipilih)->locale('id')->translatedFormat('l');
         $hariPraktek = $jadwalPraktek->hari;
         
@@ -176,25 +192,53 @@ class PendaftaranController extends Controller
                 ]);
         }
 
-        // Simpan pendaftaran
-        $pendaftaran = Pendaftaran::create($validatedData);
+        // ==========================================
+        // 🔥 LOGIKA ANTRIAN & ESTIMASI 🔥
+        // ==========================================
 
-        // Generate nomor antrian
+        // 1. Inisialisasi object
+        $pendaftaran = new Pendaftaran($validatedData);
+
+        // 2. Generate Nomor Antrian
         $tanggalDipilihString = Carbon::parse($pendaftaran->jadwal_dipilih)->toDateString();
         $namaLayanan = $pendaftaran->nama_layanan;
 
+        // Hitung jumlah pasien (KECUALI yang statusnya Dibatalkan agar antrian tidak bolong/kacau)
         $jumlahSebelumnya = Pendaftaran::where('nama_layanan', $namaLayanan)
             ->whereDate('jadwal_dipilih', $tanggalDipilihString)
-            ->where('id', '<', $pendaftaran->id)
+            ->where('status', '!=', 'Dibatalkan') // 🔥 Tambahan penting
             ->count();
 
         $pendaftaran->no_antrian = $jumlahSebelumnya + 1;
+
+        // 3. Hitung Estimasi Waktu (Setiap Pasien 20 Menit)
+        if ($jadwalPraktek->jam_mulai) {
+            // Ambil jam mulai dokter
+            $jamMulai = Carbon::parse($jadwalPraktek->jam_mulai);
+            
+            // Estimasi: Jam Mulai + ((No Antrian - 1) * 20 menit)
+            $durasiPerPasien = 20; 
+            $menitTambahan = ($pendaftaran->no_antrian - 1) * $durasiPerPasien;
+            
+            $estimasiWaktu = $jamMulai->copy()->addMinutes($menitTambahan);
+            
+            // Simpan ke kolom database
+            $pendaftaran->estimasi_dilayani = $estimasiWaktu->format('H:i:s');
+        }
+
+        // 4. Simpan ke Database
         $pendaftaran->save();
+
+        // Siapkan pesan sukses dengan estimasi waktu
+        $pesanSukses = '✅ Pendaftaran berhasil! Nomor antrian Anda: ' . $pendaftaran->no_antrian;
+        
+        if ($pendaftaran->estimasi_dilayani) {
+            $waktuFormatted = Carbon::parse($pendaftaran->estimasi_dilayani)->format('H:i');
+            $pesanSukses .= '. Estimasi dilayani pukul: ' . $waktuFormatted . ' WIB.';
+        }
 
         return redirect()
             ->route('daftar.index')
-            ->with('success', '✅ Pendaftaran berhasil! Nomor antrian Anda: ' . 
-                $pendaftaran->no_antrian . ' untuk tanggal ' . 
-                Carbon::parse($jadwalDipilih)->isoFormat('D MMMM YYYY'));
+            ->with('success', $pesanSukses);
     }
 }

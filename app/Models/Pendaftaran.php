@@ -22,6 +22,9 @@ class Pendaftaran extends Model
         'jadwal_dipilih',
         'status',
         'no_antrian',
+        'estimasi_dilayani', // <--- Tambahkan ini
+        'status_panggilan',
+        'jumlah_panggilan',
 
     ];
 

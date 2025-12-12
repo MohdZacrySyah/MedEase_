@@ -1,7 +1,7 @@
 @extends('layouts.admin')
-@section('title', 'Catatan Pemeriksaan Awal')
 
-{{-- 1. Import CSS Flatpickr --}}
+@section('title', 'Kelola Antrian & Pemeriksaan')
+
 @push('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -9,21 +9,21 @@
 
 @section('content')
 
-    {{-- HEADER BANNER (SAMA DENGAN DASHBOARD ADMIN) --}}
+    {{-- HEADER BANNER (KONSISTEN) --}}
     <div class="dashboard-header-banner">
         <div class="header-content">
             <div class="header-icon">
-                <i class="fas fa-clipboard-list"></i>
+                <i class="fas fa-bullhorn"></i>
             </div>
             <div class="header-text">
                 <div class="greeting-badge">
-                    <i class="fas fa-user-injured"></i>
-                    <span>Medical Records</span>
+                    <i class="fas fa-desktop"></i>
+                    <span>Admin Console</span>
                 </div>
-                <h1 class="page-title">Catatan Pemeriksaan Awal 📋</h1>
+                <h1 class="page-title">Kelola Antrian & Data 📋</h1>
                 <p class="page-subtitle">
-                    <i class="far fa-calendar-alt"></i>
-                    Kelola dan input pemeriksaan awal pasien
+                    <i class="far fa-calendar-check"></i>
+                    Panggil pasien dan input pemeriksaan awal secara real-time
                 </p>
             </div>
             <div class="hero-illustration">
@@ -31,7 +31,7 @@
                 <div class="pulse-circle pulse-2"></div>
                 <div class="pulse-circle pulse-3"></div>
                 <div class="time-widget">
-                    <i class="fas fa-notes-medical"></i>
+                    <i class="fas fa-clipboard-check"></i>
                     <span>Input Data</span>
                 </div>
             </div>
@@ -41,18 +41,18 @@
     {{-- FILTER SECTION --}}
     <div class="stats-section">
         <div class="section-header">
-            <h2><i class="fas fa-filter"></i> Filter Pasien</h2>
+            <h2><i class="fas fa-filter"></i> Filter Antrian</h2>
         </div>
         <div class="filter-card-modern">
             <form action="{{ route('admin.catatanpemeriksaan') }}" method="GET" class="filter-form-modern">
                 <div class="filter-input-wrapper">
                     <label for="tanggalFilter" class="filter-label">
                         <i class="fas fa-calendar-alt"></i>
-                        Tampilkan Pasien untuk Tanggal:
+                        Tampilkan Antrian untuk Tanggal:
                     </label>
                     <div class="input-with-icon">
                         <i class="fas fa-calendar-day"></i>
-                        <input type="text" name="tanggal" id="tanggalFilter" placeholder="Pilih Tanggal...">
+                        <input type="text" name="tanggal" id="tanggalFilter" placeholder="Pilih Tanggal..." value="{{ $tanggal ?? '' }}">
                     </div>
                 </div>
                 <div class="filter-button-group">
@@ -62,7 +62,7 @@
                     </button>
                     <a href="{{ route('admin.catatanpemeriksaan') }}" class="btn-filter-modern btn-secondary-filter">
                         <i class="fas fa-redo"></i>
-                        <span>Tampilkan Semua</span>
+                        <span>Reset</span>
                     </a>
                 </div>
             </form>
@@ -82,133 +82,166 @@
         </div>
     @endif
 
-    {{-- TABLES SECTION --}}
+    {{-- MAIN CONTENT: TABS & TABLES --}}
     <div class="schedule-section">
         <div class="section-header">
-            <h2><i class="fas fa-list-alt"></i> Daftar Pendaftaran Pasien</h2>
+            <h2><i class="fas fa-stethoscope"></i> Antrian Per Layanan</h2>
         </div>
 
-        @forelse ($pendaftarans as $layanan => $listPendaftaran)
-            <div class="layanan-group-modern">
-                <div class="layanan-header-modern">
-                    <div class="layanan-title-wrapper">
-                        <i class="fas fa-hospital"></i>
-                        <h3>{{ $layanan }}</h3>
-                    </div>
-                    <span class="schedule-count">
-                        <i class="fas fa-users"></i>
-                        {{ count($listPendaftaran) }} Pasien
-                    </span>
-                </div>
-
-                <div class="schedule-container-modern">
-                    {{-- DIV BARU UNTUK SCROLLING HORIZONTAL PADA TABEL --}}
-                    <div class="table-responsive">
-                        <table class="schedule-table">
-                            <thead>
-                                <tr>
-                                    <th><i class="fas fa-hashtag"></i> Antrian</th>
-                                    <th><i class="fas fa-user"></i> Nama Pasien</th>
-                                    <th><i class="fas fa-user-md"></i> Nama Dokter</th>
-                                    <th><i class="fas fa-comment-medical"></i> Keluhan</th>
-                                    <th><i class="fas fa-calendar-check"></i> Jadwal Dipilih</th>
-                                    <th><i class="far fa-clock"></i> Tgl Daftar</th>
-                                    <th><i class="fas fa-info-circle"></i> Status</th>
-                                    <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($listPendaftaran as $index => $pendaftaran)
-                                    <tr class="schedule-row" style="animation-delay: {{ $index * 0.05 }}s">
-                                        <td>
-                                            <span class="queue-number-badge">
-                                                {{ $pendaftaran->no_antrian ?? '-' }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="doctor-info">
-                                                <div class="doctor-avatar">
-                                                    @if($pendaftaran->user?->profile_photo_path)
-                                                        <img src="{{ asset('storage/' . $pendaftaran->user->profile_photo_path) }}" alt="Foto">
-                                                    @else
-                                                        <i class="fas fa-user"></i>
-                                                    @endif
-                                                </div>
-                                                <span class="doctor-name">{{ $pendaftaran->user->name ?? $pendaftaran->nama_lengkap }}</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="doctor-name-text">
-                                                {{ $pendaftaran->jadwalPraktek?->tenagaMedis?->name ?? 'N/A' }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="keluhan-badge">
-                                                {{ Str::limit($pendaftaran->keluhan, 40) }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="date-badge-modern">
-                                                <i class="fas fa-calendar"></i>
-                                                <span>{{ \Carbon\Carbon::parse($pendaftaran->jadwal_dipilih)->isoFormat('D MMM YYYY') }}</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="time-text">
-                                                {{ $pendaftaran->created_at->isoFormat('D MMM Y, HH:mm') }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            @if($pendaftaran->status == 'Menunggu')
-                                                <span class="status-badge-modern status-waiting">
-                                                    <i class="fas fa-clock"></i>
-                                                    {{ $pendaftaran->status }}
-                                                </span>
-                                            @elseif($pendaftaran->status == 'Diperiksa Awal')
-                                                <span class="status-badge-modern status-checking">
-                                                    <i class="fas fa-stethoscope"></i>
-                                                    {{ $pendaftaran->status }}
-                                                </span>
-                                            @else
-                                                <span class="status-badge-modern status-done">
-                                                    <i class="fas fa-check-circle"></i>
-                                                    {{ $pendaftaran->status }}
-                                                </span>
-                                            @endif
-                                        </td>
-                                        <td class="text-center">
-                                            @if($pendaftaran->status == 'Menunggu')
-                                                <button type="button" 
-                                                        class="btn-action-primary open-periksa-modal"
-                                                        data-url="{{ route('admin.pemeriksaan-awal.json', $pendaftaran->id) }}">
-                                                    <span>Input Periksa Awal</span>
-                                                    <i class="fas fa-clipboard-check"></i>
-                                                </button>
-                                            @else
-                                                <button type="button" class="btn-action-disabled" disabled>
-                                                    <i class="fas fa-check"></i>
-                                                    <span>{{ $pendaftaran->status }}</span>
-                                                </button>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="8">
-                                            <div class="empty-schedule">
-                                                <i class="fas fa-inbox"></i>
-                                                <p>Belum ada pasien mendaftar untuk layanan ini</p>
-                                                <small>Silakan cek kembali nanti</small>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        @if($pendaftarans->count() > 0)
+            
+            {{-- TAB NAVIGATION --}}
+            <div class="tabs-wrapper">
+                @foreach ($pendaftarans as $layanan => $listPendaftaran)
+                    <button class="tab-btn {{ $loop->first ? 'active' : '' }}" onclick="openTab(event, 'tab-{{ Str::slug($layanan) }}')">
+                        <i class="fas fa-user-md"></i>
+                        {{ $layanan }}
+                        <span class="tab-count">{{ count($listPendaftaran) }}</span>
+                    </button>
+                @endforeach
             </div>
-        @empty
+
+            {{-- TAB CONTENTS --}}
+            @foreach ($pendaftarans as $layanan => $listPendaftaran)
+                <div id="tab-{{ Str::slug($layanan) }}" class="tab-pane {{ $loop->first ? 'active' : '' }}">
+                    
+                    <div class="layanan-group-modern">
+                        <div class="layanan-header-modern">
+                            <div class="layanan-title-wrapper">
+                                <i class="fas fa-hospital"></i>
+                                <h3>{{ $layanan }}</h3>
+                            </div>
+                            <span class="schedule-count">
+                                <i class="fas fa-users"></i>
+                                {{ count($listPendaftaran) }} Pasien
+                            </span>
+                        </div>
+
+                        <div class="schedule-container-modern">
+                            <div class="table-responsive">
+                                <table class="schedule-table">
+                                    <thead>
+                                        <tr>
+                                            <th><i class="fas fa-hashtag"></i> Antrian</th>
+                                            <th><i class="fas fa-user"></i> Nama Pasien</th>
+                                            <th><i class="fas fa-info-circle"></i> Status</th>
+                                            <th class="text-center"><i class="fas fa-bullhorn"></i> Panggil</th>
+                                            <th class="text-center"><i class="fas fa-edit"></i> Aksi Data</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($listPendaftaran as $index => $pendaftaran)
+                                            <tr class="schedule-row" style="animation-delay: {{ $index * 0.05 }}s">
+                                                {{-- No Antrian --}}
+                                                <td>
+                                                    <span class="queue-number-badge">{{ $pendaftaran->no_antrian ?? '-' }}</span>
+                                                </td>
+
+                                                {{-- Info Pasien --}}
+                                                <td>
+                                                    <div class="doctor-info">
+                                                        <div class="doctor-avatar">
+                                                            @if($pendaftaran->user?->profile_photo_path)
+                                                                <img src="{{ asset('storage/' . $pendaftaran->user->profile_photo_path) }}" alt="Foto">
+                                                            @else
+                                                                <i class="fas fa-user"></i>
+                                                            @endif
+                                                        </div>
+                                                        <div class="patient-details">
+                                                            <span class="doctor-name">{{ $pendaftaran->user->name ?? $pendaftaran->nama_lengkap }}</span>
+                                                            <span class="patient-email">
+                                                                Dokter: {{ $pendaftaran->jadwalPraktek?->tenagaMedis?->name ?? 'N/A' }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                {{-- Status & Panggilan --}}
+                                                <td>
+                                                    @if($pendaftaran->status == 'Menunggu')
+                                                        <span class="status-badge-modern status-waiting">
+                                                            <i class="fas fa-clock"></i> {{ $pendaftaran->status }}
+                                                        </span>
+                                                    @elseif($pendaftaran->status == 'Diperiksa Awal')
+                                                        <span class="status-badge-modern status-checking">
+                                                            <i class="fas fa-stethoscope"></i> {{ $pendaftaran->status }}
+                                                        </span>
+                                                    @elseif($pendaftaran->status == 'Selesai')
+                                                        <span class="status-badge-modern status-done">
+                                                            <i class="fas fa-check-circle"></i> {{ $pendaftaran->status }}
+                                                        </span>
+                                                    @else
+                                                        <span class="status-badge-modern" style="background:#f3f4f6; color:#6b7280; border:1px solid #e5e7eb;">
+                                                            {{ $pendaftaran->status }}
+                                                        </span>
+                                                    @endif
+
+                                                    @if($pendaftaran->status_panggilan == 'dipanggil')
+                                                        <br><div class="call-status-badge">
+                                                            <i class="fas fa-volume-up"></i> Dipanggil ({{ $pendaftaran->jumlah_panggilan }}x)
+                                                        </div>
+                                                    @elseif($pendaftaran->status_panggilan == 'dialihkan')
+                                                        <br><div class="call-status-badge call-status-skipped">
+                                                            <i class="fas fa-forward"></i> Dialihkan
+                                                        </div>
+                                                    @endif
+                                                </td>
+
+                                                {{-- Aksi Panggil --}}
+                                                <td class="text-center">
+                                                    @if(!in_array($pendaftaran->status, ['Selesai', 'Dibatalkan']))
+                                                        <div class="action-group">
+                                                            <button onclick="panggilPasien(this, {{ $pendaftaran->id }})" class="btn-call-modern" title="Panggil Pasien">
+                                                                <i class="fas fa-bullhorn"></i> Panggil
+                                                            </button>
+                                                            
+                                                            @if($pendaftaran->jumlah_panggilan >= 2)
+                                                                <button onclick="alihkanPasien({{ $pendaftaran->id }})" class="btn-skip-modern" title="Lewati / Alihkan">
+                                                                    <i class="fas fa-forward"></i> Skip
+                                                                </button>
+                                                            @endif
+                                                        </div>
+                                                    @else
+                                                        <span style="font-size: 0.9rem; font-style: italic; color: var(--text-muted);">Selesai</span>
+                                                    @endif
+                                                </td>
+
+                                                {{-- Aksi Input Data --}}
+                                                <td class="text-center">
+                                                    @if($pendaftaran->status == 'Menunggu' || $pendaftaran->status == 'Diperiksa Awal')
+                                                        <button type="button" 
+                                                                class="btn-action-primary open-periksa-modal"
+                                                                data-url="{{ route('admin.pemeriksaan-awal.json', $pendaftaran->id) }}">
+                                                            <span>Input Data</span>
+                                                            <i class="fas fa-clipboard-check"></i>
+                                                        </button>
+                                                    @else
+                                                        <button type="button" class="btn-action-disabled" disabled>
+                                                            <i class="fas fa-check-double"></i> Selesai
+                                                        </button>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="5">
+                                                    <div class="empty-schedule">
+                                                        <i class="fas fa-inbox"></i>
+                                                        <p>Tidak ada antrian pasien saat ini</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+
+        @else
+            {{-- EMPTY STATE --}}
             <div class="alert-info-modern">
                 <div class="alert-icon">
                     <i class="fas fa-info-circle"></i>
@@ -221,29 +254,30 @@
                     @endif
                 </div>
             </div>
-        @endforelse
+        @endif
     </div>
 
-{{-- MODAL PEMERIKSAAN AWAL --}}
-<div id="periksaAwalModal" class="modal-overlay">
-    <div class="modal-card">
-        <span class="close-modal" id="closeModalBtn">&times;</span>
-        <div id="modalFormContent">
-            <div class="loading-spinner"></div>
+    {{-- MODAL INPUT PEMERIKSAAN AWAL --}}
+    <div id="periksaAwalModal" class="modal-overlay">
+        <div class="modal-card">
+            <span class="close-modal" id="closeModalBtn">&times;</span>
+            <div id="modalFormContent">
+                <div class="loading-spinner"></div>
+            </div>
         </div>
     </div>
-</div>
+
 @endsection
 
 @push('styles')
 <style>
+    /* ===== COMPLETE CSS FROM PREVIOUS DESIGN ===== */
     * { 
         box-sizing: border-box;
         margin: 0;
         padding: 0;
     }
     
-    /* ===== DARK MODE SUPPORT ===== */
     :root {
         --p1: #39A616;
         --p2: #1D8208;
@@ -251,7 +285,6 @@
         --grad: linear-gradient(135deg, #39A616, #1D8208, #0C5B00);
         --grad-reverse: linear-gradient(135deg, #0C5B00, #1D8208, #39A616);
         
-        /* Light Mode Colors */
         --text-primary: #1f2937;
         --text-secondary: #6b7280;
         --text-muted: #9ca3af;
@@ -265,9 +298,7 @@
         --modal-overlay: rgba(0,0,0,0.7);
     }
 
-    /* Dark Mode Colors */
-    [data-theme="dark"],
-    .dark-mode {
+    [data-theme="dark"], .dark-mode {
         --text-primary: #f9fafb;
         --text-secondary: #d1d5db;
         --text-muted: #9ca3af;
@@ -281,7 +312,6 @@
         --modal-overlay: rgba(0,0,0,0.85);
     }
 
-    /* Auto Dark Mode (sistem preference) */
     @media (prefers-color-scheme: dark) {
         :root:not([data-theme="light"]) {
             --text-primary: #f9fafb;
@@ -304,14 +334,8 @@
         color: var(--text-primary);
         transition: background 0.3s ease, color 0.3s ease;
     }
-    
-    .container-fluid-modern {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 40px 20px;
-    }
 
-    /* ===== HEADER BANNER PREMIUM (SAMA DENGAN DASHBOARD) ===== */
+    /* ===== HEADER BANNER ===== */
     .dashboard-header-banner {
         margin-bottom: 40px;
         animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -320,7 +344,7 @@
     .header-content {
         display: flex;
         align-items: center;
-        gap: 20px; 
+        gap: 20px;
         background: var(--grad);
         padding: 35px 40px;
         border-radius: 24px;
@@ -340,7 +364,7 @@
         border-radius: 50%;
         animation: rotate 20s linear infinite;
     }
-    
+
     @keyframes rotate {
         from { transform: rotate(0deg); }
         to { transform: rotate(360deg); }
@@ -363,7 +387,7 @@
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         animation: float 3s ease-in-out infinite;
     }
-    
+
     @keyframes float {
         0%, 100% { transform: translateY(0px); }
         50% { transform: translateY(-10px); }
@@ -410,7 +434,7 @@
         margin: 0;
         animation: fadeIn 0.8s ease-out 0.4s both;
     }
-    
+
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
@@ -452,7 +476,7 @@
     .pulse-1 { width: 140px; height: 140px; animation-delay: 0s; }
     .pulse-2 { width: 170px; height: 170px; animation-delay: 0.8s; }
     .pulse-3 { width: 200px; height: 200px; animation-delay: 1.6s; }
-    
+
     @keyframes pulse-ring {
         0% { transform: translate(-50%, -50%) scale(0.9); opacity: 1; }
         100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
@@ -488,7 +512,7 @@
         margin-bottom: 40px;
         animation: fadeInUp 0.6s ease-out 0.1s backwards;
     }
-    
+
     @keyframes fadeInUp {
         from { opacity: 0; transform: translateY(30px); }
         to { opacity: 1; transform: translateY(0); }
@@ -649,7 +673,6 @@
         border: 2px solid #17a2b8;
     }
 
-    /* Dark mode alerts */
     [data-theme="dark"] .alert-success-modern,
     .dark-mode .alert-success-modern {
         background: linear-gradient(135deg, rgba(46, 204, 113, 0.2), rgba(39, 174, 96, 0.3));
@@ -706,7 +729,79 @@
         transform: rotate(90deg);
     }
 
-    /* ===== SCHEDULE SECTION (TABLE SAMA DENGAN DASHBOARD) ===== */
+    /* ===== TABS SYSTEM ===== */
+    .tabs-wrapper {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tab-btn {
+        background: var(--bg-primary);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        padding: 14px 28px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tab-btn i { font-size: 1.1rem; }
+
+    .tab-btn:hover {
+        transform: translateY(-3px);
+        color: var(--p1);
+        border-color: var(--p1);
+        box-shadow: 0 8px 20px rgba(57, 166, 22, 0.15);
+    }
+
+    .tab-btn.active {
+        background: var(--grad);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 8px 25px rgba(57, 166, 22, 0.3);
+    }
+
+    .tab-count {
+        background: rgba(255,255,255,0.25);
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 0.85em;
+        font-weight: 700;
+    }
+
+    .tab-btn:not(.active) .tab-count {
+        background: rgba(0,0,0,0.06);
+        color: var(--text-muted);
+    }
+
+    .tab-pane {
+        display: none;
+        animation: fadeInTab 0.5s ease-out;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
+    @keyframes fadeInTab {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== SCHEDULE SECTION ===== */
     .schedule-section {
         margin-bottom: 30px;
         animation: fadeInUp 0.6s ease-out 0.2s backwards;
@@ -763,7 +858,7 @@
         border-radius: 0 0 24px 24px;
         box-shadow: 0 8px 30px var(--shadow-color);
         border: 1px solid var(--border-color);
-        overflow: hidden; /* Tetap hidden agar radius melengkung */
+        overflow: hidden;
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
@@ -772,19 +867,17 @@
         border-color: rgba(57, 166, 22, 0.4);
     }
 
-    /* --- PERBAIKAN SCROLL HORIZONTAL DIMULAI DI SINI --- */
     .table-responsive {
-        overflow-x: auto; /* Kunci untuk scrolling horizontal di mobile */
+        overflow-x: auto;
         width: 100%;
-        -webkit-overflow-scrolling: touch; /* Meningkatkan pengalaman scrolling di iOS */
+        -webkit-overflow-scrolling: touch;
     }
 
     .schedule-table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 800px; /* Pastikan tabel cukup lebar untuk di-scroll */
+        min-width: 800px;
     }
-    /* --- PERBAIKAN SCROLL HORIZONTAL SELESAI DI SINI --- */
 
     .schedule-table thead {
         background: var(--grad);
@@ -815,7 +908,7 @@
         animation: fadeInLeft 0.5s ease forwards;
         opacity: 0;
     }
-    
+
     @keyframes fadeInLeft {
         from { opacity: 0; transform: translateX(-20px); }
         to { opacity: 1; transform: translateX(0); }
@@ -863,12 +956,22 @@
         object-fit: cover;
     }
 
+    .patient-details {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
     .doctor-name {
         font-weight: 600;
         color: var(--text-primary);
     }
 
-    /* Badge Nomor Antrian */
+    .patient-email {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
     .queue-number-badge {
         display: inline-flex;
         align-items: center;
@@ -884,45 +987,7 @@
         box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
     }
 
-    .doctor-name-text {
-        color: var(--text-secondary);
-        font-weight: 600;
-    }
-
-    .keluhan-badge {
-        color: var(--text-secondary);
-        font-style: italic;
-        font-size: 0.9rem;
-    }
-
-    .date-badge-modern {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 18px;
-        background: linear-gradient(135deg, rgba(243, 156, 18, 0.1), rgba(230, 126, 34, 0.2));
-        color: #856404;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        border: 1px solid rgba(243, 156, 18, 0.2);
-    }
-
-    /* Dark mode date badge */
-    [data-theme="dark"] .date-badge-modern,
-    .dark-mode .date-badge-modern {
-        background: linear-gradient(135deg, rgba(243, 156, 18, 0.2), rgba(230, 126, 34, 0.3));
-        color: #fbbf24;
-        border-color: rgba(243, 156, 18, 0.4);
-    }
-
-    .time-text {
-        color: var(--text-muted);
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-
-    /* Status Badge */
+    /* ===== STATUS BADGES ===== */
     .status-badge-modern {
         display: inline-flex;
         align-items: center;
@@ -952,7 +1017,6 @@
         border: 1px solid rgba(46, 204, 113, 0.3);
     }
 
-    /* Dark mode status badges */
     [data-theme="dark"] .status-waiting,
     .dark-mode .status-waiting {
         background: linear-gradient(135deg, rgba(243, 156, 18, 0.2), rgba(230, 126, 34, 0.3));
@@ -974,7 +1038,84 @@
         border-color: rgba(46, 204, 113, 0.4);
     }
 
-    /* Action Buttons */
+    /* ===== CALLING SYSTEM BUTTONS ===== */
+    .action-group {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-call-modern {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 14px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-call-modern:hover { 
+        transform: translateY(-2px); 
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4); 
+    }
+
+    .btn-call-modern:disabled {
+        background: #cbd5e1;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .btn-skip-modern {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 14px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-skip-modern:hover { 
+        transform: translateY(-2px); 
+        box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4); 
+    }
+
+    .call-status-badge {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+        border-radius: 20px;
+        background: #eff6ff;
+        color: #2563eb;
+        font-weight: 700;
+        margin-top: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid #bfdbfe;
+    }
+
+    .call-status-skipped {
+        color: #d97706;
+        background: #fffbeb;
+        border-color: #fcd34d;
+    }
+
+    /* ===== ACTION BUTTONS ===== */
     .btn-action-primary {
         display: inline-flex;
         align-items: center;
@@ -1038,7 +1179,7 @@
         opacity: 0.7;
     }
 
-    /* Empty State */
+    /* ===== EMPTY STATE ===== */
     .empty-schedule {
         text-align: center;
         padding: 70px 20px;
@@ -1059,11 +1200,6 @@
         color: var(--text-secondary);
     }
 
-    .empty-schedule small {
-        font-size: 0.95rem;
-        color: var(--text-muted);
-    }
-
     /* ===== MODAL ===== */
     .modal-overlay {
         display: none;
@@ -1081,7 +1217,6 @@
         backdrop-filter: blur(8px);
     }
 
-    /* Perubahan di .modal-card: Menambahkan flex-basis untuk menampung konten scrollable */
     .modal-card {
         background-color: var(--modal-bg);
         margin: auto;
@@ -1103,7 +1238,6 @@
         cursor: pointer;
         padding: 15px 25px;
         transition: all 0.3s ease;
-        /* Tambahkan flex-shrink agar tidak ikut mengecil */
         flex-shrink: 0;
     }
 
@@ -1112,20 +1246,16 @@
         transform: rotate(90deg);
     }
 
-    /* Perubahan di #modalFormContent: Memastikan konten ini yang di-scroll */
     #modalFormContent {
         padding: 0 40px 40px 40px;
-        overflow-y: auto; /* Kunci untuk scrolling vertikal */
-        /* Tambahkan flex-grow agar mengambil sisa ruang */
-        flex-grow: 1; 
+        overflow-y: auto;
+        flex-grow: 1;
     }
-    
-    /* Tambahkan style untuk form di dalam modal, agar dapat di-scroll */
+
     #modalFormContent form {
         display: block;
     }
 
-    /* Form Styles */
     .form-header {
         text-align: center;
         margin-bottom: 30px;
@@ -1179,12 +1309,6 @@
         color: var(--text-primary);
         transition: all 0.3s ease;
         font-weight: 500;
-    }
-
-    .form-control[readonly] {
-        background-color: var(--bg-tertiary);
-        color: var(--text-muted);
-        cursor: not-allowed;
     }
 
     .form-control:focus {
@@ -1253,7 +1377,6 @@
         color: var(--p1);
     }
 
-    /* Loading Spinner */
     .loading-spinner {
         border: 6px solid var(--bg-tertiary);
         border-top: 6px solid var(--p1);
@@ -1264,7 +1387,11 @@
         margin: 80px auto;
     }
 
-    /* ===== ANIMATIONS ===== */
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
     @keyframes fadeInDown {
         from { opacity: 0; transform: translateY(-30px); }
         to { opacity: 1; transform: translateY(0); }
@@ -1275,163 +1402,173 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
     @keyframes slideDown {
         from { transform: translateY(-50px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
     }
 
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
     /* ===== RESPONSIVE ===== */
     @media (max-width: 992px) {
-        .hero-illustration {
-            display: none;
-        }
-
-        .filter-form-modern {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .filter-input-wrapper {
-            width: 100%;
-        }
-
-        .filter-button-group {
-            width: 100%;
-        }
-
-        .btn-filter-modern {
-            flex: 1;
-            justify-content: center;
-        }
+        .hero-illustration { display: none; }
+        .filter-form-modern { flex-direction: column; align-items: stretch; }
+        .filter-input-wrapper { width: 100%; }
+        .filter-button-group { width: 100%; }
+        .btn-filter-modern { flex: 1; justify-content: center; }
     }
 
     @media (max-width: 768px) {
-        .container-fluid-modern {
-            padding: 20px 15px;
-        }
-
-        .header-content {
-            flex-direction: column;
-            text-align: center;
-            padding: 30px 24px;
-        }
-
-        .page-title {
-            font-size: 1.8rem;
-        }
-
-        .layanan-header-modern {
-            flex-direction: column;
-            gap: 12px;
-            align-items: flex-start;
-        }
-
-        .schedule-table {
-            font-size: 0.9rem;
-        }
-
-        .schedule-table thead th,
-        .schedule-table tbody td {
-            padding: 14px 12px;
-        }
-
-        .doctor-avatar {
-            width: 45px;
-            height: 45px;
-            font-size: 18px;
-        }
-
-        .modal-card {
-            width: 95%;
-            margin: 20px;
-        }
-
-        #modalFormContent {
-            padding: 0 20px 30px 20px;
-        }
-
-        .form-grid {
-            grid-template-columns: 1fr;
-        }
+        .header-content { flex-direction: column; text-align: center; padding: 30px 24px; }
+        .page-title { font-size: 1.8rem; }
+        .layanan-header-modern { flex-direction: column; gap: 12px; align-items: flex-start; }
+        .schedule-table { font-size: 0.9rem; }
+        .schedule-table thead th, .schedule-table tbody td { padding: 14px 12px; }
+        .doctor-avatar { width: 45px; height: 45px; font-size: 18px; }
+        .modal-card { width: 95%; margin: 20px; }
+        #modalFormContent { padding: 0 20px 30px 20px; }
+        .form-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 576px) {
-        .page-title {
-            font-size: 1.5rem;
-        }
-
-        .greeting-badge {
-            font-size: 0.8rem;
-            padding: 8px 16px;
-        }
-
-        .section-header h2 {
-            font-size: 1.3rem;
-        }
-
-        .filter-button-group {
-            flex-direction: column;
-        }
-
-        .btn-action-primary span {
-            display: none;
-        }
-
-        .schedule-table thead th {
-            font-size: 0.8rem;
-            padding: 12px 10px;
-        }
-
-        .schedule-table tbody td {
-            padding: 12px 10px;
-        }
+        .page-title { font-size: 1.5rem; }
+        .greeting-badge { font-size: 0.8rem; padding: 8px 16px; }
+        .section-header h2 { font-size: 1.3rem; }
+        .filter-button-group { flex-direction: column; }
+        .btn-action-primary span { display: none; }
+        .schedule-table thead th { font-size: 0.8rem; padding: 12px 10px; }
+        .schedule-table tbody td { padding: 12px 10px; }
     }
 </style>
 @endpush
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-    // Inisialisasi Flatpickr dengan tema hijau
+    // --- 1. LOGIKA TABS NAVIGASI ---
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        
+        tabcontent = document.getElementsByClassName("tab-pane");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+            tabcontent[i].classList.remove("active");
+        }
+        
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        
+        const selectedTab = document.getElementById(tabName);
+        if(selectedTab) {
+            selectedTab.style.display = "block";
+            setTimeout(() => {
+                selectedTab.classList.add("active");
+            }, 10);
+        }
+        
+        if(evt) evt.currentTarget.className += " active";
+    }
+
+    // --- 2. SISTEM PEMANGGILAN (CALLING SYSTEM) ---
+    window.panggilPasien = function(btnElement, id) {
+        const originalContent = btnElement.innerHTML;
+        btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btnElement.disabled = true;
+
+        fetch(`/admin/panggil-pasien/${id}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            btnElement.innerHTML = originalContent;
+            btnElement.disabled = false;
+            
+            if(data.success) {
+                const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                audio.play().catch(e => console.log('Audio autoplay blocked')); 
+
+                Swal.fire({
+                    title: 'Memanggil...',
+                    text: `Pasien dipanggil ke-${data.jumlah_panggilan}`,
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    position: 'top-end',
+                    toast: true
+                }).then(() => {
+                    location.reload(); 
+                });
+            } else {
+                Swal.fire('Error', 'Gagal memanggil pasien', 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            btnElement.innerHTML = originalContent;
+            btnElement.disabled = false;
+            Swal.fire('Error', 'Terjadi kesalahan koneksi', 'error');
+        });
+    };
+
+    window.alihkanPasien = function(id) {
+        Swal.fire({
+            title: 'Lewati Pasien?',
+            text: "Status pasien akan diubah menjadi 'Dialihkan'.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f59e0b',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, Lewati'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/admin/alihkan-pasien/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        Swal.fire({
+                            title: 'Berhasil',
+                            text: 'Pasien telah dialihkan',
+                            icon: 'info',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
+                    }
+                });
+            }
+        });
+    };
+
+    // --- 3. FLATPICKR ---
     flatpickr("#tanggalFilter", {
         dateFormat: "Y-m-d",
         altInput: true,
         altFormat: "d M Y",
         defaultDate: "{{ $tanggal ?? '' }}",
-        placeholder: "Pilih Tanggal...",
-        locale: {
-            firstDayOfWeek: 1,
-            weekdays: {
-                shorthand: ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'],
-                longhand: ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
-            },
-            months: {
-                shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
-                longhand: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
-            },
-        }
+        locale: { firstDayOfWeek: 1 }
     });
 
-    // --- Logika Modal ---
+    // --- 4. MODAL PEMERIKSAAN ---
     const modal = document.getElementById('periksaAwalModal');
     const modalContent = document.getElementById('modalFormContent');
     const closeModalBtn = document.getElementById('closeModalBtn');
-    const links = document.querySelectorAll('.open-periksa-modal');
-
-    links.forEach(link => {
-        link.addEventListener('click', async function(event) {
-            event.preventDefault();
-            const jsonUrl = this.dataset.url;
+    
+    document.addEventListener('click', async function(e) {
+        const btn = e.target.closest('.open-periksa-modal');
+        if (btn) {
+            e.preventDefault();
+            const jsonUrl = btn.dataset.url;
             
             modal.style.display = 'flex';
             modalContent.innerHTML = '<div class="loading-spinner"></div>';
@@ -1441,11 +1578,6 @@
                 if (!response.ok) throw new Error('Gagal mengambil data');
                 const data = await response.json();
 
-                // Pastikan CSRF token di-handle dengan benar di Blade/Laravel
-                const csrfToken = document.querySelector('meta[name="csrf-token"]') ? 
-                                 document.querySelector('meta[name="csrf-token"]').content : 
-                                 '';
-                
                 const formHtml = `
                     <div class="form-header">
                         <h2 class="form-title">Input Pemeriksaan Awal</h2>
@@ -1453,19 +1585,18 @@
                     </div>
                     <form action="${data.form_action}" method="POST">
                         <input type="hidden" name="_token" value="{{ csrf_token() }}"> 
-                        
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="tekanan_darah" class="form-label">Tekanan Darah (mmHg)</label>
-                                <input type="text" name="tekanan_darah" id="tekanan_darah" class="form-control" placeholder="cth: 120/80" required>
+                                <label class="form-label">Tekanan Darah (mmHg)</label>
+                                <input type="text" name="tekanan_darah" class="form-control" placeholder="cth: 120/80" required>
                             </div>
                             <div class="form-group">
-                                <label for="berat_badan" class="form-label">Berat Badan (Kg)</label>
-                                <input type="number" step="0.1" name="berat_badan" id="berat_badan" class="form-control" placeholder="cth: 55.5" required>
+                                <label class="form-label">Berat Badan (Kg)</label>
+                                <input type="number" step="0.1" name="berat_badan" class="form-control" placeholder="cth: 55.5" required>
                             </div>
                             <div class="form-group">
-                                <label for="suhu_tubuh" class="form-label">Suhu Tubuh (°C)</label>
-                                <input type="number" step="0.1" name="suhu_tubuh" id="suhu_tubuh" class="form-control" placeholder="cth: 36.5" required>
+                                <label class="form-label">Suhu Tubuh (°C)</label>
+                                <input type="number" step="0.1" name="suhu_tubuh" class="form-control" placeholder="cth: 36.5" required>
                             </div>
                         </div>
                         <div class="form-actions">
@@ -1475,43 +1606,37 @@
                     </form>
                 `;
                 
-                // Mengganti @csrf dengan token Blade yang sebenarnya jika form di-load via JS
-                // Karena ini berada di dalam Blade file, kita bisa menggunakan {{ csrf_token() }}
                 modalContent.innerHTML = formHtml;
                 
-                // Pasang kembali event listener untuk tombol batal yang baru dimuat
-                document.getElementById('batalModalBtn').addEventListener('click', (e) => {
-                    e.preventDefault();
-                    closeModal();
+                document.getElementById('batalModalBtn').addEventListener('click', (ev) => {
+                    ev.preventDefault();
+                    modal.style.display = 'none';
                 });
 
             } catch (error) {
-                console.error('Gagal memuat form modal:', error);
-                modalContent.innerHTML = '<p style="text-align:center; color:red; padding:40px;">Gagal memuat form. Silakan muat ulang halaman.</p>';
+                console.error(error);
+                modalContent.innerHTML = '<div style="text-align:center; padding:40px; color:#ef4444;"><i class="fas fa-exclamation-triangle fa-2x"></i><br>Gagal memuat form.</div>';
             }
-        });
-    });
-
-    // Fungsi tutup modal
-    function closeModal() {
-        modal.style.display = 'none';
-        modalContent.innerHTML = '';
-    }
-    
-    if(closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
-    
-    window.addEventListener('click', function(event) {
-        if (event.target == modal) {
-            closeModal();
         }
     });
 
-    // Auto-hide alert sukses
+    if(closeModalBtn) {
+        closeModalBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
+    
+    window.addEventListener('click', (event) => {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // Auto Hide Alert
     const alertElement = document.getElementById('autoHideAlert');
     if (alertElement) {
         setTimeout(() => {
             alertElement.style.opacity = '0';
-            alertElement.style.transition = 'opacity 0.6s ease';
             setTimeout(() => alertElement.remove(), 600);
         }, 5000); 
     }

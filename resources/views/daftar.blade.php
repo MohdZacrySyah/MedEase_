@@ -20,7 +20,7 @@
             </div>
             <div class="hero-decoration">
                 <div class="pulse-ring pulse-1"></div>
-                <div class="pulse-ring pulse-2"><z/div>
+                <div class="pulse-ring pulse-2"></div>
                 <div class="pulse-ring pulse-3"></div>
                 <i class="fas fa-heartbeat"></i>
             </div>
@@ -166,6 +166,12 @@
         --p3: #0C5B00;
         --grad: linear-gradient(135deg, #39A616, #1D8208, #0C5B00);
         --grad-reverse: linear-gradient(135deg, #0C5B00, #1D8208, #39A616);
+        --bg-primary: #ffffff;
+        --bg-secondary: #f9fafb;
+        --bg-tertiary: #f3f4f6;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --text-muted: #9ca3af;
     }
     
     body { 
@@ -328,6 +334,12 @@
         color: var(--p3);
         background: linear-gradient(135deg, rgba(57, 166, 22, 0.15), rgba(57, 166, 22, 0.25));
         border: 2px solid rgba(57, 166, 22, 0.3);
+    }
+    
+    .alert-danger {
+        color: #721c24;
+        background: linear-gradient(135deg, rgba(231, 76, 60, 0.15), rgba(231, 76, 60, 0.25));
+        border: 2px solid rgba(231, 76, 60, 0.3);
     }
     
     .alert i { 
@@ -529,11 +541,11 @@
     .btn-daftar::before { 
         content: ''; 
         position: absolute; 
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        border-radius: 50%;
+        top: 50%; 
+        left: 50%; 
+        width: 0; 
+        height: 0; 
+        border-radius: 50%; 
         background: rgba(255, 255, 255, 0.3);
         transform: translate(-50%, -50%);
         transition: width 0.6s, height 0.6s;
@@ -1110,15 +1122,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 const data = await response.json();
 
                 // 2. ✅ Fetch closed dates (tanggal yang ditutup dokter)
-                const closedResponse = await fetch(`/jadwal-praktek/${jadwalId}/closed-dates`);
-                if (closedResponse.ok) {
-                    const closedData = await closedResponse.json();
-                    closedDates = closedData.closed_dates || [];
-                    console.log('Tanggal tertutup:', closedDates);
-                } else {
-                    closedDates = [];
-                    console.warn('Gagal mengambil tanggal tertutup');
-                }
+                // Pastikan data ini dikirim dari controller (getFormDataJson)
+                closedDates = data.closed_dates || [];
+                console.log('Tanggal tertutup:', closedDates);
 
                 const formHtml = `
                     <div class="form-header">
@@ -1183,33 +1189,46 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 modalContent.innerHTML = formHtml.replace('@csrf', '{{ csrf_field() }}');
 
-                // 3. ✅ Initialize Flatpickr dengan disable closed dates
+                // 3. ✅ Initialize Flatpickr dengan disable closed dates & Fix Timezone
                 if (flatpickrInstance) flatpickrInstance.destroy();
                 
                 flatpickrInstance = flatpickr("#modal_jadwal_datepicker", {
                     locale: { firstDayOfWeek: 1 },
                     minDate: "today",
                     dateFormat: "Y-m-d",
-                    disable: closedDates, // ✅ Disable tanggal yang ditutup dokter
-                    enable: [
+                    // ✅ Menonaktifkan tanggal yang ditutup dengan KONVERSI LOKAL YANG BENAR
+                    disable: [
                         function(date) {
-                            // Enable hanya hari praktek dokter
-                            const isEnabledDay = data.enabled_days.includes(date.getDay());
+                            // 1. Disable hari yang tidak praktek
+                            // flatpickr date.getDay(): 0=Minggu, 1=Senin
+                            return (!data.enabled_days.includes(date.getDay()));
+                        },
+                        function(date) {
+                            // 2. Disable tanggal Closed (dari Admin)
+                            // 🔥 FIX: Gunakan waktu lokal, bukan UTC (toISOString)
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            const dateString = `${year}-${month}-${day}`;
                             
-                            // Disable jika tanggal ada di closedDates
-                            const dateString = date.toISOString().split('T')[0];
-                            const isClosed = closedDates.includes(dateString);
-                            
-                            return isEnabledDay && !isClosed;
+                            return closedDates.includes(dateString);
                         }
                     ],
                     onDayCreate: function(dObj, dStr, fp, dayElem) {
-                        // Custom styling untuk tanggal yang ditutup
-                        const dateString = dayElem.dateObj.toISOString().split('T')[0];
+                        // Custom styling untuk tanggal yang ditutup (Visual Feedback)
+                        // 🔥 FIX: Gunakan waktu lokal yang sama untuk pengecekan
+                        const date = dayElem.dateObj;
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const dateString = `${year}-${month}-${day}`;
+
                         if (closedDates.includes(dateString)) {
-                            dayElem.style.textDecoration = 'line-through';
-                            dayElem.style.color = '#ef4444';
-                            dayElem.title = 'Dokter tidak tersedia';
+                            dayElem.innerHTML += "<span class='dot'></span>";
+                            dayElem.style.backgroundColor = "#fee2e2"; // Merah muda
+                            dayElem.style.color = "#ef4444"; // Merah teks
+                            dayElem.style.textDecoration = "line-through";
+                            dayElem.title = "Jadwal Dibatalkan/Tutup";
                         }
                     }
                 });
@@ -1224,7 +1243,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     dynamicForm.addEventListener('submit', function(e) {
                         e.preventDefault();
                         
-                        // ✅ Validasi tambahan di frontend
+                        // ✅ Validasi tambahan di frontend (Double Check)
                         const selectedDate = document.getElementById('modal_jadwal_datepicker').value;
                         
                         if (closedDates.includes(selectedDate)) {

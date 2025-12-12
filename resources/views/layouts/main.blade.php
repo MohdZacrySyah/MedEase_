@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}" />
     <title>@yield('title') - Praktek Bersama by Fathurrahman</title>
 
@@ -162,12 +163,6 @@
             align-items: center;
             justify-content: center;
             margin: 0 auto 15px;
-            /* animation: float 3s ease-in-out infinite; */
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-12px); }
         }
         
         .brand-logo img {
@@ -263,12 +258,6 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
             position: relative;
             z-index: 1;
-            /* animation: pulse 2s ease-in-out infinite; */
-        }
-        
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2); }
-            50% { box-shadow: 0 8px 25px rgba(57, 166, 22, 0.4); }
         }
         
         .sidebar-profile-pic {
@@ -799,9 +788,9 @@
                 $notifikasiCount = 0;
                 if(Auth::check()) {
                     $notifikasiCount = \App\Models\Pendaftaran::where('user_id', Auth::id())
-                                       ->where('status', '!=', 'Selesai')
-                                       ->whereDate('jadwal_dipilih', '>=', \Carbon\Carbon::today())
-                                       ->count();
+                                                           ->where('status', '!=', 'Selesai')
+                                                           ->whereDate('jadwal_dipilih', '>=', \Carbon\Carbon::today())
+                                                           ->count();
                 }
             @endphp
 
@@ -846,10 +835,10 @@
                     </a>
                 </li>
                 <li class="nav-item">
-    <a class="nav-link {{ request()->routeIs('chat.*') ? 'active' : '' }}" href="{{ route('chat.index') }}">
-        <i class="fas fa-comments"></i> Chat Dokter
-    </a>
-</li>
+                    <a class="nav-link {{ request()->routeIs('chat.*') ? 'active' : '' }}" href="{{ route('chat.index') }}">
+                        <i class="fas fa-comments"></i> Chat Dokter
+                    </a>
+                </li>
             </ul>
         </div>
 
@@ -1139,7 +1128,6 @@
                 reverseButtons: true,
                 backdrop: `
                     rgba(0,0,0,0.6)
-                    url("/images/logout-bg.png")
                     left top
                     no-repeat
                 `,
@@ -1192,7 +1180,55 @@
                 }
             });
         });
+        
     </script>
+
+    {{-- 🔥 SCRIPT PEMANGGILAN PASIEN OTOMATIS (POLLING) 🔥 --}}
+    @auth
+    <script>
+        // Cek status panggilan setiap 5 detik
+        setInterval(() => {
+            fetch('{{ route("check.panggilan") }}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.dipanggil) {
+                        // Mainkan suara notifikasi
+                        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Sound Effect Bell
+                        audio.play().catch(e => console.log('Audio autoplay blocked by browser policy'));
+
+                        // Tampilkan Pop-up Besar
+                        Swal.fire({
+                            title: '📢 GILIRAN ANDA!',
+                            html: `
+                                <div style="font-size: 1.1rem; line-height: 1.6;">
+                                    Halo <b>{{ Auth::user()->name }}</b>,<br>
+                                    Silakan masuk ke ruang periksa.<br><br>
+                                    <div style="background: #e8f5e9; padding: 15px; border-radius: 10px; border: 2px solid #39A616;">
+                                        <span style="font-size: 2.5rem; font-weight: 800; color: #39A616; display: block;">
+                                            NO. ${data.data.no_antrian}
+                                        </span>
+                                        <span style="color: #1D8208; font-weight: 600;">
+                                            ${data.data.nama_layanan}
+                                        </span>
+                                    </div>
+                                </div>
+                            `,
+                            icon: 'info',
+                            confirmButtonText: '<i class="fas fa-walking"></i> Saya Menuju Kesana',
+                            confirmButtonColor: '#39A616',
+                            allowOutsideClick: false,
+                            backdrop: `
+                                rgba(0,0,0,0.8)
+                                left top
+                                no-repeat
+                            `
+                        });
+                    }
+                })
+                .catch(err => console.error('Error polling:', err));
+        }, 5000); // 5000ms = 5 detik
+    </script>
+    @endauth
 
     @stack('scripts')
     

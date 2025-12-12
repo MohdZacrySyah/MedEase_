@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth; // Tambahkan ini untuk Auth di closure
+use Illuminate\Support\Facades\Redirect; // Tambahkan ini
+use Carbon\Carbon; // Tambahkan ini
 
 // --- Import Semua Controller yang Dibutuhkan ---
 use App\Http\Controllers\AuthController;
@@ -19,7 +22,6 @@ use App\Http\Controllers\Apoteker\Auth\LoginController as ApotekerLoginControlle
 use App\Http\Controllers\Apoteker\AntrianController;
 use App\Http\Controllers\Apoteker\RiwayatController;
 use App\Http\Controllers\Apoteker\LaporanController;
-use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\ChatController;
 
@@ -31,10 +33,6 @@ use App\Http\Controllers\Admin\JadwalController as AdminJadwalController;
 Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
-
-// Google OAuth Routes
-Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
-Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 /*
 |--------------------------------------------------------------------------
 | Rute Publik & Pasien
@@ -68,7 +66,7 @@ Route::controller(PendaftaranController::class)->group(function () {
     Route::get('/daftar-data/{jadwal}', 'getFormDataJson')->name('daftar.form.json');
     Route::get('/daftar/{jadwal}', 'showForm')->name('daftar.form');
     Route::post('/daftar', 'store')->name('daftar.store');
-    // ✅ TAMBAHKAN ROUTE INI (untuk get tanggal tertutup)
+    // ✅ Route untuk get tanggal tertutup
     Route::get('/jadwal-praktek/{jadwalPraktek}/closed-dates', 'getClosedDates')->name('jadwal.closed-dates');
 });
 
@@ -83,9 +81,20 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/notifikasi-jadwal', [AuthController::class, 'notifikasiList'])->name('notifikasi.list');
     Route::get('/notifikasi-jadwal/{pendaftaran}', [AuthController::class, 'notifikasiDetail'])->name('notifikasi.detail');
 
-    
-// Route ini menangani halaman chat utama & saat memilih user
-    
+    // 🔥 ROUTE BARU: Polling Panggilan Antrian (Untuk Pop-up Pasien)
+    Route::get('/check-panggilan', function () {
+        $user = Auth::user();
+        // Cari pendaftaran hari ini milik user yang status_panggilan = 'dipanggil'
+        $panggilan = \App\Models\Pendaftaran::where('user_id', $user->id)
+            ->whereDate('jadwal_dipilih', Carbon::today())
+            ->where('status_panggilan', 'dipanggil')
+            ->first();
+            
+        return response()->json([
+            'dipanggil' => $panggilan ? true : false,
+            'data' => $panggilan
+        ]);
+    })->name('check.panggilan');
 });
 
 
@@ -121,7 +130,6 @@ Route::middleware(['auth:tenaga_medis'])
     ->group(function () {
     
     // 👇 ROUTE PEMBATALAN JADWAL (AdminJadwalController)
-    // Walaupun namanya AdminJadwalController, ini bisa digunakan oleh Tenaga Medis (jika role-nya sesuai)
     Route::post('/jadwal/cancel', [AdminJadwalController::class, 'cancelJadwal'])->name('jadwal.cancel'); 
     
     Route::get('/pasien/{pendaftaran}', [TenagaMedisController::class, 'detailPasien'])->name('pasien.show'); 
@@ -133,7 +141,7 @@ Route::middleware(['auth:tenaga_medis'])
     Route::get('/riwayat-pemeriksaan-saya', [TenagaMedisController::class, 'myPemeriksaanHistory'])->name('riwayat-pemeriksaan-saya');
     Route::get('/laporan', [TenagaMedisController::class, 'laporan'])->name('laporan');
     Route::get('/pemeriksaan/json/{pendaftaran}', [PemeriksaanController::class, 'getModalDataJson'])
-             ->name('pemeriksaan.json'); // Seharusnya 'pemeriksaan.json'
+             ->name('pemeriksaan.json');
     Route::get('/riwayat-pemeriksaan', [RiwayatPemeriksaanController::class, 'index'])
              ->name('riwayat.index');
 });
@@ -148,7 +156,6 @@ Route::middleware(['auth:tenaga_medis'])
 Route::get('/admin/login', [AdminController::class, 'showLoginForm'])->name('admin.login');
 Route::post('/admin/login', [AdminController::class, 'login'])->name('admin.login.post');
 
-// --- TAMBAHKAN BLOK INI ---
 // Rute Lupa Password Admin
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('forgot-password', [AdminController::class, 'showLinkRequestForm'])->name('password.request');
@@ -158,23 +165,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // Rute Lupa Password Pasien (Alur OTP)
-Route::get('forgot-password', [AuthController::class, 'showForgotPasswordForm'])
-     ->name('password.request'); // Form minta email
-
-Route::post('forgot-password', [AuthController::class, 'sendOtp'])
-     ->name('password.send_otp'); // Kirim OTP ke email
-
-Route::get('verify-otp', [AuthController::class, 'showVerifyOtpForm'])
-     ->name('password.verify.form'); // Form masukkan OTP
-
-Route::post('verify-otp', [AuthController::class, 'verifyOtp'])
-     ->name('password.verify.otp'); // Cek OTP
-
-Route::get('reset-password', [AuthController::class, 'showResetPasswordForm'])
-     ->name('password.reset.form'); // Form ganti password baru (setelah OTP benar)
-
-Route::post('reset-password', [AuthController::class, 'updatePassword'])
-     ->name('password.update'); // Simpan password baru
+Route::get('forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
+Route::post('forgot-password', [AuthController::class, 'sendOtp'])->name('password.send_otp');
+Route::get('verify-otp', [AuthController::class, 'showVerifyOtpForm'])->name('password.verify.form');
+Route::post('verify-otp', [AuthController::class, 'verifyOtp'])->name('password.verify.otp');
+Route::get('reset-password', [AuthController::class, 'showResetPasswordForm'])->name('password.reset.form');
+Route::post('reset-password', [AuthController::class, 'updatePassword'])->name('password.update');
 
 Route::get('/admin/logout', [AdminController::class, 'logout'])->name('admin.logout'); 
 
@@ -182,10 +178,13 @@ Route::get('/admin/logout', [AdminController::class, 'logout'])->name('admin.log
 // CATATAN: Middleware auth:admin harus ada
 Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
     
-    // 👇 ROUTE PEMBATALAN JADWAL (AdminJadwalController)
-    // Akan diakses melalui /admin/jadwal/cancel
+    // Route Pembatalan Jadwal
     Route::post('/jadwal/cancel', [AdminJadwalController::class, 'cancelJadwal'])->name('jadwal.cancel'); 
     
+    // 🔥 ROUTE BARU: Sistem Pemanggilan Antrian
+    Route::post('/panggil-pasien/{id}', [AdminController::class, 'panggilPasien'])->name('panggil.pasien');
+    Route::post('/alihkan-pasien/{id}', [AdminController::class, 'alihkanPasien'])->name('alihkan.pasien');
+
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/keloladatapasien', [AdminController::class, 'keloladatapasien'])->name('keloladatapasien');
     Route::get('/pasien/{user}/riwayat', [AdminController::class, 'riwayatPasien'])->name('pasien.riwayat');
@@ -205,34 +204,20 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
 |--------------------------------------------------------------------------
 */
 Route::prefix('apoteker')->name('apoteker.')->group(function () {
-    
     // Rute Login
-    Route::get('login', [ApotekerLoginController::class, 'showLoginForm'])
-             ->name('login');
+    Route::get('login', [ApotekerLoginController::class, 'showLoginForm'])->name('login');
     Route::post('login', [ApotekerLoginController::class, 'login']);
     
     // Rute Logout (harus diakses setelah login)
     Route::post('logout', [ApotekerLoginController::class, 'logout'])
              ->name('logout')
-             ->middleware('auth:apoteker'); // Lindungi rute logout
+             ->middleware('auth:apoteker'); 
 
-    // ===== PERBAIKAN: RUTE LUPA PASSWORD DIPINDAHKAN KE SINI =====
-    
-    // Form untuk memasukkan email
-    Route::get('forgot-password', [ApotekerLoginController::class, 'showLinkRequestForm'])
-             ->name('password.request'); // apoteker.password.request
-
-    // Proses pengiriman email
-    Route::post('forgot-password', [ApotekerLoginController::class, 'sendResetLinkEmail'])
-             ->name('password.email');
-
-    // Form untuk memasukkan password baru (dari link di email)
-    Route::get('reset-password/{token}', [ApotekerLoginController::class, 'showResetForm'])
-             ->name('password.reset');
-
-    // Proses penyimpanan password baru
-    Route::post('reset-password', [ApotekerLoginController::class, 'reset'])
-             ->name('password.update');
+    // Rute Lupa Password
+    Route::get('forgot-password', [ApotekerLoginController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('forgot-password', [ApotekerLoginController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('reset-password/{token}', [ApotekerLoginController::class, 'showResetForm'])->name('password.reset');
+    Route::post('reset-password', [ApotekerLoginController::class, 'reset'])->name('password.update');
 });
 
 /*
@@ -241,7 +226,6 @@ Route::prefix('apoteker')->name('apoteker.')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth:apoteker'])->prefix('apoteker')->name('apoteker.')->group(function () {
-    
     // 1. Redirect /dashboard ke halaman Antrian
     Route::get('dashboard', function () {
         return Redirect::route('apoteker.antrian.index');
@@ -257,6 +241,4 @@ Route::middleware(['auth:apoteker'])->prefix('apoteker')->name('apoteker.')->gro
     
     // 4. Rute Laporan
     Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
-    
-    // RUTE LUPA PASSWORD SUDAH DIPINDAHKAN DARI SINI
 });
