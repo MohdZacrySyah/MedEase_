@@ -1,5 +1,4 @@
 @extends('layouts.admin')
-
 @section('title', 'Kelola Antrian & Pemeriksaan')
 
 @push('styles')
@@ -9,7 +8,7 @@
 
 @section('content')
 
-    {{-- HEADER BANNER (KONSISTEN) --}}
+    {{-- HEADER BANNER --}}
     <div class="dashboard-header-banner">
         <div class="header-content">
             <div class="header-icon">
@@ -22,8 +21,8 @@
                 </div>
                 <h1 class="page-title">Kelola Antrian & Data 📋</h1>
                 <p class="page-subtitle">
-                    <i class="far fa-calendar-check"></i>
-                    Panggil pasien dan input pemeriksaan awal secara real-time
+                    <i class="far fa-calendar-alt"></i>
+                    Panggil pasien dan input data pemeriksaan awal
                 </p>
             </div>
             <div class="hero-illustration">
@@ -31,7 +30,7 @@
                 <div class="pulse-circle pulse-2"></div>
                 <div class="pulse-circle pulse-3"></div>
                 <div class="time-widget">
-                    <i class="fas fa-clipboard-check"></i>
+                    <i class="fas fa-notes-medical"></i>
                     <span>Input Data</span>
                 </div>
             </div>
@@ -41,14 +40,13 @@
     {{-- FILTER SECTION --}}
     <div class="stats-section">
         <div class="section-header">
-            <h2><i class="fas fa-filter"></i> Filter Antrian</h2>
+            <h2><i class="fas fa-filter"></i> Filter Data</h2>
         </div>
         <div class="filter-card-modern">
             <form action="{{ route('admin.catatanpemeriksaan') }}" method="GET" class="filter-form-modern">
                 <div class="filter-input-wrapper">
                     <label for="tanggalFilter" class="filter-label">
-                        <i class="fas fa-calendar-alt"></i>
-                        Tampilkan Antrian untuk Tanggal:
+                        <i class="fas fa-calendar-alt"></i> Pilih Tanggal:
                     </label>
                     <div class="input-with-icon">
                         <i class="fas fa-calendar-day"></i>
@@ -57,12 +55,10 @@
                 </div>
                 <div class="filter-button-group">
                     <button type="submit" class="btn-filter-modern btn-primary-filter">
-                        <i class="fas fa-search"></i>
-                        <span>Filter</span>
+                        <i class="fas fa-search"></i> Filter
                     </button>
                     <a href="{{ route('admin.catatanpemeriksaan') }}" class="btn-filter-modern btn-secondary-filter">
-                        <i class="fas fa-redo"></i>
-                        <span>Reset</span>
+                        <i class="fas fa-redo"></i> Reset
                     </a>
                 </div>
             </form>
@@ -72,17 +68,13 @@
     {{-- ALERT SUCCESS --}}
     @if (session('success'))
         <div class="alert-success-modern" id="autoHideAlert">
-            <div class="alert-icon">
-                <i class="fas fa-check-circle"></i>
-            </div>
+            <div class="alert-icon"><i class="fas fa-check-circle"></i></div>
             <span class="alert-text">{{ session('success') }}</span>
-            <button class="alert-close-btn" onclick="this.parentElement.remove()">
-                <i class="fas fa-times"></i>
-            </button>
+            <button class="alert-close-btn" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
         </div>
     @endif
 
-    {{-- MAIN CONTENT: TABS & TABLES --}}
+    {{-- MAIN CONTENT --}}
     <div class="schedule-section">
         <div class="section-header">
             <h2><i class="fas fa-stethoscope"></i> Antrian Per Layanan</h2>
@@ -94,7 +86,7 @@
             <div class="tabs-wrapper">
                 @foreach ($pendaftarans as $layanan => $listPendaftaran)
                     <button class="tab-btn {{ $loop->first ? 'active' : '' }}" onclick="openTab(event, 'tab-{{ Str::slug($layanan) }}')">
-                        <i class="fas fa-user-md"></i>
+                        <i class="fas fa-hospital-user"></i>
                         {{ $layanan }}
                         <span class="tab-count">{{ count($listPendaftaran) }}</span>
                     </button>
@@ -123,10 +115,10 @@
                                     <thead>
                                         <tr>
                                             <th><i class="fas fa-hashtag"></i> Antrian</th>
-                                            <th><i class="fas fa-user"></i> Nama Pasien</th>
+                                            <th><i class="fas fa-user"></i> Pasien</th>
                                             <th><i class="fas fa-info-circle"></i> Status</th>
-                                            <th class="text-center"><i class="fas fa-bullhorn"></i> Panggil</th>
-                                            <th class="text-center"><i class="fas fa-edit"></i> Aksi Data</th>
+                                            <th class="text-center"><i class="fas fa-bullhorn"></i> Aksi Panggil</th>
+                                            <th class="text-center"><i class="fas fa-cog"></i> Aksi Data</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -156,7 +148,7 @@
                                                     </div>
                                                 </td>
 
-                                                {{-- Status & Panggilan --}}
+                                                {{-- Status --}}
                                                 <td>
                                                     @if($pendaftaran->status == 'Menunggu')
                                                         <span class="status-badge-modern status-waiting">
@@ -166,47 +158,54 @@
                                                         <span class="status-badge-modern status-checking">
                                                             <i class="fas fa-stethoscope"></i> {{ $pendaftaran->status }}
                                                         </span>
-                                                    @elseif($pendaftaran->status == 'Selesai')
+                                                    @else
                                                         <span class="status-badge-modern status-done">
                                                             <i class="fas fa-check-circle"></i> {{ $pendaftaran->status }}
-                                                        </span>
-                                                    @else
-                                                        <span class="status-badge-modern" style="background:#f3f4f6; color:#6b7280; border:1px solid #e5e7eb;">
-                                                            {{ $pendaftaran->status }}
                                                         </span>
                                                     @endif
 
                                                     @if($pendaftaran->status_panggilan == 'dipanggil')
-                                                        <br><div class="call-status-badge">
+                                                        <br><span class="badge-call-status">
                                                             <i class="fas fa-volume-up"></i> Dipanggil ({{ $pendaftaran->jumlah_panggilan }}x)
-                                                        </div>
+                                                        </span>
                                                     @elseif($pendaftaran->status_panggilan == 'dialihkan')
-                                                        <br><div class="call-status-badge call-status-skipped">
+                                                        <br><span class="badge-call-status badge-skipped">
                                                             <i class="fas fa-forward"></i> Dialihkan
-                                                        </div>
+                                                        </span>
                                                     @endif
                                                 </td>
 
-                                                {{-- Aksi Panggil --}}
+                                                {{-- AKSI PANGGIL (3 TOMBOL TERPISAH) --}}
                                                 <td class="text-center">
                                                     @if(!in_array($pendaftaran->status, ['Selesai', 'Dibatalkan']))
                                                         <div class="action-group">
+                                                            
+                                                            {{-- 1. Tombol Panggil (Selalu Ada) --}}
                                                             <button onclick="panggilPasien(this, {{ $pendaftaran->id }})" class="btn-call-modern" title="Panggil Pasien">
                                                                 <i class="fas fa-bullhorn"></i> Panggil
                                                             </button>
-                                                            
+
+                                                            {{-- 2. Tombol Hadir (Muncul jika sedang dipanggil) --}}
+                                                            @if($pendaftaran->status_panggilan == 'dipanggil')
+                                                                <button onclick="stopPanggil(this, {{ $pendaftaran->id }})" class="btn-stop-call" title="Pasien Hadir">
+                                                                    <i class="fas fa-check"></i> Hadir
+                                                                </button>
+                                                            @endif
+
+                                                            {{-- 3. Tombol Skip (Muncul jika sudah dipanggil 2x) --}}
                                                             @if($pendaftaran->jumlah_panggilan >= 2)
-                                                                <button onclick="alihkanPasien({{ $pendaftaran->id }})" class="btn-skip-modern" title="Lewati / Alihkan">
+                                                                <button onclick="alihkanPasien({{ $pendaftaran->id }})" class="btn-skip-modern" title="Lewati Pasien">
                                                                     <i class="fas fa-forward"></i> Skip
                                                                 </button>
                                                             @endif
+
                                                         </div>
                                                     @else
-                                                        <span style="font-size: 0.9rem; font-style: italic; color: var(--text-muted);">Selesai</span>
+                                                        <span style="font-size: 0.85rem; font-style: italic; color: var(--text-muted);">-</span>
                                                     @endif
                                                 </td>
 
-                                                {{-- Aksi Input Data --}}
+                                                {{-- Aksi Data --}}
                                                 <td class="text-center">
                                                     @if($pendaftaran->status == 'Menunggu' || $pendaftaran->status == 'Diperiksa Awal')
                                                         <button type="button" 
@@ -227,7 +226,7 @@
                                                 <td colspan="5">
                                                     <div class="empty-schedule">
                                                         <i class="fas fa-inbox"></i>
-                                                        <p>Tidak ada antrian pasien saat ini</p>
+                                                        <p>Tidak ada antrian untuk layanan ini</p>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -241,23 +240,16 @@
             @endforeach
 
         @else
-            {{-- EMPTY STATE --}}
             <div class="alert-info-modern">
-                <div class="alert-icon">
-                    <i class="fas fa-info-circle"></i>
-                </div>
+                <div class="alert-icon"><i class="fas fa-info-circle"></i></div>
                 <div class="alert-text">
-                    @if($tanggal ?? null)
-                        Tidak ada pendaftaran pasien untuk tanggal {{ \Carbon\Carbon::parse($tanggal)->isoFormat('D MMMM YYYY') }}.
-                    @else
-                        Belum ada pendaftaran pasien sama sekali.
-                    @endif
+                    Tidak ada data pendaftaran pasien untuk tanggal {{ \Carbon\Carbon::parse($tanggal ?? now())->isoFormat('D MMMM YYYY') }}.
                 </div>
             </div>
         @endif
     </div>
 
-    {{-- MODAL INPUT PEMERIKSAAN AWAL --}}
+    {{-- MODAL --}}
     <div id="periksaAwalModal" class="modal-overlay">
         <div class="modal-card">
             <span class="close-modal" id="closeModalBtn">&times;</span>
@@ -271,7 +263,7 @@
 
 @push('styles')
 <style>
-    /* ===== COMPLETE CSS FROM PREVIOUS DESIGN ===== */
+    /* ===== COMPLETE CSS SYSTEM ===== */
     * { 
         box-sizing: border-box;
         margin: 0;
@@ -1038,12 +1030,13 @@
         border-color: rgba(46, 204, 113, 0.4);
     }
 
-    /* ===== CALLING SYSTEM BUTTONS ===== */
+    /* ===== CALLING SYSTEM BUTTONS (3 TOMBOL TERPISAH) ===== */
     .action-group {
         display: flex;
         gap: 8px;
         justify-content: center;
         flex-wrap: wrap;
+        align-items: center;
     }
 
     .btn-call-modern {
@@ -1074,6 +1067,27 @@
         box-shadow: none;
     }
 
+    .btn-stop-call {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 14px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-stop-call:hover { 
+        transform: translateY(-2px); 
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4); 
+    }
+
     .btn-skip-modern {
         background: linear-gradient(135deg, #f59e0b, #d97706);
         color: white;
@@ -1095,7 +1109,7 @@
         box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4); 
     }
 
-    .call-status-badge {
+    .badge-call-status {
         font-size: 0.8rem;
         padding: 6px 12px;
         border-radius: 20px;
@@ -1109,7 +1123,7 @@
         border: 1px solid #bfdbfe;
     }
 
-    .call-status-skipped {
+    .badge-skipped {
         color: #d97706;
         background: #fffbeb;
         border-color: #fcd34d;
@@ -1426,6 +1440,8 @@
         .modal-card { width: 95%; margin: 20px; }
         #modalFormContent { padding: 0 20px 30px 20px; }
         .form-grid { grid-template-columns: 1fr; }
+        .action-group { flex-direction: column; }
+        .btn-call-modern, .btn-stop-call, .btn-skip-modern { width: 100%; justify-content: center; }
     }
 
     @media (max-width: 576px) {
@@ -1445,7 +1461,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    // --- 1. LOGIKA TABS NAVIGASI ---
+    // --- 1. TAB NAVIGATION ---
     function openTab(evt, tabName) {
         var i, tabcontent, tablinks;
         
@@ -1471,7 +1487,7 @@
         if(evt) evt.currentTarget.className += " active";
     }
 
-    // --- 2. SISTEM PEMANGGILAN (CALLING SYSTEM) ---
+    // --- 2. CALLING SYSTEM ---
     window.panggilPasien = function(btnElement, id) {
         const originalContent = btnElement.innerHTML;
         btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
@@ -1514,12 +1530,52 @@
             btnElement.disabled = false;
             Swal.fire('Error', 'Terjadi kesalahan koneksi', 'error');
         });
-    };
+    }
+
+    window.stopPanggil = function(btnElement, id) {
+        const originalContent = btnElement.innerHTML;
+        btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btnElement.disabled = true;
+
+        fetch(`/admin/stop-panggil/${id}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                Swal.fire({
+                    title: 'Selesai',
+                    text: 'Panggilan dihentikan. Pasien ditandai hadir.',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    position: 'top-end',
+                    toast: true
+                }).then(() => {
+                    location.reload(); 
+                });
+            } else {
+                btnElement.innerHTML = originalContent;
+                btnElement.disabled = false;
+                Swal.fire('Error', 'Gagal menghentikan panggilan', 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            btnElement.innerHTML = originalContent;
+            btnElement.disabled = false;
+            Swal.fire('Error', 'Terjadi kesalahan koneksi', 'error');
+        });
+    }
 
     window.alihkanPasien = function(id) {
         Swal.fire({
             title: 'Lewati Pasien?',
-            text: "Status pasien akan diubah menjadi 'Dialihkan'.",
+            text: "Status akan diubah menjadi 'Dialihkan'.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#f59e0b',
@@ -1548,7 +1604,7 @@
                 });
             }
         });
-    };
+    }
 
     // --- 3. FLATPICKR ---
     flatpickr("#tanggalFilter", {
@@ -1559,7 +1615,7 @@
         locale: { firstDayOfWeek: 1 }
     });
 
-    // --- 4. MODAL PEMERIKSAAN ---
+    // --- 4. MODAL ---
     const modal = document.getElementById('periksaAwalModal');
     const modalContent = document.getElementById('modalFormContent');
     const closeModalBtn = document.getElementById('closeModalBtn');

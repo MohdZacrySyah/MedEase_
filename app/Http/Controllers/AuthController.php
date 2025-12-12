@@ -10,7 +10,7 @@ use App\Models\User;
 use App\Models\Pendaftaran;
 use App\Models\Pemeriksaan;
 use App\Models\JadwalPraktek;
-use App\Models\DoctorAvailability; // 🔥 Import Model Ini (PENTING)
+use App\Models\DoctorAvailability; // 🔥 Import Model Ini
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -196,7 +196,7 @@ class AuthController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | FUNGSI PANEL PASIEN (Setelah Login)
+    | FUNGSI PANEL PASIEN (DIPERBARUI)
     |--------------------------------------------------------------------------
     */
     public function dashboard()
@@ -209,7 +209,6 @@ class AuthController extends Controller
         $today = Carbon::today(); // Ambil tanggal hari ini
 
         // 🔥 LOGIKA BARU: Filter Dokter yang Jadwalnya Dibatalkan/Ditutup Hari Ini 🔥
-        // Ambil ID dokter yang is_available = 0 pada tanggal hari ini
         $unavailableDoctorIds = DoctorAvailability::whereDate('date', $today)
             ->where('is_available', false)
             ->pluck('tenaga_medis_id')
@@ -266,29 +265,27 @@ class AuthController extends Controller
     }
 
     /**
-     * Menampilkan daftar notifikasi dari database (Pembatalan) DAN Pendaftaran Aktif (Jadwal).
+     * Menampilkan daftar notifikasi.
      */
     public function notifikasiList()
     {
         $user = Auth::user();
         $userId = $user->id;
         
-        // 1. Notifikasi Database (Pembatalan/Pembaruan) - Ambil semua data mentah
+        // 1. Notifikasi Database (Pembatalan/Pembaruan)
         $notificationsDb = $user->notifications()->latest()->get();
         
-        // 2. Pendaftaran Aktif (Jadwal Aktif) - Ambil semua data mentah
-        // Pastikan hanya mengambil status yang benar-benar aktif
+        // 2. Pendaftaran Aktif (Jadwal Aktif)
         $pendaftaranAktif = Pendaftaran::where('user_id', $userId)
-                                    ->whereIn('status', ['Menunggu', 'Diperiksa Awal']) // Status aktif
+                                    ->whereIn('status', ['Menunggu', 'Diperiksa Awal']) 
                                     ->whereDate('jadwal_dipilih', '>=', Carbon::today()) 
                                     ->with('jadwalPraktek.tenagaMedis') 
                                     ->orderBy('created_at', 'desc')
                                     ->get();
         
-        // 3. Gabungkan kedua data dan transform ke format yang sama
         $allNotifications = collect();
         
-        // Transform notifikasi database
+        // Transform notifikasi DB
         foreach ($notificationsDb as $notif) {
             $data = $notif->data;
             
@@ -339,10 +336,8 @@ class AuthController extends Controller
             ]);
         }
         
-        // 4. Urutkan berdasarkan created_at (terbaru di atas)
         $allNotifications = $allNotifications->sortByDesc('created_at');
         
-        // 5. Manual pagination (15 item per halaman)
         $perPage = 15;
         $currentPage = request()->get('page', 1);
         $paginatedNotifications = new \Illuminate\Pagination\LengthAwarePaginator(
@@ -356,75 +351,58 @@ class AuthController extends Controller
         return view('notifikasi_list', compact('paginatedNotifications'));
     }
 
-    
-    /**
-     * Dipanggil via AJAX untuk menandai notifikasi DB sebagai sudah dibaca.
-     */
     public function markNotificationAsRead(Request $request, $notificationId)
     {
         $user = Auth::user();
-        
-        // Cari notifikasi DB yang sesuai dengan user dan ID yang diberikan
         $notification = $user->notifications()->where('id', $notificationId)->first();
         
         if ($notification) {
             $notification->markAsRead();
             return response()->json(['success' => true]);
         }
-
         return response()->json(['success' => false, 'message' => 'Notification not found'], 404);
     }
     
-    public function notifikasiDetail($pendaftaranId)
-    {
-        return redirect()->route('notifikasi.list');
-    }
+    public function notifikasiDetail($pendaftaranId) { return redirect()->route('notifikasi.list'); }
     
-    public function showProfile()
-    {
+    public function showProfile() { $user = Auth::user(); return view('profil', compact('user')); }
+    public function editProfile() { $user = Auth::user(); return view('profil_edit', compact('user')); }
+    
+    public function updateProfile(Request $request) {
         $user = Auth::user();
-        return view('profil', compact('user'));
-    }
-
-    public function editProfile()
-    {
-        $user = Auth::user();
-        return view('profil_edit', compact('user')); 
-    }
-
-    public function updateProfile(Request $request)
-    {
-        $user = Auth::user();
-
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'tanggal_lahir' => 'nullable|date', 
             'alamat' => 'nullable|string',
             'no_hp' => 'nullable|string|max:15',
         ]);
-
         $user->update($validatedData);
-
         return redirect()->route('profil')->with('success', 'Profil berhasil diperbarui!');
     }
-
-    public function updatePhoto(Request $request)
-    {
-        $request->validate([
-            'profile_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', 
-        ]);
-
+    
+    public function updatePhoto(Request $request) {
+        $request->validate(['profile_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048']);
         $user = Auth::user();
-
         if ($user->profile_photo_path && Storage::disk('public')->exists($user->profile_photo_path)) {
             Storage::disk('public')->delete($user->profile_photo_path);
         }
-
         $path = $request->file('profile_photo')->store('profil-photos', 'public'); 
-
         $user->profile_photo_path = $path;
         $user->save();
-
         return redirect()->route('profil')->with('success', 'Foto profil berhasil diperbarui!');
+    }
+    public function konfirmasiDatang($id)
+    {
+        $pendaftaran = Pendaftaran::findOrFail($id);
+        
+        // Pastikan yang konfirmasi adalah pemilik akun
+        if ($pendaftaran->user_id == Auth::id()) {
+            $pendaftaran->status_panggilan = 'menunggu'; // Reset status agar notifikasi berhenti
+            $pendaftaran->save();
+            
+            return response()->json(['success' => true]);
+        }
+        
+        return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
     }
 }

@@ -1183,18 +1183,23 @@
         
     </script>
 
-    {{-- 🔥 SCRIPT PEMANGGILAN PASIEN OTOMATIS (POLLING) 🔥 --}}
+   {{-- 🔥 SCRIPT PEMANGGILAN PASIEN OTOMATIS (POLLING) & KONFIRMASI 🔥 --}}
     @auth
     <script>
         // Cek status panggilan setiap 5 detik
         setInterval(() => {
+            // Cek apakah SweetAlert sedang terbuka agar tidak menumpuk popup
+            if (Swal.isVisible()) {
+                return; 
+            }
+
             fetch('{{ route("check.panggilan") }}')
                 .then(response => response.json())
                 .then(data => {
                     if (data.dipanggil) {
                         // Mainkan suara notifikasi
-                        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Sound Effect Bell
-                        audio.play().catch(e => console.log('Audio autoplay blocked by browser policy'));
+                        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); 
+                        audio.play().catch(e => console.log('Audio autoplay blocked'));
 
                         // Tampilkan Pop-up Besar
                         Swal.fire({
@@ -1202,7 +1207,7 @@
                             html: `
                                 <div style="font-size: 1.1rem; line-height: 1.6;">
                                     Halo <b>{{ Auth::user()->name }}</b>,<br>
-                                    Silakan masuk ke ruang periksa.<br><br>
+                                    Silakan menuju ke staff admin.<br><br>
                                     <div style="background: #e8f5e9; padding: 15px; border-radius: 10px; border: 2px solid #39A616;">
                                         <span style="font-size: 2.5rem; font-weight: 800; color: #39A616; display: block;">
                                             NO. ${data.data.no_antrian}
@@ -1217,11 +1222,39 @@
                             confirmButtonText: '<i class="fas fa-walking"></i> Saya Menuju Kesana',
                             confirmButtonColor: '#39A616',
                             allowOutsideClick: false,
-                            backdrop: `
-                                rgba(0,0,0,0.8)
-                                left top
-                                no-repeat
-                            `
+                            backdrop: `rgba(0,0,0,0.8) left top no-repeat`,
+                            
+                            // 🔥 AKSI SAAT TOMBOL DIKLIK
+                            preConfirm: () => {
+                                return fetch(`/konfirmasi-datang/${data.data.id}`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                        'Content-Type': 'application/json'
+                                    }
+                                })
+                                .then(response => {
+                                    if (!response.ok) {
+                                        throw new Error(response.statusText)
+                                    }
+                                    return response.json()
+                                })
+                                .catch(error => {
+                                    Swal.showValidationMessage(
+                                        `Request failed: ${error}`
+                                    )
+                                })
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                Swal.fire({
+                                    title: 'Terima Kasih!',
+                                    text: 'Segera menuju ke staff admin.',
+                                    icon: 'success',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                            }
                         });
                     }
                 })

@@ -11,7 +11,7 @@ use App\Models\Admin;
 use App\Models\User;
 use App\Models\Pemeriksaan;
 use App\Models\TenagaMedis;
-use App\Models\DoctorAvailability; // 🔥 Pastikan Model ini di-import
+use App\Models\DoctorAvailability;
 use Illuminate\Support\Facades\DB;
 use App\Models\Layanan;
 use Illuminate\Support\Facades\Route;
@@ -31,8 +31,7 @@ class AdminController extends Controller
         Carbon::setLocale('id');
         $namaHariIni = Carbon::now()->translatedFormat('l');
 
-        // 🔥 LOGIKA BARU: Cari Dokter yang TUTUP/LIBUR Hari Ini
-        // Kita cari di tabel doctor_availabilities siapa saja yang is_available = 0 pada tanggal hari ini
+        // 🔥 Cek Dokter Libur Hari Ini
         $unavailableDoctorIds = DoctorAvailability::whereDate('date', $today)
             ->where('is_available', false)
             ->pluck('tenaga_medis_id')
@@ -55,21 +54,19 @@ class AdminController extends Controller
                                  ->orWhereNull('role')
                                  ->count();
 
-        // 🔥 PERBAIKAN: Hitung Dokter Aktif (Kecuali yang Libur/Batal Hari Ini)
+        // Hitung Dokter Aktif (Kecuali yang Libur)
         $jumlahDokterAktifHariIni = JadwalPraktek::whereJsonContains('hari', $namaHariIni)
-                                                ->whereNotIn('tenaga_medis_id', $unavailableDoctorIds) // Filter Dokter Libur
+                                                ->whereNotIn('tenaga_medis_id', $unavailableDoctorIds)
                                                 ->distinct('tenaga_medis_id')
                                                 ->count('tenaga_medis_id');
         
-        // Menghitung total pemeriksaan tahun ini (agar tidak error undefined variable)
         $pemeriksaanTahunIni = Pemeriksaan::whereYear('created_at', Carbon::now()->year)->count();
 
 
-        // 4. AMBIL DATA UNTUK TABEL
-        // 🔥 PERBAIKAN: Jangan tampilkan jadwal dokter yang libur hari ini di tabel
+        // 4. AMBIL DATA UNTUK TABEL DASHBOARD
         $jadwalHariIni = JadwalPraktek::with('tenagaMedis')
                                       ->whereJsonContains('hari', $namaHariIni)
-                                      ->whereNotIn('tenaga_medis_id', $unavailableDoctorIds) // Filter Dokter Libur
+                                      ->whereNotIn('tenaga_medis_id', $unavailableDoctorIds)
                                       ->get();
                                       
         $pendaftaranMenunggu = Pendaftaran::with('user')
@@ -88,13 +85,11 @@ class AdminController extends Controller
             'jumlahTenagaMedis',
             'jumlahTotalPasien',
             'jumlahDokterAktifHariIni',
-            'pemeriksaanTahunIni', // Sudah didefinisikan di atas
+            'pemeriksaanTahunIni',
             'jadwalHariIni',
             'pendaftaranMenunggu'
         ));
     }
-
-    // ... (method-method Anda yang lain tidak berubah) ...
 
     public function showLoginForm()
     {
@@ -127,10 +122,8 @@ class AdminController extends Controller
     public function keloladatapasien(Request $request)
     {
         $search = $request->input('search');
-
         $query = User::where(function ($q) {
-            $q->where('role', 'pasien')
-              ->orWhereNull('role'); 
+            $q->where('role', 'pasien')->orWhereNull('role'); 
         });
 
         if ($search) {
@@ -142,28 +135,77 @@ class AdminController extends Controller
 
         $pasiens = $query->orderBy('created_at', 'desc')->paginate(8);
 
-        return view('admin.keloladatapasien', [
-            'pasiens' => $pasiens,
-            'search' => $search,
-        ]);
+        return view('admin.keloladatapasien', compact('pasiens', 'search'));
     }
 
+    // ==========================================
+    // 🔥 PERBAIKAN: SUMBER DATA LAYANAN DARI JADWAL 🔥
+    // ==========================================
     public function catatanpemeriksaan(Request $request)
     {
         $tanggal = $request->input('tanggal'); 
+        
+        // Default hari ini jika tidak ada filter
+        $targetDate = $tanggal ? $tanggal : Carbon::today();
 
-        $query = Pendaftaran::with(['user', 'jadwalPraktek.tenagaMedis']);
+        // 1. Ambil SEMUA Layanan dari JADWAL PRAKTEK (Bukan tabel Layanan)
+        // Ini memastikan tab muncul sesuai layanan yang punya jadwal dokter
+        $semuaLayanan = JadwalPraktek::select('layanan')
+                                     ->distinct()
+                                     ->orderBy('layanan', 'asc')
+                                     ->pluck('layanan');
 
-        if ($tanggal) {
-            $query->whereDate('jadwal_dipilih', $tanggal);
+        // 2. Ambil Pendaftaran pada tanggal tersebut
+        $query = Pendaftaran::with(['user', 'jadwalPraktek.tenagaMedis'])
+                            ->whereDate('jadwal_dipilih', $targetDate);
+
+        // Grouping data pendaftaran
+        $pendaftaransGrouped = $query->orderByRaw("FIELD(status, 'Menunggu', 'Diperiksa Awal', 'Selesai')")
+                                     ->orderBy('no_antrian', 'asc')
+                                     ->get()
+                                     ->groupBy('nama_layanan');
+
+        // 3. Gabungkan: Pastikan setiap layanan dari Jadwal punya Tab
+        $pendaftarans = collect();
+        foreach ($semuaLayanan as $layananName) {
+            // Jika ada pasien, masukkan datanya. Jika tidak, masukkan collection kosong.
+            $pendaftarans[$layananName] = $pendaftaransGrouped->has($layananName) 
+                                            ? $pendaftaransGrouped[$layananName] 
+                                            : collect();
         }
 
-        $pendaftarans = $query->orderByRaw("FIELD(status, 'Menunggu', 'Diperiksa Awal', 'Selesai')")
-                             ->orderBy('no_antrian', 'asc')
-                             ->get()
-                             ->groupBy('nama_layanan');
-
         return view('admin.catatanpemeriksaan', compact('pendaftarans', 'tanggal')); 
+    }
+
+    // ==========================================
+    // 🔥 FITUR PEMANGGILAN (CALLING SYSTEM) 🔥
+    // ==========================================
+    public function panggilPasien(Request $request, $id)
+    {
+        $pendaftaran = Pendaftaran::findOrFail($id);
+        
+        $pendaftaran->increment('jumlah_panggilan');
+        $pendaftaran->status_panggilan = 'dipanggil';
+        $pendaftaran->save();
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Pasien sedang dipanggil.',
+            'jumlah_panggilan' => $pendaftaran->jumlah_panggilan
+        ]);
+    }
+
+    public function alihkanPasien(Request $request, $id)
+    {
+        $pendaftaran = Pendaftaran::findOrFail($id);
+        
+        $pendaftaran->status_panggilan = 'dialihkan';
+        $pendaftaran->save();
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Pasien dialihkan ke antrian belakang.'
+        ]);
     }
 
     public function laporan(Request $request)
@@ -172,14 +214,10 @@ class AdminController extends Controller
         $tanggalDipilih = $request->input('tanggal', Carbon::today()->toDateString());
         $bulanDipilih = $request->input('bulan', Carbon::now()->format('Y-m')); 
 
-        // KPI
         $kunjunganHariIni = Pendaftaran::whereDate('created_at', Carbon::today())->count();
-        $kunjunganBulanIni = Pendaftaran::whereMonth('created_at', Carbon::now()->month)
-                                        ->whereYear('created_at', Carbon::now()->year)
-                                        ->count();
+        $kunjunganBulanIni = Pendaftaran::whereMonth('created_at', Carbon::now()->month)->whereYear('created_at', Carbon::now()->year)->count();
         $semuaKunjungan = Pendaftaran::count();
 
-        // Query Tabel
         $query = Pendaftaran::join('users', 'pendaftarans.user_id', '=', 'users.id')
                             ->leftJoin('jadwal_prakteks', 'pendaftarans.jadwal_praktek_id', '=', 'jadwal_prakteks.id')
                             ->leftJoin('tenaga_medis', 'jadwal_prakteks.tenaga_medis_id', '=', 'tenaga_medis.id')
@@ -198,19 +236,16 @@ class AdminController extends Controller
         if ($filter == 'hari_ini') {
             $query->whereDate('pendaftarans.created_at', Carbon::today());
         } elseif ($filter == 'bulan_ini') {
-            $query->whereMonth('pendaftarans.created_at', Carbon::now()->month)
-                  ->whereYear('pendaftarans.created_at', Carbon::now()->year);
+            $query->whereMonth('pendaftarans.created_at', Carbon::now()->month)->whereYear('pendaftarans.created_at', Carbon::now()->year);
         } elseif ($filter == 'tanggal') {
             $query->whereDate('pendaftarans.created_at', $tanggalDipilih);
         } elseif ($filter == 'bulan_terpilih') {
             $carbonBulan = Carbon::parse($bulanDipilih);
-            $query->whereMonth('pendaftarans.created_at', $carbonBulan->month)
-                  ->whereYear('pendaftarans.created_at', $carbonBulan->year);
+            $query->whereMonth('pendaftarans.created_at', $carbonBulan->month)->whereYear('pendaftarans.created_at', $carbonBulan->year);
         }
 
         $kunjunganData = $query->latest('pendaftarans.created_at')->get();
 
-        // Data Grafik
         $chartLabels = [];
         $chartData = [];
 
@@ -223,20 +258,16 @@ class AdminController extends Controller
                                      ->get();
             $chartLabels = $chartQuery->pluck('jam')->map(fn($jam) => "$jam:00");
             $chartData = $chartQuery->pluck('jumlah');
-
         } elseif ($filter == 'bulan_ini' || $filter == 'bulan_terpilih') {
             $carbonBulan = ($filter == 'bulan_ini') ? Carbon::now() : Carbon::parse($bulanDipilih);
-            
             $chartQuery = Pendaftaran::select(DB::raw('DATE(created_at) as tanggal'), DB::raw('COUNT(*) as jumlah'))
                                      ->whereMonth('created_at', $carbonBulan->month)
                                      ->whereYear('created_at', $carbonBulan->year)
                                      ->groupBy('tanggal')
                                      ->orderBy('tanggal', 'asc')
                                      ->get();
-            
             $chartLabels = $chartQuery->pluck('tanggal')->map(fn($tgl) => Carbon::parse($tgl)->format('d M'));
             $chartData = $chartQuery->pluck('jumlah');
-
         } else {
             $chartQuery = Pendaftaran::select(DB::raw('DATE_FORMAT(created_at, "%Y-%m") as bulan'), DB::raw('COUNT(*) as jumlah'))
                                      ->groupBy('bulan')
@@ -246,56 +277,38 @@ class AdminController extends Controller
             $chartData = $chartQuery->pluck('jumlah');
         }
         
-        return view('admin.laporan', compact(
-            'kunjunganHariIni',
-            'kunjunganBulanIni',
-            'semuaKunjungan',
-            'kunjunganData',
-            'chartLabels',
-            'chartData',
-            'filter',
-            'tanggalDipilih',
-            'bulanDipilih'
-        ));
+        return view('admin.laporan', compact('kunjunganHariIni', 'kunjunganBulanIni', 'semuaKunjungan', 'kunjunganData', 'chartLabels', 'chartData', 'filter', 'tanggalDipilih', 'bulanDipilih'));
     }
 
     public function riwayatPasien(Request $request, User $user)
     {
-        $query = Pemeriksaan::with([
-            'pendaftaran.user', 
-            'pendaftaran.pemeriksaanAwal', 
-            'tenagaMedis',
-            'resep'
-        ])->where('pasien_id', $user->id);
+        $query = Pemeriksaan::with(['pendaftaran.user', 'pendaftaran.pemeriksaanAwal', 'tenagaMedis', 'resep'])
+                            ->where('pasien_id', $user->id);
 
-        if ($request->filled('tanggal')) {
-            $query->whereDate('pemeriksaans.created_at', $request->tanggal);
-        }
-
-        if ($request->filled('layanan_id')) {
-            $query->whereHas('pendaftaran', function($q) use ($request) {
-                $q->where('layanan_id', $request->layanan_id);
-            });
-        }
-
-        if ($request->filled('tenaga_medis_id')) {
-            $query->where('tenaga_medis_id', $request->tenaga_medis_id);
-        }
+        if ($request->filled('tanggal')) { $query->whereDate('pemeriksaans.created_at', $request->tanggal); }
+        if ($request->filled('layanan_id')) { $query->whereHas('pendaftaran', function($q) use ($request) { $q->where('layanan_id', $request->layanan_id); }); }
+        if ($request->filled('tenaga_medis_id')) { $query->where('tenaga_medis_id', $request->tenaga_medis_id); }
 
         $riwayats = $query->latest('pemeriksaans.created_at')->get();
-
         $layanans = Layanan::orderBy('nama_layanan')->get();
         $tenagaMedisList = TenagaMedis::orderBy('name')->get();
         
-        return view('admin.riwayat.index', [
-            'riwayats' => $riwayats,
-            'layanans' => $layanans,
-            'tenagaMedisList' => $tenagaMedisList,
-            'request' => $request, 
-            'pasien' => $user, 
-        ]);
+        return view('admin.riwayat.index', compact('riwayats', 'layanans', 'tenagaMedisList', 'request', 'user'));
     }
-}
+   public function stopPanggil(Request $request, $id)
+    {
+        $pendaftaran = Pendaftaran::findOrFail($id);
+        
+        // Kembalikan status ke menunggu (stop alarm di sisi pasien)
+        $pendaftaran->status_panggilan = 'menunggu'; 
+        $pendaftaran->save();
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Panggilan dihentikan. Pasien ditandai hadir.'
+        ]);
+    }}
+
 
 // Route API di bawah class ini sebaiknya dipindah ke routes/api.php atau routes/web.php
 // Tapi jika ingin tetap disini (bad practice tapi jalan), pastikan di luar class.
