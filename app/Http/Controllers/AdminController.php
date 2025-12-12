@@ -13,6 +13,8 @@ use App\Models\Pemeriksaan;
 use App\Models\TenagaMedis; // Pastikan ini di-import
 use Illuminate\Support\Facades\DB;
 use App\Models\Layanan;
+use Illuminate\Support\Facades\Route;
+
 
 
 class AdminController extends Controller
@@ -288,3 +290,27 @@ class AdminController extends Controller
         'pasien' => $user, // Mengirim data pasien ($user) ke view
     ]);
 }}
+// --- API NOTIFIKASI / HISTORI PENDAFTARAN ---
+Route::get('/pendaftaran/history', function (Request $request) {
+    $userId = $request->query('user_id'); // Ambil ID User dari parameter
+
+    $pendaftarans = \App\Models\Pendaftaran::with(['jadwalPraktek.tenagaMedis'])
+        ->where('user_id', $userId)
+        ->orderBy('created_at', 'desc') // Urutkan dari yang terbaru
+        ->get()
+        ->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'no_antrian' => $item->no_antrian,
+                'nama_layanan' => $item->nama_layanan,
+                'dokter_name' => $item->jadwalPraktek->tenagaMedis->name ?? 'N/A',
+                'jadwal_dipilih' => $item->jadwal_dipilih, // Format Y-m-d
+                'status' => $item->no_antrian ? 'Terdaftar' : 'Menunggu'
+            ];
+        });
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $pendaftarans
+    ]);
+});

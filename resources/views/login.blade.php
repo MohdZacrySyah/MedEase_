@@ -43,22 +43,28 @@
 
         html { scroll-behavior: smooth; }
 
+        /* --- PERBAIKAN SCROLLING DIMULAI DI SINI --- */
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #f0fdf4, #dcfce7);
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            /* Hapus min-height: 100vh agar body bisa lebih tinggi dari viewport */
+            /* Tambahkan padding vertikal yang cukup sebagai ganti min-height */
             padding: 20px;
+            padding-top: 100px; /* Ruang agar tidak terpotong tombol fixed atas */
+            padding-bottom: 100px; 
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden; /* Mencegah scroll horizontal yang tidak diinginkan */
+            overflow-y: auto; /* Memastikan vertical scrolling diaktifkan */
             transition: background 0.3s ease;
         }
 
         [data-theme="dark"] body {
             background: linear-gradient(135deg, #1f2937, #111827);
         }
+        /* --- PERBAIKAN SCROLLING SELESAI DI SINI --- */
 
         /* Animated Background */
         body::before {
@@ -115,7 +121,8 @@
             0%, 100% { transform: translateY(100vh) scale(0); opacity: 0; }
             10% { opacity: 1; }
             90% { opacity: 1; }
-            100% { transform: translateY(-100px) scale(1); opacity: 0; }
+            /* Mengubah translateY(-100px) menjadi translateY(-50px) agar partikel hilang lebih cepat di atas */
+            100% { transform: translateY(-50px) scale(1); opacity: 0; }
         }
 
         /* Dark Mode Toggle */
@@ -311,7 +318,7 @@
         }
 
         .illustration-logo img {
-            width: 80px;
+            width: 150px;
             height: auto;
             position: relative;
             z-index: 1;
@@ -851,10 +858,16 @@
 
         /* Responsive */
         @media (max-width: 768px) {
+            /* Perubahan untuk Scrolling di Mobile */
+            body {
+                padding-top: 90px;
+                padding-bottom: 90px;
+            }
+
             .login-wrapper {
                 flex-direction: column;
                 max-width: 500px;
-                margin: 20px;
+                margin: 0 20px;
                 border-radius: 24px;
             }
 
@@ -1077,7 +1090,7 @@
         icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     });
 
-    // Back Button (tanpa loading overlay)
+    // Back Button
     function goBack() {
         window.history.back();
     }
@@ -1096,7 +1109,7 @@
         }
     }
 
-    // Form Submit with Ripple (Loading Overlay dihapus)
+    // Form Submit with Ripple
     const loginForm = document.getElementById('loginForm');
     const submitBtn = document.querySelector('.btn-submit');
 
@@ -1121,7 +1134,7 @@
     // Form Submit with simple Loading class on button
     loginForm.addEventListener('submit', function(e) {
         if (this.checkValidity()) {
-            // Tambahkan class loading ke tombol, tanpa menampilkan overlay
+            // Tambahkan class loading ke tombol
             submitBtn.classList.add('loading');
         }
     });
@@ -1130,28 +1143,34 @@
     const emailInput = document.getElementById('email');
 
     emailInput.addEventListener('blur', function() {
-        const icon = this.nextElementSibling;
-        
-        if (this.value && this.checkValidity()) {
-            this.classList.add('success');
-            this.classList.remove('invalid');
-            icon.classList.add('animated');
-            setTimeout(() => icon.classList.remove('animated'), 500);
-        } else if (this.value) {
-            this.classList.add('invalid');
-            this.classList.remove('success');
+        // Hanya tambahkan/hapus kelas validasi saat pengguna meninggalkan input
+        if (this.value) {
+            if (this.checkValidity()) {
+                this.classList.add('success');
+                this.classList.remove('invalid');
+            } else {
+                this.classList.add('invalid');
+                this.classList.remove('success');
+            }
+        } else {
+             this.classList.remove('success', 'invalid');
         }
     });
 
     const passwordInput = document.getElementById('password');
     
     passwordInput.addEventListener('blur', function() {
-        if (this.value.length >= 6) {
-            this.classList.add('valid');
-            this.classList.remove('invalid');
-        } else if (this.value.length > 0) {
-            this.classList.add('invalid');
-            this.classList.remove('valid');
+         if (this.value) {
+            // Contoh validasi sederhana: minimal 6 karakter
+            if (this.value.length >= 6) {
+                this.classList.add('valid');
+                this.classList.remove('invalid');
+            } else {
+                this.classList.add('invalid');
+                this.classList.remove('valid');
+            }
+        } else {
+             this.classList.remove('valid', 'invalid');
         }
     });
 
@@ -1166,14 +1185,14 @@
         }, 4000);
     }
 
-    // Shake animation on error
+    // Shake animation on error (menggunakan sintaks Blade untuk mengecek error)
     const loginWrapper = document.querySelector('.login-wrapper');
     @if ($errors->any())
         loginWrapper.classList.add('shake');
         setTimeout(() => loginWrapper.classList.remove('shake'), 500);
     @endif
 
-    // Social Login Handlers (TANPA LOADING)
+    // Social Login Handlers (Peringatan untuk Facebook/Link Kosong)
     document.querySelectorAll('.social-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
             // Check if button has valid href (not # or empty)
@@ -1204,7 +1223,7 @@
         });
     });
 
-    // Disable form resubmission on page refresh
+    // Disable form resubmission on page refresh (praktik baik di Laravel/PHP)
     if (window.history.replaceState) {
         window.history.replaceState(null, null, window.location.href);
     }

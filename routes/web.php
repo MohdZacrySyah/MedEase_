@@ -21,6 +21,11 @@ use App\Http\Controllers\Apoteker\RiwayatController;
 use App\Http\Controllers\Apoteker\LaporanController;
 use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\ChatController;
+
+// 👇 IMPORT CONTROLLER PEMBATALAN JADWAL BARU
+use App\Http\Controllers\Admin\JadwalController as AdminJadwalController;
+
 
 // Google OAuth Routes
 Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
@@ -63,6 +68,8 @@ Route::controller(PendaftaranController::class)->group(function () {
     Route::get('/daftar-data/{jadwal}', 'getFormDataJson')->name('daftar.form.json');
     Route::get('/daftar/{jadwal}', 'showForm')->name('daftar.form');
     Route::post('/daftar', 'store')->name('daftar.store');
+    // ✅ TAMBAHKAN ROUTE INI (untuk get tanggal tertutup)
+    Route::get('/jadwal-praktek/{jadwalPraktek}/closed-dates', 'getClosedDates')->name('jadwal.closed-dates');
 });
 
 // Grup untuk halaman yang butuh login sebagai Pasien
@@ -75,8 +82,19 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/riwayat-pemeriksaan', [AuthController::class, 'riwayatPemeriksaan'])->name('riwayat.index');
     Route::get('/notifikasi-jadwal', [AuthController::class, 'notifikasiList'])->name('notifikasi.list');
     Route::get('/notifikasi-jadwal/{pendaftaran}', [AuthController::class, 'notifikasiDetail'])->name('notifikasi.detail');
+
+    
+// Route ini menangani halaman chat utama & saat memilih user
+    
 });
 
+
+// Gabungkan middleware auth:web DAN auth:tenaga_medis
+// Artinya: user harus login sebagai pasien ATAU tenaga medis
+Route::middleware(['auth:web,tenaga_medis'])->group(function () {
+    Route::get('/chat/{partnerId?}', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -96,10 +114,16 @@ Route::post('tenaga-medis/reset-password', [TenagaMedisController::class, 'reset
 Route::post('tenaga-medis/logout', [TenagaMedisController::class, 'logout'])->name('tenaga-medis.logout');
 
 // Panel Tenaga Medis (Terproteksi)
+// CATATAN: Middleware auth:tenaga_medis harus ada
 Route::middleware(['auth:tenaga_medis'])
     ->prefix('tenaga-medis')
     ->name('tenaga-medis.')
     ->group(function () {
+    
+    // 👇 ROUTE PEMBATALAN JADWAL (AdminJadwalController)
+    // Walaupun namanya AdminJadwalController, ini bisa digunakan oleh Tenaga Medis (jika role-nya sesuai)
+    Route::post('/jadwal/cancel', [AdminJadwalController::class, 'cancelJadwal'])->name('jadwal.cancel'); 
+    
     Route::get('/pasien/{pendaftaran}', [TenagaMedisController::class, 'detailPasien'])->name('pasien.show'); 
     Route::get('/dashboard', [TenagaMedisController::class, 'dashboard'])->name('dashboard');
     Route::get('/pasien', [TenagaMedisController::class, 'lihatPasien'])->name('pasien.index');
@@ -109,9 +133,9 @@ Route::middleware(['auth:tenaga_medis'])
     Route::get('/riwayat-pemeriksaan-saya', [TenagaMedisController::class, 'myPemeriksaanHistory'])->name('riwayat-pemeriksaan-saya');
     Route::get('/laporan', [TenagaMedisController::class, 'laporan'])->name('laporan');
     Route::get('/pemeriksaan/json/{pendaftaran}', [PemeriksaanController::class, 'getModalDataJson'])
-         ->name('tenaga-medis.pemeriksaan.json'); // Seharusnya 'pemeriksaan.json'
+             ->name('pemeriksaan.json'); // Seharusnya 'pemeriksaan.json'
     Route::get('/riwayat-pemeriksaan', [RiwayatPemeriksaanController::class, 'index'])
-         ->name('riwayat.index');
+             ->name('riwayat.index');
 });
 
 
@@ -155,7 +179,13 @@ Route::post('reset-password', [AuthController::class, 'updatePassword'])
 Route::get('/admin/logout', [AdminController::class, 'logout'])->name('admin.logout'); 
 
 // Panel Admin (Terproteksi)
+// CATATAN: Middleware auth:admin harus ada
 Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // 👇 ROUTE PEMBATALAN JADWAL (AdminJadwalController)
+    // Akan diakses melalui /admin/jadwal/cancel
+    Route::post('/jadwal/cancel', [AdminJadwalController::class, 'cancelJadwal'])->name('jadwal.cancel'); 
+    
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/keloladatapasien', [AdminController::class, 'keloladatapasien'])->name('keloladatapasien');
     Route::get('/pasien/{user}/riwayat', [AdminController::class, 'riwayatPasien'])->name('pasien.riwayat');
@@ -178,31 +208,31 @@ Route::prefix('apoteker')->name('apoteker.')->group(function () {
     
     // Rute Login
     Route::get('login', [ApotekerLoginController::class, 'showLoginForm'])
-         ->name('login');
+             ->name('login');
     Route::post('login', [ApotekerLoginController::class, 'login']);
     
     // Rute Logout (harus diakses setelah login)
     Route::post('logout', [ApotekerLoginController::class, 'logout'])
-         ->name('logout')
-         ->middleware('auth:apoteker'); // Lindungi rute logout
+             ->name('logout')
+             ->middleware('auth:apoteker'); // Lindungi rute logout
 
     // ===== PERBAIKAN: RUTE LUPA PASSWORD DIPINDAHKAN KE SINI =====
     
     // Form untuk memasukkan email
     Route::get('forgot-password', [ApotekerLoginController::class, 'showLinkRequestForm'])
-         ->name('password.request'); // apoteker.password.request
+             ->name('password.request'); // apoteker.password.request
 
     // Proses pengiriman email
     Route::post('forgot-password', [ApotekerLoginController::class, 'sendResetLinkEmail'])
-         ->name('password.email');
+             ->name('password.email');
 
     // Form untuk memasukkan password baru (dari link di email)
     Route::get('reset-password/{token}', [ApotekerLoginController::class, 'showResetForm'])
-         ->name('password.reset');
+             ->name('password.reset');
 
     // Proses penyimpanan password baru
     Route::post('reset-password', [ApotekerLoginController::class, 'reset'])
-         ->name('password.update');
+             ->name('password.update');
 });
 
 /*

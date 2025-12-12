@@ -30,8 +30,21 @@ class TenagaMedis extends Authenticatable implements \Illuminate\Contracts\Auth\
         'email_verified_at' => 'datetime',
         'password' => 'hashed', // <-- Pastikan ini ada
     ];
+    
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new TenagaMedisResetPasswordNotification($token));
+    }
+
+// Tambahkan relasi ke JadwalPraktek
+    public function jadwalPrakteks()
+    {
+        return $this->hasMany(JadwalPraktek::class, 'tenaga_medis_id');
+    }
+    
+    // Tambahkan relasi ke DoctorAvailability (dari Langkah 1B sebelumnya)
+    public function availabilities()
+    {
+        return $this->hasMany(DoctorAvailability::class, 'tenaga_medis_id');
     }
 }

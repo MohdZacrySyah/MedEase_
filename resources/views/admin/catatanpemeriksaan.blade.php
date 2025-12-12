@@ -102,107 +102,110 @@
                 </div>
 
                 <div class="schedule-container-modern">
-                    <table class="schedule-table">
-                        <thead>
-                            <tr>
-                                <th><i class="fas fa-hashtag"></i> Antrian</th>
-                                <th><i class="fas fa-user"></i> Nama Pasien</th>
-                                <th><i class="fas fa-user-md"></i> Nama Dokter</th>
-                                <th><i class="fas fa-comment-medical"></i> Keluhan</th>
-                                <th><i class="fas fa-calendar-check"></i> Jadwal Dipilih</th>
-                                <th><i class="far fa-clock"></i> Tgl Daftar</th>
-                                <th><i class="fas fa-info-circle"></i> Status</th>
-                                <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($listPendaftaran as $index => $pendaftaran)
-                                <tr class="schedule-row" style="animation-delay: {{ $index * 0.05 }}s">
-                                    <td>
-                                        <span class="queue-number-badge">
-                                            {{ $pendaftaran->no_antrian ?? '-' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="doctor-info">
-                                            <div class="doctor-avatar">
-                                                @if($pendaftaran->user?->profile_photo_path)
-                                                    <img src="{{ asset('storage/' . $pendaftaran->user->profile_photo_path) }}" alt="Foto">
-                                                @else
-                                                    <i class="fas fa-user"></i>
-                                                @endif
-                                            </div>
-                                            <span class="doctor-name">{{ $pendaftaran->user->name ?? $pendaftaran->nama_lengkap }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="doctor-name-text">
-                                            {{ $pendaftaran->jadwalPraktek?->tenagaMedis?->name ?? 'N/A' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="keluhan-badge">
-                                            {{ Str::limit($pendaftaran->keluhan, 40) }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="date-badge-modern">
-                                            <i class="fas fa-calendar"></i>
-                                            <span>{{ \Carbon\Carbon::parse($pendaftaran->jadwal_dipilih)->isoFormat('D MMM YYYY') }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="time-text">
-                                            {{ $pendaftaran->created_at->isoFormat('D MMM Y, HH:mm') }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        @if($pendaftaran->status == 'Menunggu')
-                                            <span class="status-badge-modern status-waiting">
-                                                <i class="fas fa-clock"></i>
-                                                {{ $pendaftaran->status }}
-                                            </span>
-                                        @elseif($pendaftaran->status == 'Diperiksa Awal')
-                                            <span class="status-badge-modern status-checking">
-                                                <i class="fas fa-stethoscope"></i>
-                                                {{ $pendaftaran->status }}
-                                            </span>
-                                        @else
-                                            <span class="status-badge-modern status-done">
-                                                <i class="fas fa-check-circle"></i>
-                                                {{ $pendaftaran->status }}
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td class="text-center">
-                                        @if($pendaftaran->status == 'Menunggu')
-                                            <button type="button" 
-                                                    class="btn-action-primary open-periksa-modal"
-                                                    data-url="{{ route('admin.pemeriksaan-awal.json', $pendaftaran->id) }}">
-                                                <span>Input Periksa Awal</span>
-                                                <i class="fas fa-clipboard-check"></i>
-                                            </button>
-                                        @else
-                                            <button type="button" class="btn-action-disabled" disabled>
-                                                <i class="fas fa-check"></i>
-                                                <span>{{ $pendaftaran->status }}</span>
-                                            </button>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
+                    {{-- DIV BARU UNTUK SCROLLING HORIZONTAL PADA TABEL --}}
+                    <div class="table-responsive">
+                        <table class="schedule-table">
+                            <thead>
                                 <tr>
-                                    <td colspan="8">
-                                        <div class="empty-schedule">
-                                            <i class="fas fa-inbox"></i>
-                                            <p>Belum ada pasien mendaftar untuk layanan ini</p>
-                                            <small>Silakan cek kembali nanti</small>
-                                        </div>
-                                    </td>
+                                    <th><i class="fas fa-hashtag"></i> Antrian</th>
+                                    <th><i class="fas fa-user"></i> Nama Pasien</th>
+                                    <th><i class="fas fa-user-md"></i> Nama Dokter</th>
+                                    <th><i class="fas fa-comment-medical"></i> Keluhan</th>
+                                    <th><i class="fas fa-calendar-check"></i> Jadwal Dipilih</th>
+                                    <th><i class="far fa-clock"></i> Tgl Daftar</th>
+                                    <th><i class="fas fa-info-circle"></i> Status</th>
+                                    <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
                                 </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @forelse ($listPendaftaran as $index => $pendaftaran)
+                                    <tr class="schedule-row" style="animation-delay: {{ $index * 0.05 }}s">
+                                        <td>
+                                            <span class="queue-number-badge">
+                                                {{ $pendaftaran->no_antrian ?? '-' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="doctor-info">
+                                                <div class="doctor-avatar">
+                                                    @if($pendaftaran->user?->profile_photo_path)
+                                                        <img src="{{ asset('storage/' . $pendaftaran->user->profile_photo_path) }}" alt="Foto">
+                                                    @else
+                                                        <i class="fas fa-user"></i>
+                                                    @endif
+                                                </div>
+                                                <span class="doctor-name">{{ $pendaftaran->user->name ?? $pendaftaran->nama_lengkap }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="doctor-name-text">
+                                                {{ $pendaftaran->jadwalPraktek?->tenagaMedis?->name ?? 'N/A' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="keluhan-badge">
+                                                {{ Str::limit($pendaftaran->keluhan, 40) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="date-badge-modern">
+                                                <i class="fas fa-calendar"></i>
+                                                <span>{{ \Carbon\Carbon::parse($pendaftaran->jadwal_dipilih)->isoFormat('D MMM YYYY') }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="time-text">
+                                                {{ $pendaftaran->created_at->isoFormat('D MMM Y, HH:mm') }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if($pendaftaran->status == 'Menunggu')
+                                                <span class="status-badge-modern status-waiting">
+                                                    <i class="fas fa-clock"></i>
+                                                    {{ $pendaftaran->status }}
+                                                </span>
+                                            @elseif($pendaftaran->status == 'Diperiksa Awal')
+                                                <span class="status-badge-modern status-checking">
+                                                    <i class="fas fa-stethoscope"></i>
+                                                    {{ $pendaftaran->status }}
+                                                </span>
+                                            @else
+                                                <span class="status-badge-modern status-done">
+                                                    <i class="fas fa-check-circle"></i>
+                                                    {{ $pendaftaran->status }}
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            @if($pendaftaran->status == 'Menunggu')
+                                                <button type="button" 
+                                                        class="btn-action-primary open-periksa-modal"
+                                                        data-url="{{ route('admin.pemeriksaan-awal.json', $pendaftaran->id) }}">
+                                                    <span>Input Periksa Awal</span>
+                                                    <i class="fas fa-clipboard-check"></i>
+                                                </button>
+                                            @else
+                                                <button type="button" class="btn-action-disabled" disabled>
+                                                    <i class="fas fa-check"></i>
+                                                    <span>{{ $pendaftaran->status }}</span>
+                                                </button>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="8">
+                                            <div class="empty-schedule">
+                                                <i class="fas fa-inbox"></i>
+                                                <p>Belum ada pasien mendaftar untuk layanan ini</p>
+                                                <small>Silakan cek kembali nanti</small>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         @empty
@@ -760,7 +763,7 @@
         border-radius: 0 0 24px 24px;
         box-shadow: 0 8px 30px var(--shadow-color);
         border: 1px solid var(--border-color);
-        overflow: hidden;
+        overflow: hidden; /* Tetap hidden agar radius melengkung */
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
@@ -769,10 +772,19 @@
         border-color: rgba(57, 166, 22, 0.4);
     }
 
+    /* --- PERBAIKAN SCROLL HORIZONTAL DIMULAI DI SINI --- */
+    .table-responsive {
+        overflow-x: auto; /* Kunci untuk scrolling horizontal di mobile */
+        width: 100%;
+        -webkit-overflow-scrolling: touch; /* Meningkatkan pengalaman scrolling di iOS */
+    }
+
     .schedule-table {
         width: 100%;
         border-collapse: collapse;
+        min-width: 800px; /* Pastikan tabel cukup lebar untuk di-scroll */
     }
+    /* --- PERBAIKAN SCROLL HORIZONTAL SELESAI DI SINI --- */
 
     .schedule-table thead {
         background: var(--grad);
@@ -1069,6 +1081,7 @@
         backdrop-filter: blur(8px);
     }
 
+    /* Perubahan di .modal-card: Menambahkan flex-basis untuk menampung konten scrollable */
     .modal-card {
         background-color: var(--modal-bg);
         margin: auto;
@@ -1090,6 +1103,8 @@
         cursor: pointer;
         padding: 15px 25px;
         transition: all 0.3s ease;
+        /* Tambahkan flex-shrink agar tidak ikut mengecil */
+        flex-shrink: 0;
     }
 
     .close-modal:hover, .close-modal:focus {
@@ -1097,9 +1112,17 @@
         transform: rotate(90deg);
     }
 
+    /* Perubahan di #modalFormContent: Memastikan konten ini yang di-scroll */
     #modalFormContent {
         padding: 0 40px 40px 40px;
-        overflow-y: auto;
+        overflow-y: auto; /* Kunci untuk scrolling vertikal */
+        /* Tambahkan flex-grow agar mengambil sisa ruang */
+        flex-grow: 1; 
+    }
+    
+    /* Tambahkan style untuk form di dalam modal, agar dapat di-scroll */
+    #modalFormContent form {
+        display: block;
     }
 
     /* Form Styles */
@@ -1418,13 +1441,18 @@
                 if (!response.ok) throw new Error('Gagal mengambil data');
                 const data = await response.json();
 
+                // Pastikan CSRF token di-handle dengan benar di Blade/Laravel
+                const csrfToken = document.querySelector('meta[name="csrf-token"]') ? 
+                                 document.querySelector('meta[name="csrf-token"]').content : 
+                                 '';
+                
                 const formHtml = `
                     <div class="form-header">
                         <h2 class="form-title">Input Pemeriksaan Awal</h2>
                         <p class="form-subtitle">Pasien: <strong>${data.pasien_name}</strong> (${data.layanan_name})</p>
                     </div>
                     <form action="${data.form_action}" method="POST">
-                        @csrf
+                        <input type="hidden" name="_token" value="{{ csrf_token() }}"> 
                         
                         <div class="form-grid">
                             <div class="form-group">
@@ -1447,8 +1475,11 @@
                     </form>
                 `;
                 
-                modalContent.innerHTML = formHtml.replace('@csrf', '{{ csrf_field() }}');
+                // Mengganti @csrf dengan token Blade yang sebenarnya jika form di-load via JS
+                // Karena ini berada di dalam Blade file, kita bisa menggunakan {{ csrf_token() }}
+                modalContent.innerHTML = formHtml;
                 
+                // Pasang kembali event listener untuk tombol batal yang baru dimuat
                 document.getElementById('batalModalBtn').addEventListener('click', (e) => {
                     e.preventDefault();
                     closeModal();

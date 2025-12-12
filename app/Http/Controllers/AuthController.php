@@ -118,6 +118,7 @@ class AuthController extends Controller
 
         // 4. Kirim OTP ke email pasien
         try {
+            // Pastikan Anda sudah membuat PasienOtpNotification
             $user->notify(new PasienOtpNotification($otp));
         } catch (\Exception $e) {
             // Tangani jika email gagal terkirim
@@ -157,8 +158,8 @@ class AuthController extends Controller
 
         // 2. Cek OTP di database
         $otpData = PasswordResetOtp::where('email', $request->email)
-                                 ->where('otp', $request->otp)
-                                 ->first();
+                                     ->where('otp', $request->otp)
+                                     ->first();
         
         // 3. Cek jika OTP tidak ada
         if (!$otpData) {
@@ -173,10 +174,9 @@ class AuthController extends Controller
             return back()->withErrors(['otp' => 'Kode OTP telah kedaluwarsa. Silakan minta lagi.'])->withInput();
         }
 
-        // 5. ===== PERBAIKAN DI SINI =====
-        // Gunakan $request->session()->put() dan paksa ->save()
+        // 5. Masukkan email ke session untuk tahap reset password
         $request->session()->put('otp_verified_email', $request->email);
-        $request->session()->save(); // Ini memaksa session ditulis ke database SEKARANG
+        $request->session()->save(); 
 
         return redirect()->route('password.reset.form');
     }
@@ -186,7 +186,6 @@ class AuthController extends Controller
      */
     public function showResetPasswordForm(Request $request) // <-- Tambahkan Request
     {
-        // ===== PERBAIKAN DI SINI =====
         // Baca session dari $request
         $email = $request->session()->get('otp_verified_email');
 
@@ -203,8 +202,7 @@ class AuthController extends Controller
      */
     public function updatePassword(Request $request)
     {
-        // 1. ===== PERBAIKAN DI SINI =====
-        // Cek apakah user sudah verifikasi OTP
+        // 1. Cek apakah user sudah verifikasi OTP
         $email = $request->session()->get('otp_verified_email');
         if (!$email) {
             return redirect()->route('password.request')->withErrors(['email' => 'Sesi Anda telah berakhir. Harap ulangi proses.']);
@@ -249,17 +247,19 @@ class AuthController extends Controller
         $jadwalHariIni = JadwalPraktek::with('tenagaMedis')
                                      ->whereJsonContains('hari', $namaHariIni)
                                      ->get();
+        
+        // Notifikasi Hari Ini untuk dashboard (hanya cek status aktif/tidak)
         $notifikasiHariIni = Pendaftaran::where('user_id', $user->id)
-                                        ->whereDate('jadwal_dipilih', Carbon::today())
-                                        ->where('status', '!=', 'Selesai')
-                                        ->first();
+                                         ->whereDate('jadwal_dipilih', Carbon::today())
+                                         ->where('status', '!=', 'Selesai')
+                                         ->first();
 
         $pemeriksaanTahunIni = Pemeriksaan::where('pasien_id', $pasienId)
-                                            ->whereYear('created_at', Carbon::now()->year)
-                                            ->count();
+                                             ->whereYear('created_at', Carbon::now()->year)
+                                             ->count();
         $jumlahDokterDikunjungi = Pemeriksaan::where('pasien_id', $pasienId)
-                                              ->distinct('tenaga_medis_id')
-                                              ->count('tenaga_medis_id');
+                                                 ->distinct('tenaga_medis_id')
+                                                 ->count('tenaga_medis_id');
 
         return view('dashboard', compact(
             'user',
@@ -291,26 +291,124 @@ class AuthController extends Controller
         ]);
     }
 
-    public function notifikasiList()
-    {
-        $pasienId = Auth::id();
+    /**
+     * Menampilkan daftar notifikasi dari database (Pembatalan) DAN Pendaftaran Aktif (Jadwal).
+     */
+    /**
+ * Menampilkan SEMUA notifikasi (pembatalan + jadwal aktif) digabung dan diurutkan berdasarkan waktu terbaru.
+ */
+public function notifikasiList()
+{
+    $user = Auth::user();
+    $userId = $user->id;
+    
+    // 1. Notifikasi Database (Pembatalan/Pembaruan) - Ambil semua data mentah
+    $notificationsDb = $user->notifications()->latest()->get();
+    
+    // 2. Pendaftaran Aktif (Jadwal Aktif) - Ambil semua data mentah
+    $pendaftaranAktif = Pendaftaran::where('user_id', $userId)
+                                 ->whereIn('status', ['Menunggu', 'Diperiksa Awal']) 
+                                 ->whereDate('jadwal_dipilih', '>=', Carbon::today()) 
+                                 ->with('jadwalPraktek.tenagaMedis') 
+                                 ->orderBy('created_at', 'desc')
+                                 ->get();
+    
+    // 3. Gabungkan kedua data dan transform ke format yang sama
+    $allNotifications = collect();
+    
+    // Transform notifikasi database
+    foreach ($notificationsDb as $notif) {
+        $data = $notif->data;
         
-        $pendaftarans = Pendaftaran::where('user_id', $pasienId)
-                                    ->where('status', '!=', 'Selesai') 
-                                    ->whereDate('jadwal_dipilih', '>=', Carbon::today()) 
-                                    ->with('jadwalPraktek.tenagaMedis') 
-                                    ->orderBy('jadwal_dipilih', 'asc')
-                                    ->get();
-
-        return view('notifikasi_list', compact('pendaftarans'));
+        // PERBAIKAN: Jika layanan atau dokter N/A, ambil dari pendaftaran_id
+        $layanan = $data['layanan'] ?? 'N/A';
+        $dokterName = $data['dokter_name'] ?? 'N/A';
+        
+        if (($layanan === 'N/A' || $dokterName === 'N/A') && isset($data['pendaftaran_id'])) {
+            $pend = Pendaftaran::with('jadwalPraktek.tenagaMedis')->find($data['pendaftaran_id']);
+            if ($pend) {
+                $layanan = $pend->nama_layanan;
+                $dokterName = $pend->jadwalPraktek->tenagaMedis->name ?? 'N/A';
+            }
+        }
+        
+        $allNotifications->push((object)[
+            'id' => $notif->id,
+            'type' => 'notification',
+            'created_at' => $notif->created_at,
+            'is_unread' => is_null($notif->read_at),
+            'is_cancellation' => ($data['type'] ?? null) === 'Pembatalan Jadwal',
+            'title' => $data['title'] ?? 'Pembaruan Umum',
+            'message' => $data['message'] ?? 'Klik untuk detail lengkap.',
+            'date' => $data['date'] ?? $notif->created_at->toDateString(),
+            'no_antrian' => $data['no_antrian'] ?? '-',
+            'layanan' => $layanan,
+            'dokter_name' => $dokterName,
+            'raw_data' => $data,
+        ]);
     }
     
-    public function notifikasiDetail(Pendaftaran $pendaftaran)
+    // Transform pendaftaran aktif
+    foreach ($pendaftaranAktif as $pend) {
+        $allNotifications->push((object)[
+            'id' => 'pend_' . $pend->id,
+            'type' => 'pendaftaran',
+            'created_at' => $pend->created_at,
+            'is_unread' => false,
+            'is_cancellation' => false,
+            'title' => 'Jadwal Konsultasi Aktif',
+            'message' => 'Status: ' . $pend->status,
+            'date' => $pend->jadwal_dipilih,
+            'no_antrian' => $pend->no_antrian ?? '-',
+            'layanan' => $pend->nama_layanan,
+            'dokter_name' => optional($pend->jadwalPraktek)->tenagaMedis->name ?? 'N/A',
+            'raw_pendaftaran' => $pend,
+        ]);
+    }
+    
+    // 4. Urutkan berdasarkan created_at (terbaru di atas)
+    $allNotifications = $allNotifications->sortByDesc('created_at');
+    
+    // 5. Manual pagination (15 item per halaman)
+    $perPage = 15;
+    $currentPage = request()->get('page', 1);
+    $paginatedNotifications = new \Illuminate\Pagination\LengthAwarePaginator(
+        $allNotifications->forPage($currentPage, $perPage),
+        $allNotifications->count(),
+        $perPage,
+        $currentPage,
+        ['path' => request()->url(), 'query' => request()->query()]
+    );
+
+    return view('notifikasi_list', compact('paginatedNotifications'));
+}
+
+    
+    /**
+     * Dipanggil via AJAX untuk menandai notifikasi DB sebagai sudah dibaca.
+     */
+    public function markNotificationAsRead(Request $request, $notificationId)
     {
-        if ($pendaftaran->user_id !== Auth::id()) {
-            abort(403);
+        $user = Auth::user();
+        
+        // Cari notifikasi DB yang sesuai dengan user dan ID yang diberikan
+        $notification = $user->notifications()->where('id', $notificationId)->first();
+        
+        if ($notification) {
+            $notification->markAsRead();
+            return response()->json(['success' => true]);
         }
-        return view('notifikasi_detail', compact('pendaftaran'));
+
+        return response()->json(['success' => false, 'message' => 'Notification not found'], 404);
+    }
+    
+    // Method notifikasiDetail lama tidak digunakan karena diganti Pop-up Modal.
+    // Kita biarkan fungsi ini tidak dipanggil melalui route, atau hapus route aslinya di web.php.
+    // Jika Anda mempertahankan route-nya:
+    public function notifikasiDetail($pendaftaranId)
+    {
+        // Fungsi ini akan dikembalikan ke list karena detail ditangani oleh pop-up modal.
+        return redirect()->route('notifikasi.list');
     }
     
     public function showProfile()

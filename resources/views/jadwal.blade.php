@@ -33,6 +33,17 @@
             <span>{{ session('success') }}</span>
         </div>
     @endif
+    
+    @if ($errors->any())
+        <div class="alert alert-danger" id="autoHideAlert">
+            <i class="fas fa-exclamation-circle"></i>
+            <div>
+                @foreach ($errors->all() as $error)
+                    <div>{{ $error }}</div>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     @php
         if (!function_exists('formatHariFleksibelUser')) {
@@ -115,9 +126,9 @@
                             Libur Hari Ini
                         </span>
                     @endif
-
                     <a href="#" 
                        data-url="{{ route('daftar.form.json', $jadwal->id) }}" 
+                       data-jadwal-id="{{ $jadwal->id }}"
                        class="btn-daftar-langsung open-form-modal">
                         <span>Daftar Sekarang</span>
                         <i class="fas fa-arrow-right"></i>
@@ -1152,6 +1163,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const closeModalBtn = document.getElementById('closeModalBtn');
     const links = document.querySelectorAll('.jadwal-grid .open-form-modal'); 
     let flatpickrInstance = null;
+    let closedDates = []; // ✅ Array untuk tanggal tertutup
     
     const confirmModal = document.getElementById('confirmModal');
     const closeConfirmBtn = document.getElementById('closeConfirmModalBtn');
@@ -1159,7 +1171,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const submitConfirmBtn = document.getElementById('btnConfirmSubmit');
     let formToSubmit = null;
 
-    // Auto-hide Alert dengan animasi
+    // Auto-hide Alert
     const alert = document.getElementById('autoHideAlert');
     if (alert) {
         setTimeout(() => {
@@ -1167,22 +1179,35 @@ document.addEventListener('DOMContentLoaded', function () {
             alert.style.opacity = '0';
             alert.style.transform = 'translateY(-30px)';
             setTimeout(() => alert.remove(), 500);
-        }, 4000);
+        }, 5000);
     }
 
     links.forEach(link => {
         link.addEventListener('click', async function(event) {
             event.preventDefault(); 
             const jsonUrl = this.dataset.url;
+            const jadwalId = this.dataset.jadwalId; // ✅ Ambil jadwal ID
             
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
             modalContent.innerHTML = '<div class="loading-spinner"></div>';
 
             try {
+                // 1. Fetch form data
                 const response = await fetch(jsonUrl);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
+
+                // 2. ✅ Fetch closed dates (tanggal yang ditutup dokter)
+                const closedResponse = await fetch(`/jadwal-praktek/${jadwalId}/closed-dates`);
+                if (closedResponse.ok) {
+                    const closedData = await closedResponse.json();
+                    closedDates = closedData.closed_dates || [];
+                    console.log('Tanggal tertutup:', closedDates);
+                } else {
+                    closedDates = [];
+                    console.warn('Gagal mengambil tanggal tertutup');
+                }
 
                 const formHtml = `
                     <div class="form-header">
@@ -1247,17 +1272,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 modalContent.innerHTML = formHtml.replace('@csrf', '{{ csrf_field() }}');
 
+                // 3. ✅ Initialize Flatpickr dengan disable closed dates
                 if (flatpickrInstance) flatpickrInstance.destroy(); 
                 
                 flatpickrInstance = flatpickr("#modal_jadwal_datepicker", {
                     locale: { firstDayOfWeek: 1 },
                     minDate: "today", 
                     dateFormat: "Y-m-d",
+                    disable: closedDates, // ✅ Disable tanggal tertutup
                     enable: [
                         function(date) {
-                            return data.enabled_days.includes(date.getDay());
+                            // Enable hanya hari praktek dokter
+                            const isEnabledDay = data.enabled_days.includes(date.getDay());
+                            
+                            // Disable jika tanggal ada di closedDates
+                            const dateString = date.toISOString().split('T')[0];
+                            const isClosed = closedDates.includes(dateString);
+                            
+                            return isEnabledDay && !isClosed;
                         }
-                    ]
+                    ],
+                    onDayCreate: function(dObj, dStr, fp, dayElem) {
+                        // ✅ Custom styling untuk tanggal tertutup
+                        const dateString = dayElem.dateObj.toISOString().split('T')[0];
+                        if (closedDates.includes(dateString)) {
+                            dayElem.style.textDecoration = 'line-through';
+                            dayElem.style.color = '#ef4444';
+                            dayElem.title = 'Dokter tidak tersedia';
+                        }
+                    }
                 });
 
                 document.getElementById('batalModalBtn').addEventListener('click', (e) => {
@@ -1269,6 +1312,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (dynamicForm) {
                     dynamicForm.addEventListener('submit', function(e) {
                         e.preventDefault();
+                        
+                        // ✅ Validasi tambahan di frontend
+                        const selectedDate = document.getElementById('modal_jadwal_datepicker').value;
+                        
+                        if (closedDates.includes(selectedDate)) {
+                            alert('❌ Dokter tidak tersedia pada tanggal yang Anda pilih. Silakan pilih tanggal lain.');
+                            return false;
+                        }
+                        
                         formToSubmit = this;
                         openConfirmModal();
                     });

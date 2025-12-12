@@ -4,314 +4,11 @@
 
 @push('styles')
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-@endpush
-
-@section('content')
-    {{-- Header Banner --}}
-    <div class="page-header-banner">
-        <div class="header-content">
-            <div class="header-icon">
-                <i class="fas fa-calendar-alt"></i>
-            </div>
-            <div class="header-text">
-                <div class="greeting-badge">
-                    <i class="fas fa-hospital"></i>
-                    <span>Schedule Management</span>
-                </div>
-                <h1 class="page-title">Kelola Jadwal Praktek 📅</h1>
-                <p class="page-subtitle">
-                    <i class="far fa-calendar-check"></i>
-                    Manajemen Jadwal Tenaga Medis
-                </p>
-            </div>
-            <div class="hero-illustration">
-                <div class="pulse-circle pulse-1"></div>
-                <div class="pulse-circle pulse-2"></div>
-                <div class="pulse-circle pulse-3"></div>
-                <button class="btn-add" id="btnTambahJadwal">
-                    <span>Tambah Jadwal</span>
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{-- Alert Success --}}
-    @if (session('success'))
-        <div class="alert-success-modern" id="autoHideAlert">
-            <div class="alert-icon">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <span class="alert-text">{{ session('success') }}</span>
-            <button class="alert-close-btn" onclick="this.parentElement.remove()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    @endif
-
-    {{-- Table Card --}}
-    <div class="schedule-container-modern">
-        <div class="table-card-header">
-            <h3 class="table-title">
-                <i class="fas fa-list"></i> 
-                Daftar Jadwal Praktek
-            </h3>
-            <span class="schedule-count">
-                <i class="fas fa-calendar-check"></i>
-                {{ $jadwals->count() }} Jadwal Aktif
-            </span>
-        </div>
-        <table class="schedule-table">
-            <thead>
-                <tr>
-                    <th><i class="fas fa-hashtag"></i> No</th>
-                    <th><i class="fas fa-user-md"></i> Nama Dokter</th>
-                    <th><i class="fas fa-stethoscope"></i> Layanan</th>
-                    <th><i class="fas fa-calendar"></i> Hari</th>
-                    <th><i class="far fa-clock"></i> Waktu</th>
-                    <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php
-                    if (!function_exists('formatHariFleksibel')) {
-                        function formatHariFleksibel($hariArray) {
-                            if (empty($hariArray) || !is_array($hariArray)) return '';
-                            if (count($hariArray) == 7) return 'Setiap Hari';
-                            $semuaHari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-                            $indeksHari = array_map(fn($h) => array_search($h, $semuaHari), $hariArray); 
-                            sort($indeksHari); 
-                            $rentang = [];
-                            for ($i = 0, $j = 0, $n = count($indeksHari); $i < $n; $i = $j) {
-                                $j = $i + 1; 
-                                while ($j < $n && $indeksHari[$j] == $indeksHari[$j-1] + 1) $j++; 
-                                $rentang[] = [$indeksHari[$i], $indeksHari[$j-1]];
-                            }
-                            $outputStrings = [];
-                            foreach ($rentang as $r) { 
-                                $awal = $semuaHari[$r[0]]; 
-                                $akhir = $semuaHari[$r[1]]; 
-                                $outputStrings[] = ($awal == $akhir) ? $awal : "$awal - $akhir"; 
-                            }
-                            return implode(', ', $outputStrings);
-                        }
-                    }
-                @endphp
-
-                @forelse ($jadwals as $index => $jadwal)
-                    <tr class="schedule-row" style="animation-delay: {{ $index * 0.05 }}s">
-                        <td>
-                            <span class="number-badge">{{ $index + 1 }}</span>
-                        </td>
-                        <td>
-                            <div class="doctor-info">
-                                <div class="doctor-avatar">
-                                    @if($jadwal->tenagaMedis && $jadwal->tenagaMedis->profile_photo_path)
-                                        <img src="{{ asset('storage/' . $jadwal->tenagaMedis->profile_photo_path) }}" alt="{{ $jadwal->tenagaMedis->name }}">
-                                    @else
-                                        <i class="fas fa-user-md"></i>
-                                    @endif
-                                </div>
-                                <span class="doctor-name">{{ $jadwal->tenagaMedis?->name ?? 'N/A' }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="service-badge">
-                                <i class="fas fa-briefcase-medical"></i>
-                                {{ $jadwal->layanan }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="day-badge">
-                                <i class="fas fa-calendar-week"></i>
-                                {{ formatHariFleksibel($jadwal->hari) }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="time-badge-modern">
-                                <i class="far fa-clock"></i>
-                                <span>
-                                    {{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }} - 
-                                    {{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }} WIB
-                                </span>
-                            </div>
-                        </td>
-                        <td class="text-center">
-                            <div class="action-buttons">
-                                <button class="btn-action btn-edit" 
-                                        data-id="{{ $jadwal->id }}"
-                                        data-tenaga-medis-id="{{ $jadwal->tenaga_medis_id }}"
-                                        data-layanan="{{ $jadwal->layanan }}"
-                                        data-hari='@json($jadwal->hari)'
-                                        data-jam-mulai="{{ $jadwal->jam_mulai }}"
-                                        data-jam-selesai="{{ $jadwal->jam_selesai }}"
-                                        title="Edit Jadwal">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <form action="{{ route('admin.kelolajadwalpraktek.destroy', $jadwal->id) }}" 
-                                      method="POST" 
-                                      class="delete-form"
-                                      style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn-action btn-hapus" title="Hapus Jadwal">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6">
-                            <div class="empty-schedule">
-                                <i class="fas fa-calendar-times"></i>
-                                <p>Belum ada jadwal praktek</p>
-                                <small>Klik tombol "Tambah Jadwal" untuk membuat jadwal baru</small>
-                            </div>
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-{{-- Modal Form (Tambah/Edit Jadwal) --}}
-<div id="jadwalModal" class="modal-overlay">
-    <div class="modal-card">
-        <button class="close-modal" id="closeModalBtn">
-            <i class="fas fa-times"></i>
-        </button>
-        
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">
-                    <i class="fas fa-calendar-plus"></i>
-                    <span id="modalTitleText">Tambah Jadwal Praktek</span>
-                </h2>
-            </div>
-
-            <form id="jadwalForm" method="POST">
-                @csrf
-                <input type="hidden" id="formMethod" name="_method" value="">
-                
-                <div class="form-group">
-                    <label for="tenaga_medis_id" class="form-label">
-                        <i class="fas fa-user-md"></i> Tenaga Medis
-                    </label>
-                    <select name="tenaga_medis_id" id="tenaga_medis_id" class="form-control" required>
-                        <option value="">-- Pilih Tenaga Medis --</option>
-                        @foreach ($tenagaMedis as $tenaga)
-                            <option value="{{ $tenaga->id }}">
-                                {{ $tenaga->name }} ({{ $tenaga->email }})
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="layanan" class="form-label">
-                        <i class="fas fa-stethoscope"></i> Layanan
-                    </label>
-                    <input type="text" name="layanan" id="layanan" class="form-control" placeholder="Contoh: Dokter Umum" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-calendar-week"></i> Hari Praktek
-                    </label>
-                    <div class="checkbox-grid">
-                        @php
-                            $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-                        @endphp
-                        @foreach ($days as $day)
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="hari[]" value="{{ $day }}" id="day_{{ $day }}">
-                                <span class="checkbox-custom"></span>
-                                <span class="checkbox-text">{{ $day }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="jam_mulai" class="form-label">
-                            <i class="fas fa-clock"></i> Jam Mulai
-                        </label>
-                        <input type="time" name="jam_mulai" id="jam_mulai" class="form-control" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="jam_selesai" class="form-label">
-                            <i class="fas fa-clock"></i> Jam Selesai
-                        </label>
-                        <input type="time" name="jam_selesai" id="jam_selesai" class="form-control" required>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">
-                        <i class="fas fa-save"></i>
-                        <span id="btnSubmitText">Simpan Jadwal</span>
-                    </button>
-                    <button type="button" class="btn-secondary" id="btnCancelModal">
-                        <i class="fas fa-times"></i>
-                        Batal
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-{{-- MODAL KONFIRMASI HAPUS --}}
-<div id="deleteConfirmModal" class="modal-overlay">
-    <div class="modal-card modal-card-small">
-        <button class="close-modal" id="closeDeleteModalBtn">
-            <i class="fas fa-times"></i>
-        </button>
-        
-        <div class="modal-content">
-            <div class="modal-header modal-header-center">
-                <div class="modal-icon modal-icon-danger">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <h2 class="modal-title modal-title-danger">
-                    <span>Konfirmasi Hapus</span>
-                </h2>
-            </div>
-
-            <p class="modal-description">
-                Apakah Anda yakin ingin menghapus jadwal ini? <br>
-                <strong>Tindakan ini tidak dapat dibatalkan.</strong>
-            </p>
-
-            <div class="form-actions">
-                <button type="button" class="btn-secondary" id="btnCancelDelete">
-                    <i class="fas fa-times"></i>
-                    Batal
-                </button>
-                <button type="button" class="btn-danger" id="btnConfirmDelete">
-                    <i class="fas fa-trash"></i>
-                    Ya, Hapus
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-@endsection
-
-@push('styles')
 <style>
-    * { 
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
-
-    /* ===== DARK MODE SUPPORT ===== */
+/* --------------------------------------------------------------------- */
+/* KODE CSS YANG SUDAH ADA DI ATAS */
+/* --------------------------------------------------------------------- */
+/* ===== DARK MODE SUPPORT ===== */
     :root {
         --p1: #39A616;
         --p2: #1D8208;
@@ -549,6 +246,35 @@
         background: rgba(255, 255, 255, 0.3);
         transform: translateY(-3px);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    /* ===== PAGE ACTION BAR ===== */
+    .page-action-bar {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+    }
+
+    .btn-danger-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+        padding: 14px 24px;
+        border-radius: 20px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        border: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    }
+
+    .btn-danger-action:hover {
+        background: linear-gradient(135deg, #c0392b, #a93226);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
     }
 
     /* ===== ALERT ===== */
@@ -999,6 +725,11 @@
         color: #e74c3c;
     }
 
+    #cancelScheduleModal .modal-icon-danger {
+        background: #e74c3c; 
+        color: white;
+    }
+
     .modal-title {
         background: var(--grad);
         -webkit-background-clip: text;
@@ -1031,6 +762,16 @@
     .modal-description strong {
         color: var(--text-primary);
         font-weight: 700;
+    }
+
+    .text-danger-small {
+        color: #e74c3c;
+        font-size: 0.9rem;
+        margin-top: 15px;
+        padding: 12px;
+        background: rgba(231, 76, 60, 0.1);
+        border-radius: 8px;
+        border-left: 3px solid #e74c3c;
     }
 
     /* Form Styles */
@@ -1156,6 +897,12 @@
         padding-top: 24px;
         border-top: 2px solid var(--border-color);
     }
+    
+    #cancelScheduleModal .modal-card .form-actions {
+        padding: 0 40px 40px;
+        margin-top: 0;
+        border-top: none;
+    }
 
     .btn-primary {
         flex: 1;
@@ -1274,11 +1021,6 @@
         to { transform: translateY(0); opacity: 1; }
     }
 
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
     @keyframes slideUp {
         from { transform: translateY(50px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
@@ -1372,10 +1114,371 @@
 </style>
 @endpush
 
+@section('content')
+<div class="container-fluid-modern">
+    <div class="page-header-banner">
+        <div class="header-content">
+            <div class="header-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="header-text">
+                <div class="greeting-badge">
+                    <i class="fas fa-hospital"></i>
+                    <span>Schedule Management</span>
+                </div>
+                <h1 class="page-title">Kelola Jadwal Praktek 📅</h1>
+                <p class="page-subtitle">
+                    <i class="far fa-calendar-check"></i>
+                    Manajemen Jadwal Tenaga Medis
+                </p>
+            </div>
+            <div class="hero-illustration">
+                <div class="pulse-circle pulse-1"></div>
+                <div class="pulse-circle pulse-2"></div>
+                <div class="pulse-circle pulse-3"></div>
+                <button class="btn-add" id="btnTambahJadwal">
+                    <span>Tambah Jadwal</span>
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-action-bar">
+        <button type="button" class="btn-danger-action" id="btnCancelScheduleModalToggle">
+            <i class="fas fa-calendar-times"></i> Tutup Jadwal Spesifik
+        </button>
+    </div>
+
+    @if (session('success'))
+        <div class="alert-success-modern" id="autoHideAlert">
+            <div class="alert-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <span class="alert-text">{{ session('success') }}</span>
+            <button class="alert-close-btn" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    @endif
+
+    <div class="schedule-container-modern">
+        <div class="table-card-header">
+            <h3 class="table-title">
+                <i class="fas fa-list"></i> 
+                Daftar Jadwal Praktek
+            </h3>
+            <span class="schedule-count">
+                <i class="fas fa-calendar-check"></i>
+                {{ $jadwals->count() }} Jadwal Aktif
+            </span>
+        </div>
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-hashtag"></i> No</th>
+                    <th><i class="fas fa-user-md"></i> Nama Dokter</th>
+                    <th><i class="fas fa-stethoscope"></i> Layanan</th>
+                    <th><i class="fas fa-calendar"></i> Hari</th>
+                    <th><i class="far fa-clock"></i> Waktu</th>
+                    <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php
+                    if (!function_exists('formatHariFleksibel')) {
+                        function formatHariFleksibel($hariArray) {
+                            if (empty($hariArray) || !is_array($hariArray)) return '';
+                            if (count($hariArray) == 7) return 'Setiap Hari';
+                            $semuaHari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+                            $indeksHari = array_map(fn($h) => array_search($h, $semuaHari), $hariArray); 
+                            sort($indeksHari); 
+                            $rentang = [];
+                            for ($i = 0, $j = 0, $n = count($indeksHari); $i < $n; $i = $j) {
+                                $j = $i + 1; 
+                                while ($j < $n && $indeksHari[$j] == $indeksHari[$j-1] + 1) $j++; 
+                                $rentang[] = [$indeksHari[$i], $indeksHari[$j-1]];
+                            }
+                            $outputStrings = [];
+                            foreach ($rentang as $r) { 
+                                $awal = $semuaHari[$r[0]]; 
+                                $akhir = $semuaHari[$r[1]]; 
+                                $outputStrings[] = ($awal == $akhir) ? $awal : "$awal - $akhir"; 
+                            }
+                            return implode(', ', $outputStrings);
+                        }
+                    }
+                @endphp
+
+                @forelse ($jadwals as $index => $jadwal)
+                    <tr class="schedule-row" style="animation-delay: {{ $index * 0.05 }}s">
+                        <td>
+                            <span class="number-badge">{{ $index + 1 }}</span>
+                        </td>
+                        <td>
+                            <div class="doctor-info">
+                                <div class="doctor-avatar">
+                                    @if($jadwal->tenagaMedis && $jadwal->tenagaMedis->profile_photo_path)
+                                        <img src="{{ asset('storage/' . $jadwal->tenagaMedis->profile_photo_path) }}" alt="{{ $jadwal->tenagaMedis->name }}">
+                                    @else
+                                        <i class="fas fa-user-md"></i>
+                                    @endif
+                                </div>
+                                <span class="doctor-name">{{ $jadwal->tenagaMedis?->name ?? 'N/A' }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="service-badge">
+                                <i class="fas fa-briefcase-medical"></i>
+                                {{ $jadwal->layanan }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="day-badge">
+                                <i class="fas fa-calendar-week"></i>
+                                {{ formatHariFleksibel($jadwal->hari) }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="time-badge-modern">
+                                <i class="far fa-clock"></i>
+                                <span>
+                                    {{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }} - 
+                                    {{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }} WIB
+                                </span>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div class="action-buttons">
+                                <button class="btn-action btn-edit" 
+                                        data-id="{{ $jadwal->id }}"
+                                        data-tenaga-medis-id="{{ $jadwal->tenaga_medis_id }}"
+                                        data-layanan="{{ $jadwal->layanan }}"
+                                        data-hari='@json($jadwal->hari)'
+                                        data-jam-mulai="{{ $jadwal->jam_mulai }}"
+                                        data-jam-selesai="{{ $jadwal->jam_selesai }}"
+                                        title="Edit Jadwal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <form action="{{ route('admin.kelolajadwalpraktek.destroy', $jadwal->id) }}" 
+                                      method="POST" 
+                                      class="delete-form"
+                                      style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-action btn-hapus" title="Hapus Jadwal">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-schedule">
+                                <i class="fas fa-calendar-times"></i>
+                                <p>Belum ada jadwal praktek</p>
+                                <small>Klik tombol "Tambah Jadwal" untuk membuat jadwal baru</small>
+                            </div>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="jadwalModal" class="modal-overlay">
+    <div class="modal-card">
+        <button class="close-modal" id="closeModalBtn">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">
+                    <i class="fas fa-calendar-plus"></i>
+                    <span id="modalTitleText">Tambah Jadwal Praktek</span>
+                </h2>
+            </div>
+
+            <form id="jadwalForm" method="POST">
+                @csrf
+                <input type="hidden" id="formMethod" name="_method" value="">
+                
+                <div class="form-group">
+                    <label for="tenaga_medis_id" class="form-label">
+                        <i class="fas fa-user-md"></i> Tenaga Medis
+                    </label>
+                    <select name="tenaga_medis_id" id="tenaga_medis_id" class="form-control" required>
+                        <option value="">-- Pilih Tenaga Medis --</option>
+                        @foreach ($tenagaMedis as $tenaga)
+                            <option value="{{ $tenaga->id }}">
+                                {{ $tenaga->name }} ({{ $tenaga->email }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="layanan" class="form-label">
+                        <i class="fas fa-stethoscope"></i> Layanan
+                    </label>
+                    <input type="text" name="layanan" id="layanan" class="form-control" placeholder="Contoh: Dokter Umum" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-calendar-week"></i> Hari Praktek
+                    </label>
+                    <div class="checkbox-grid">
+                        @php
+                            $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+                        @endphp
+                        @foreach ($days as $day)
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="hari[]" value="{{ $day }}" id="day_{{ $day }}">
+                                <span class="checkbox-custom"></span>
+                                <span class="checkbox-text">{{ $day }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="jam_mulai" class="form-label">
+                            <i class="fas fa-clock"></i> Jam Mulai
+                        </label>
+                        <input type="time" name="jam_mulai" id="jam_mulai" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="jam_selesai" class="form-label">
+                            <i class="fas fa-clock"></i> Jam Selesai
+                        </label>
+                        <input type="time" name="jam_selesai" id="jam_selesai" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i>
+                        <span id="btnSubmitText">Simpan Jadwal</span>
+                    </button>
+                    <button type="button" class="btn-secondary" id="btnCancelModal">
+                        <i class="fas fa-times"></i>
+                        Batal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="cancelScheduleModal" class="modal-overlay">
+    <div class="modal-card modal-card-small">
+        <button class="close-modal" id="closeCancelModalBtn">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <div class="modal-content">
+            <div class="modal-header modal-header-center">
+                <div class="modal-icon modal-icon-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h2 class="modal-title modal-title-danger">
+                    <span>Penutupan Jadwal</span>
+                </h2>
+            </div>
+
+            <form id="formCancelSchedule">
+                @csrf 
+                <div class="form-group">
+                    <label for="cancel_doctor" class="form-label">
+                        <i class="fas fa-user-md"></i> Pilih Dokter/Tenaga Medis
+                    </label>
+                    <select name="tenaga_medis_id" id="cancel_doctor" class="form-control" required>
+                        <option value="">-- Pilih Dokter --</option>
+                        @foreach ($tenagaMedis as $tm)
+                            <option value="{{ $tm->id }}">{{ $tm->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="cancel_date" class="form-label">
+                        <i class="fas fa-calendar-day"></i> Tanggal yang Akan Ditutup
+                    </label>
+                    <input type="date" class="form-control" id="cancel_date" name="date" required 
+                           min="{{ \Carbon\Carbon::today()->toDateString() }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="cancel_reason" class="form-label">
+                        <i class="fas fa-exclamation-circle"></i> Alasan Pembatalan (Min. 10 karakter)
+                    </label>
+                    <textarea class="form-control" id="cancel_reason" name="reason" rows="3" required></textarea>
+                </div>
+
+                <p class="text-danger-small">
+                    ⚠️ Menutup jadwal ini akan <strong>membatalkan semua pendaftaran pasien</strong> yang sudah ada pada tanggal tersebut dan mengirim notifikasi.
+                </p>
+                
+                <div class="form-actions" style="border-top: 2px solid var(--border-color); padding-top: 24px;">
+                    <button type="button" class="btn-secondary" id="btnCancelModalClose">
+                        <i class="fas fa-times"></i> Batal
+                    </button>
+                    <button type="button" class="btn-danger" id="submitCancelSchedule">
+                        <i class="fas fa-calendar-times"></i> Tutup & Batalkan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="deleteConfirmModal" class="modal-overlay">
+    <div class="modal-card modal-card-small">
+        <button class="close-modal" id="closeDeleteModalBtn">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <div class="modal-content">
+            <div class="modal-header modal-header-center">
+                <div class="modal-icon modal-icon-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h2 class="modal-title modal-title-danger">
+                    <span>Konfirmasi Hapus</span>
+                </h2>
+            </div>
+
+            <p class="modal-description">
+                Apakah Anda yakin ingin menghapus jadwal ini? <br>
+                <strong>Tindakan ini tidak dapat dibatalkan.</strong>
+            </p>
+
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" id="btnCancelDelete">
+                    <i class="fas fa-times"></i>
+                    Batal
+                </button>
+                <button type="button" class="btn-danger" id="btnConfirmDelete">
+                    <i class="fas fa-trash"></i>
+                    Ya, Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@endsection
+
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- Variabel Modal Form (Jadwal) ---
         const modal = document.getElementById('jadwalModal');
         const btnTambah = document.getElementById('btnTambahJadwal');
         const closeBtn = document.getElementById('closeModalBtn');
@@ -1385,14 +1488,30 @@
         const btnSubmitText = document.getElementById('btnSubmitText');
         const formMethod = document.getElementById('formMethod');
 
-        // --- Variabel Modal Konfirmasi Hapus ---
         const deleteModal = document.getElementById('deleteConfirmModal');
         const closeDeleteBtn = document.getElementById('closeDeleteModalBtn');
         const cancelDeleteBtn = document.getElementById('btnCancelDelete');
         const confirmDeleteBtn = document.getElementById('btnConfirmDelete');
         let formToDelete = null;
 
-        // Auto hide alert
+        const cancelModal = document.getElementById('cancelScheduleModal');
+        const btnCancelToggle = document.getElementById('btnCancelScheduleModalToggle');
+        const closeCancelBtn = document.getElementById('closeCancelModalBtn');
+        const cancelModalCloseBtn = document.getElementById('btnCancelModalClose');
+        const submitCancelBtn = document.getElementById('submitCancelSchedule');
+
+        function openCancelModal() {
+            cancelModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            document.getElementById('formCancelSchedule').reset();
+            document.getElementById('cancel_date').min = new Date().toISOString().split('T')[0]; 
+        }
+
+        function closeCancelModal() {
+            cancelModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
         const alert = document.getElementById('autoHideAlert');
         if (alert) {
             setTimeout(() => {
@@ -1402,12 +1521,20 @@
             }, 5000);
         }
 
-        // Open modal for create
         btnTambah.addEventListener('click', function() {
             openModal('create');
         });
+        
+        if(btnCancelToggle) {
+            btnCancelToggle.addEventListener('click', openCancelModal);
+        }
+        if(closeCancelBtn) {
+            closeCancelBtn.addEventListener('click', closeCancelModal);
+        }
+        if(cancelModalCloseBtn) {
+            cancelModalCloseBtn.addEventListener('click', closeCancelModal);
+        }
 
-        // Open modal for edit
         document.querySelectorAll('.btn-edit').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
@@ -1423,11 +1550,9 @@
             });
         });
 
-        // Close modal (Jadwal)
         closeBtn.addEventListener('click', closeModal);
         cancelBtn.addEventListener('click', closeModal);
 
-        // Close modal when clicking outside
         window.addEventListener('click', function(event) {
             if (event.target == modal) {
                 closeModal();
@@ -1435,9 +1560,11 @@
             if (event.target == deleteModal) {
                 closeDeleteModal();
             }
+            if (event.target == cancelModal) {
+                closeCancelModal();
+            }
         });
 
-        // ESC key to close
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && modal.style.display === 'flex') {
                 closeModal();
@@ -1445,9 +1572,11 @@
             if (e.key === 'Escape' && deleteModal.style.display === 'flex') {
                 closeDeleteModal();
             }
+            if (e.key === 'Escape' && cancelModal.style.display === 'flex') {
+                closeCancelModal();
+            }
         });
 
-        // === KONFIRMASI HAPUS ===
         document.querySelectorAll('.delete-form').forEach(form => {
             form.addEventListener('submit', function(e) {
                 e.preventDefault(); 
@@ -1476,7 +1605,6 @@
             formToDelete = null;
         }
 
-        // Fungsi openModal (Jadwal)
         function openModal(mode, data = null) {
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -1487,7 +1615,7 @@
             if (mode === 'create') {
                 modalTitleText.textContent = 'Tambah Jadwal Praktek';
                 btnSubmitText.textContent = 'Simpan Jadwal';
-                form.action = '{{ route("admin.kelolajadwalpraktek.store") }}';
+                form.action = "{{ route('admin.kelolajadwalpraktek.store') }}";
                 formMethod.value = '';
             } else if (mode === 'edit' && data) {
                 modalTitleText.textContent = 'Edit Jadwal Praktek';
@@ -1513,6 +1641,86 @@
             modal.style.display = 'none';
             document.body.style.overflow = 'auto';
             form.reset();
+        }
+        
+        if(submitCancelBtn) {
+            submitCancelBtn.addEventListener('click', function() {
+                const tenagaMedisId = document.getElementById('cancel_doctor').value;
+                const date = document.getElementById('cancel_date').value;
+                const reason = document.getElementById('cancel_reason').value;
+                const csrfToken = document.querySelector('#formCancelSchedule input[name="_token"]').value;
+                const doctorSelect = document.getElementById('cancel_doctor');
+                const doctorName = doctorSelect.options[doctorSelect.selectedIndex].text;
+                
+                if (!tenagaMedisId || !date || !reason || reason.length < 10) {
+                    Swal.fire('Validasi Gagal', 'Harap pilih dokter, tanggal, dan tulis alasan minimal 10 karakter.', 'warning');
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Konfirmasi Penutupan Jadwal',
+                    text: `Anda yakin ingin menutup jadwal ${doctorName} pada tanggal ${date}? Semua pendaftaran yang ada akan dibatalkan!`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Tutup Jadwal',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#e74c3c',
+                    cancelButtonColor: '#39A616'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Memproses...',
+                            text: 'Membatalkan pendaftaran dan mengirim notifikasi.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        fetch("{{ route('admin.jadwal.cancel') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken 
+                            },
+                            body: JSON.stringify({
+                                tenaga_medis_id: tenagaMedisId,
+                                date: date,
+                                reason: reason
+                            })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(errorData => {
+                                    if (response.status === 422 && errorData.errors) {
+                                        const firstError = Object.values(errorData.errors)[0][0];
+                                        throw new Error(firstError);
+                                    }
+                                    throw new Error(errorData.message || 'Pembatalan gagal di server.');
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            Swal.fire({
+                                title: '✅ Penutupan Berhasil!',
+                                html: `Jadwal tanggal ${date} berhasil ditutup. Total <b>${data.pasien_terdampak}</b> pasien telah dinotifikasi.`,
+                                icon: 'success'
+                            }).then(() => {
+                                closeCancelModal();
+                                window.location.reload(); 
+                            });
+                        })
+                        .catch(error => {
+                            Swal.fire({
+                                title: 'Gagal Membatalkan',
+                                text: error.message || 'Terjadi kesalahan saat membatalkan jadwal.',
+                                icon: 'error'
+                            });
+                        });
+                    }
+                });
+            });
         }
     });
 </script>

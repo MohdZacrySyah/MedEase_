@@ -845,6 +845,11 @@
                         <i class="fas fa-history"></i>Riwayat Pemeriksaan
                     </a>
                 </li>
+                <li class="nav-item">
+    <a class="nav-link {{ request()->routeIs('chat.*') ? 'active' : '' }}" href="{{ route('chat.index') }}">
+        <i class="fas fa-comments"></i> Chat Dokter
+    </a>
+</li>
             </ul>
         </div>
 

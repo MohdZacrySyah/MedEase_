@@ -836,6 +836,11 @@
                         <i class="fas fa-chart-line"></i>Laporan Saya
                     </a>
                 </li>
+                <li class="nav-item">
+    <a class="nav-link {{ request()->routeIs('chat.*') ? 'active' : '' }}" href="{{ route('chat.index') }}">
+        <i class="fas fa-comments"></i> Chat Pasien
+    </a>
+</li>
             </ul>
         </div>
 

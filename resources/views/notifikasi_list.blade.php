@@ -3,206 +3,34 @@
 
 @push('styles')
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-@endpush
-
-@section('content')
-
-    {{-- Header Halaman --}}
-    <div class="page-header-container">
-        <div class="header-content">
-            <div class="header-icon">
-                <i class="fas fa-calendar-check"></i>
-            </div>
-            <div class="header-text">
-                <h1 class="page-title">Jadwal Kunjungan</h1>
-                <p class="page-subtitle">Jadwal konsultasi Anda yang akan datang</p>
-            </div>
-            <div class="hero-decoration">
-                <div class="pulse-ring pulse-1"></div>
-                <div class="pulse-ring pulse-2"></div>
-                <div class="pulse-ring pulse-3"></div>
-                <i class="fas fa-clipboard-list"></i>
-            </div>
-        </div>
-    </div>
-
-    {{-- Daftar Notifikasi --}}
-    <div class="notifikasi-list-ringkas">
-        @forelse ($pendaftarans as $index => $pendaftaran)
-            <div class="notifikasi-item-ringkas" style="animation-delay: {{ $index * 0.1 }}s"
-                 data-tanggal="{{ \Carbon\Carbon::parse($pendaftaran->jadwal_dipilih)->isoFormat('dddd, D MMMM YYYY') }}"
-                 data-antrian="{{ $pendaftaran->no_antrian ?? '-' }}"
-                 data-layanan="{{ $pendaftaran->nama_layanan }}"
-                 data-dokter="{{ $pendaftaran->jadwalPraktek?->tenagaMedis?->name ?? 'N/A' }}"
-                 data-status-antrian="{{ $pendaftaran->no_antrian ? 'true' : 'false' }}">
-                
-                <div class="notifikasi-card-inner">
-                    <div class="card-left-accent"></div>
-                    
-                    <div class="card-main-content">
-                        <div class="date-section">
-                            <div class="date-box">
-                                <span class="date-day">{{ \Carbon\Carbon::parse($pendaftaran->jadwal_dipilih)->format('d') }}</span>
-                                <span class="date-month">{{ \Carbon\Carbon::parse($pendaftaran->jadwal_dipilih)->isoFormat('MMM') }}</span>
-                            </div>
-                            <div class="date-info">
-                                <span class="date-full">{{ \Carbon\Carbon::parse($pendaftaran->jadwal_dipilih)->isoFormat('dddd') }}</span>
-                                <span class="date-year">{{ \Carbon\Carbon::parse($pendaftaran->jadwal_dipilih)->format('Y') }}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="appointment-details">
-                            <h3 class="layanan-title">{{ $pendaftaran->nama_layanan }}</h3>
-                            <div class="dokter-info">
-                                <div class="dokter-avatar">
-                                    <i class="fas fa-user-md"></i>
-                                </div>
-                                <div class="dokter-text">
-                                    <span class="dokter-label">Dokter</span> 
-                                    <span class="dokter-name">{{ $pendaftaran->jadwalPraktek?->tenagaMedis?->name ?? 'N/A' }}</span>
-                                </div>
-                            </div>
-                            
-                            @if($pendaftaran->no_antrian)
-                                <div class="queue-badge">
-                                    <i class="fas fa-ticket-alt"></i>
-                                    <span>Antrian #{{ $pendaftaran->no_antrian }}</span>
-                                </div>
-                            @else
-                                <div class="queue-badge pending">
-                                    <i class="fas fa-clock"></i>
-                                    <span>Menunggu Nomor Antrian</span>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                    
-                    <div class="card-action">
-                        <button class="btn-view-ticket">
-                            <i class="fas fa-ticket-alt"></i>
-                            <span>Lihat</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        @empty
-            <div class="no-notifikasi-info">
-                <div class="no-data-icon">
-                    <i class="fas fa-calendar-times"></i>
-                </div>
-                <h3>Belum Ada Jadwal</h3>
-                <p>Anda tidak memiliki jadwal kunjungan yang akan datang</p>
-                <a href="{{ route('jadwal') }}" class="btn-book-now">
-                    <i class="fas fa-plus-circle"></i>
-                    Buat Jadwal Baru
-                </a>
-            </div>
-        @endforelse
-    </div>
-
-{{-- MODAL TIKET --}}
-<div id="detailModal" class="modal">
-    <div class="modal-overlay-bg"></div>
-    <div class="modal-content">
-        <button class="close-btn" id="closeModalBtn">
-            <i class="fas fa-times"></i>
-        </button>
-        
-        <div class="ticket-card">
-            {{-- Ticket Header --}}
-            <div class="ticket-header">
-                <div class="ticket-pattern"></div>
-                <div class="header-content-ticket">
-                    <div class="clinic-logo">
-                        <i class="fas fa-heartbeat"></i>
-                    </div>
-                    <h2 class="clinic-name">Praktek Bersama</h2>
-                    <p class="ticket-type">Tiket Konsultasi</p>
-                </div>
-            </div>
-            
-            {{-- Ticket Separator --}}
-            <div class="ticket-separator">
-                <div class="separator-circle left"></div>
-                <div class="separator-line"></div>
-                <div class="separator-circle right"></div>
-            </div>
-            
-            {{-- Ticket Body --}}
-            <div class="ticket-body">
-                <div class="queue-section">
-                    <span class="queue-label">NOMOR ANTRIAN</span>
-                    <div class="queue-number" id="modalAntrian">-</div>
-                </div>
-                
-                <div class="ticket-details">
-                    <div class="detail-row">
-                        <i class="fas fa-calendar-alt"></i>
-                        <div class="detail-content">
-                            <span class="detail-label">Tanggal Kunjungan</span>
-                            <span class="detail-value" id="modalTanggal"></span>
-                        </div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <i class="fas fa-stethoscope"></i>
-                        <div class="detail-content">
-                            <span class="detail-label">Layanan</span>
-                            <span class="detail-value" id="modalLayanan"></span>
-                        </div>
-                    </div>
-                    
-                    <div class="detail-row">
-                        <i class="fas fa-user-md"></i>
-                        <div class="detail-content">
-                            <span class="detail-label">Dokter</span>
-                            <span class="detail-value" id="modalDokter"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            {{-- Ticket Footer --}}
-            <div class="ticket-footer">
-                <div class="footer-icon">
-                    <i class="fas fa-info-circle"></i>
-                </div>
-                <p id="modalFooterText">Harap datang sesuai jadwal</p>
-            </div>
-            
-            {{-- Barcode Decoration --}}
-            <div class="ticket-barcode">
-                <div class="barcode-line"></div>
-                <div class="barcode-line"></div>
-                <div class="barcode-line short"></div>
-                <div class="barcode-line"></div>
-                <div class="barcode-line short"></div>
-                <div class="barcode-line"></div>
-                <div class="barcode-line"></div>
-                <div class="barcode-line short"></div>
-                <div class="barcode-line"></div>
-                <div class="barcode-line"></div>
-                <div class="barcode-line short"></div>
-                <div class="barcode-line"></div>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection
-
-@push('styles')
 <style>
-    * { box-sizing: border-box; }
+    * { 
+        box-sizing: border-box; 
+    }
     
-    /* ===== WARNA BARU ===== */
     :root {
         --p1: #39A616;
         --p2: #1D8208;
         --p3: #0C5B00;
         --grad: linear-gradient(135deg, #39A616, #1D8208, #0C5B00);
         --grad-reverse: linear-gradient(135deg, #0C5B00, #1D8208, #39A616);
+        --bg-primary: #ffffff;
+        --bg-secondary: #f9fafb;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --text-muted: #9ca3af;
+        --shadow-color: rgba(57, 166, 22, 0.1);
+        --danger-color: #e74c3c;
     }
     
+    [data-theme="dark"] {
+        --bg-primary: #1f2937;
+        --bg-secondary: #111827;
+        --text-primary: #f9fafb;
+        --text-secondary: #d1d5db;
+        --text-muted: #9ca3af;
+    }
+
     body { 
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
@@ -213,7 +41,6 @@
         padding: 40px 20px;
     }
 
-    /* ===== HEADER PREMIUM ===== */
     .page-header-container {
         margin-bottom: 40px;
         animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -330,16 +157,42 @@
         animation: pulse-ring 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
     
-    .pulse-1 { width: 100%; height: 100%; animation-delay: 0s; }
-    .pulse-2 { width: 120%; height: 120%; animation-delay: 0.8s; }
-    .pulse-3 { width: 140%; height: 140%; animation-delay: 1.6s; }
+    .pulse-1 { 
+        width: 100%; 
+        height: 100%; 
+        animation-delay: 0s; 
+    }
+    
+    .pulse-2 { 
+        width: 120%; 
+        height: 120%; 
+        animation-delay: 0.8s; 
+    }
+    
+    .pulse-3 { 
+        width: 140%; 
+        height: 140%; 
+        animation-delay: 1.6s; 
+    }
     
     @keyframes pulse-ring {
-        0% { transform: scale(0.9); opacity: 1; }
-        100% { transform: scale(1.5); opacity: 0; }
+        from { transform: scale(0.9); opacity: 1; }
+        to { transform: scale(1.5); opacity: 0; }
     }
 
-    /* ===== NOTIFIKASI LIST PREMIUM ===== */
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 40px 0 20px 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .section-title i {
+        font-size: 1.3rem;
+    }
+
     .notifikasi-list-ringkas {
         display: flex;
         flex-direction: column;
@@ -353,9 +206,10 @@
     }
 
     .notifikasi-item-ringkas {
+        text-decoration: none; 
         background: var(--bg-primary);
         border-radius: 20px;
-        box-shadow: 0 8px 30px rgba(57, 166, 22, 0.1);
+        box-shadow: 0 8px 30px var(--shadow-color);
         cursor: pointer;
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
@@ -374,6 +228,36 @@
         box-shadow: 0 20px 60px rgba(57, 166, 22, 0.25);
         border-color: rgba(57, 166, 22, 0.4);
     }
+    
+    .notifikasi-item-ringkas.unread-glow {
+        border: 2px solid var(--p1);
+        box-shadow: 0 8px 30px rgba(57, 166, 22, 0.3);
+    }
+
+    .notifikasi-item-ringkas.read-dim {
+        opacity: 0.85;
+    }
+    
+    .status-cancellation .card-left-accent,
+    .status-cancellation .date-box {
+        background: linear-gradient(135deg, var(--danger-color), #c0392b) !important;
+        box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4) !important;
+    }
+    
+    .status-cancellation .layanan-title {
+        color: var(--danger-color);
+    }
+    
+    .status-cancellation .dokter-avatar {
+        color: var(--danger-color);
+        background: rgba(231, 76, 60, 0.15);
+    }
+    
+    .status-cancellation .queue-badge {
+        background: linear-gradient(135deg, rgba(231, 76, 60, 0.15), rgba(231, 76, 60, 0.25)) !important;
+        border-color: rgba(231, 76, 60, 0.3) !important;
+        color: var(--danger-color) !important;
+    }
 
     .notifikasi-card-inner {
         display: flex;
@@ -381,6 +265,7 @@
         padding: 28px;
         gap: 28px;
         position: relative;
+        color: var(--text-primary);
     }
 
     .card-left-accent {
@@ -398,7 +283,13 @@
         width: 12px;
     }
 
-    /* Date Section */
+    .card-main-content {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        flex: 1;
+    }
+
     .date-section {
         display: flex;
         align-items: center;
@@ -417,6 +308,11 @@
         justify-content: center;
         box-shadow: 0 8px 25px rgba(57, 166, 22, 0.3);
         animation: float 4s ease-in-out infinite;
+    }
+    
+    .date-box i {
+        font-size: 2rem;
+        color: white;
     }
 
     .date-day {
@@ -451,7 +347,6 @@
         color: var(--text-secondary);
     }
 
-    /* Appointment Details */
     .appointment-details {
         flex: 1;
         display: flex;
@@ -529,7 +424,6 @@
         font-size: 0.95rem;
     }
 
-    /* Card Action */
     .card-action {
         display: flex;
         align-items: center;
@@ -586,7 +480,6 @@
         font-size: 1.05rem;
     }
 
-    /* No Data */
     .no-notifikasi-info {
         text-align: center;
         padding: 80px 40px;
@@ -664,7 +557,7 @@
         transform: translateY(-3px) scale(1.05);
         box-shadow: 0 12px 35px rgba(57, 166, 22, 0.45);
     }
-    /* ===== MODAL PREMIUM ===== */
+
     .modal {
         display: none;
         position: fixed;
@@ -742,7 +635,6 @@
         color: #fff;
     }
 
-    /* ===== TICKET CARD PREMIUM ===== */
     .ticket-card {
         background: var(--bg-primary);
         border-radius: 24px;
@@ -755,6 +647,21 @@
         padding: 40px 35px;
         position: relative;
         overflow: hidden;
+    }
+    
+    .ticket-card.cancellation-style .ticket-header {
+        background: linear-gradient(135deg, var(--danger-color), #c0392b);
+    }
+    
+    .ticket-card.cancellation-style .queue-number {
+        background: linear-gradient(135deg, var(--danger-color), #c0392b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .ticket-card.cancellation-style .detail-row i {
+        color: var(--danger-color);
     }
 
     .ticket-pattern {
@@ -804,7 +711,6 @@
         font-weight: 500;
     }
 
-    /* Ticket Separator */
     .ticket-separator {
         position: relative;
         height: 35px;
@@ -845,7 +751,6 @@
         right: -17px;
     }
 
-    /* Ticket Body */
     .ticket-body {
         padding: 40px 35px 35px;
         background: var(--bg-primary);
@@ -928,7 +833,6 @@
         font-weight: 600;
     }
 
-    /* Ticket Footer */
     .ticket-footer {
         padding: 24px 35px;
         background: var(--bg-secondary);
@@ -962,7 +866,6 @@
         font-weight: 500;
     }
 
-    /* Barcode */
     .ticket-barcode {
         display: flex;
         justify-content: center;
@@ -985,7 +888,6 @@
         height: 28px;
     }
 
-    /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
         .header-content {
             flex-direction: column;
@@ -1011,6 +913,11 @@
             align-items: flex-start;
             padding: 24px;
             gap: 20px;
+        }
+
+        .card-main-content {
+            flex-direction: column;
+            width: 100%;
         }
 
         .date-section {
@@ -1084,54 +991,312 @@
 </style>
 @endpush
 
+@section('content')
+
+    <div class="page-header-container">
+        <div class="header-content">
+            <div class="header-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="header-text">
+                <h1 class="page-title">Notifikasi Jadwal</h1>
+                <p class="page-subtitle">Semua pembaruan dan pemberitahuan jadwal Anda</p>
+            </div>
+            <div class="hero-decoration">
+                <div class="pulse-ring pulse-1"></div>
+                <div class="pulse-ring pulse-2"></div>
+                <div class="pulse-ring pulse-3"></div>
+                <i class="fas fa-bell"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="notifikasi-list-ringkas">
+        @forelse ($paginatedNotifications as $index => $item)
+            @php
+                $isCancellation = $item->is_cancellation;
+                $isUnread = $item->is_unread;
+                $isPendaftaran = $item->type === 'pendaftaran';
+                
+                $statusClass = $isCancellation ? 'status-cancellation' : 'status-general';
+                $iconClass = $isCancellation ? 'fa-calendar-times' : ($isPendaftaran ? 'fa-calendar-check' : 'fa-bell');
+                
+                $jadwalDate = \Carbon\Carbon::parse($item->date);
+            @endphp
+            
+            <div class="notifikasi-item-ringkas open-modal-trigger {{ $statusClass }} {{ $isUnread ? 'unread-glow' : 'read-dim' }}" 
+                 style="animation-delay: {{ $index * 0.1 }}s"
+                 data-notifikasi-id="{{ $item->type === 'notification' ? $item->id : '' }}"
+                 data-modal-type="{{ $item->type }}"
+                 data-tanggal="{{ $jadwalDate->isoFormat('dddd, D MMMM YYYY') }}"
+                 data-antrian="{{ $item->no_antrian }}"
+                 data-layanan="{{ $item->layanan }}"
+                 data-dokter="{{ $item->dokter_name }}"
+                 data-is-batal="{{ $isCancellation ? 'true' : 'false' }}"
+                 data-pesan="{{ $item->message }}"
+                 data-is-unread="{{ $isUnread ? 'true' : 'false' }}">
+                
+                <div class="notifikasi-card-inner">
+                    <div class="card-left-accent"></div>
+                    
+                    <div class="card-main-content">
+                        <div class="date-section">
+                            <div class="date-box">
+                                @if ($isPendaftaran)
+                                    <span class="date-day">{{ $jadwalDate->format('d') }}</span>
+                                    <span class="date-month">{{ $jadwalDate->isoFormat('MMM') }}</span>
+                                @else
+                                    <span class="date-day"><i class="fas {{ $iconClass }}"></i></span>
+                                    <span class="date-month">{{ $isUnread ? 'BARU' : 'LIHAT' }}</span>
+                                @endif
+                            </div>
+                            <div class="date-info">
+                                <span class="date-full">{{ $item->title }}</span>
+                                <span class="date-year">{{ $item->created_at->diffForHumans() }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="appointment-details">
+                            <h3 class="layanan-title">{{ $item->layanan }}</h3>
+                            <div class="dokter-info">
+                                <div class="dokter-avatar">
+                                    <i class="fas {{ $isPendaftaran ? 'fa-user-md' : 'fa-info-circle' }}"></i>
+                                </div>
+                                <div class="dokter-text">
+                                    <span class="dokter-label">{{ $isPendaftaran ? 'DOKTER' : 'KETERANGAN' }}</span> 
+                                    <span class="dokter-name">{{ $isPendaftaran ? $item->dokter_name : Str::limit($item->message, 60) }}</span>
+                                </div>
+                            </div>
+                            
+                            @if ($isPendaftaran)
+                                @php
+                                    $isPending = $item->no_antrian === '-';
+                                @endphp
+                                <div class="queue-badge {{ $isPending ? 'pending' : '' }}">
+                                    <i class="fas {{ $isPending ? 'fa-clock' : 'fa-ticket-alt' }}"></i>
+                                    <span>{{ $isPending ? 'Menunggu Antrian' : 'Antrian #' . $item->no_antrian }}</span>
+                                </div>
+                            @else
+                                <div class="queue-badge">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>Tanggal: {{ $jadwalDate->isoFormat('D MMMM YYYY') }}</span>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    <div class="card-action">
+                        <button class="btn-view-ticket">
+                            <i class="fas {{ $isPendaftaran ? 'fa-ticket-alt' : 'fa-arrow-right' }}"></i>
+                            <span>{{ $isPendaftaran ? 'Lihat ' : 'Detail' }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="no-notifikasi-info">
+                <div class="no-data-icon">
+                    <i class="fas fa-bell-slash"></i>
+                </div>
+                <h3>Tidak Ada Notifikasi</h3>
+                <p>Belum ada notifikasi atau jadwal konsultasi yang terdaftar.</p>
+                <a href="{{ route('jadwal') }}" class="btn-book-now">
+                    <i class="fas fa-plus-circle"></i>
+                    Buat Jadwal Baru
+                </a>
+            </div>
+        @endforelse
+
+        @if ($paginatedNotifications->hasPages())
+            <div class="d-flex justify-content-center mt-4">
+                {{ $paginatedNotifications->links() }}
+            </div>
+        @endif
+    </div>
+</div>
+
+{{-- MODAL TIKET (SAMA SEPERTI SEBELUMNYA) --}}
+<div id="detailModal" class="modal">
+    <div class="modal-overlay-bg"></div>
+    <div class="modal-content">
+        <button class="close-btn" id="closeModalBtn">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <div class="ticket-card" id="modalTicketCard">
+            <div class="ticket-header">
+                <div class="ticket-pattern"></div>
+                <div class="header-content-ticket">
+                    <div class="clinic-logo">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h2 class="clinic-name">Praktek Bersama</h2>
+                    <p class="ticket-type" id="modalTicketType">Detail Notifikasi</p>
+                </div>
+            </div>
+            
+            <div class="ticket-separator">
+                <div class="separator-circle left"></div>
+                <div class="separator-line"></div>
+                <div class="separator-circle right"></div>
+            </div>
+            
+            <div class="ticket-body">
+                <div class="queue-section">
+                    <span class="queue-label" id="modalQueueLabel">NOMOR ANTRIAN</span>
+                    <div class="queue-number" id="modalAntrian"></div>
+                </div>
+                
+                <div class="ticket-details">
+                    <div class="detail-row">
+                        <i class="fas fa-calendar-alt"></i>
+                        <div class="detail-content">
+                            <span class="detail-label">Tanggal Jadwal</span>
+                            <span class="detail-value" id="modalTanggal"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <i class="fas fa-stethoscope"></i>
+                        <div class="detail-content">
+                            <span class="detail-label">Layanan</span>
+                            <span class="detail-value" id="modalLayanan"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <i class="fas fa-user-md"></i>
+                        <div class="detail-content">
+                            <span class="detail-label">Dokter</span>
+                            <span class="detail-value" id="modalDokter"></span>
+                        </div>
+                    </div>
+
+                    <div class="detail-row" id="modalMessageRow" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <div class="detail-content">
+                            <span class="detail-label">Pesan</span>
+                            <span class="detail-value" id="modalMessage"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ticket-footer">
+                <div class="footer-icon">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <p id="modalFooterText">Harap datang sesuai jadwal</p>
+            </div>
+            
+            <div class="ticket-barcode">
+                <div class="barcode-line"></div>
+                <div class="barcode-line"></div>
+                <div class="barcode-line short"></div>
+                <div class="barcode-line"></div>
+                <div class="barcode-line short"></div>
+                <div class="barcode-line"></div>
+                <div class="barcode-line"></div>
+                <div class="barcode-line short"></div>
+                <div class="barcode-line"></div>
+                <div class="barcode-line"></div>
+                <div class="barcode-line short"></div>
+                <div class="barcode-line"></div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('detailModal');
-    const items = document.querySelectorAll('.notifikasi-item-ringkas');
     const closeModalBtn = document.getElementById('closeModalBtn');
+    const items = document.querySelectorAll('.open-modal-trigger');
 
-    items.forEach(item => {
-        item.addEventListener('click', function() {
-            const data = this.dataset;
-            
-            // Isi konten modal
-            document.getElementById('modalTanggal').textContent = data.tanggal;
-            document.getElementById('modalAntrian').textContent = data.antrian;
-            document.getElementById('modalLayanan').textContent = data.layanan;
-            document.getElementById('modalDokter').textContent = data.dokter;
-
-            // Ubah pesan footer
-            if (data.statusAntrian === 'false') {
-                document.getElementById('modalFooterText').innerHTML = 'Nomor antrian belum tersedia. Silakan hubungi admin.';
-            } else {
-                document.getElementById('modalFooterText').innerHTML = 'Harap datang sesuai jadwal yang telah ditentukan';
-            }
-            
-            // Tampilkan modal
-            modal.style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        });
-    });
-
-    // Fungsi tutup modal
     function closeModal() {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
     }
 
-    closeModalBtn.addEventListener('click', closeModal);
+    function openModal(data) {
+        const antrianEl = document.getElementById('modalAntrian');
+        const ticketCard = document.getElementById('modalTicketCard');
+        const messageRow = document.getElementById('modalMessageRow');
+        const isCancellation = data.isBatal === 'true';
 
-    // Tutup modal jika klik di luar area konten
+        ticketCard.classList.remove('cancellation-style');
+        
+        document.getElementById('modalTanggal').textContent = data.tanggal;
+        document.getElementById('modalLayanan').textContent = data.layanan;
+        document.getElementById('modalDokter').textContent = data.dokter.split('(')[0].trim();
+        
+        if (isCancellation) {
+            ticketCard.classList.add('cancellation-style');
+            antrianEl.textContent = 'BATAL';
+            document.getElementById('modalQueueLabel').textContent = 'STATUS';
+            document.getElementById('modalTicketType').textContent = 'Pesan Pembatalan';
+            document.getElementById('modalMessage').textContent = data.pesan;
+            messageRow.style.display = 'flex';
+            document.getElementById('modalFooterText').textContent = '⚠️ Mohon segera buat jadwal baru';
+        } else {
+            antrianEl.textContent = data.antrian === '-' ? 'N/A' : data.antrian;
+            document.getElementById('modalQueueLabel').textContent = 'NOMOR ANTRIAN';
+            document.getElementById('modalTicketType').textContent = 'Tiket Konsultasi';
+            messageRow.style.display = 'none';
+            document.getElementById('modalFooterText').textContent = 'Harap datang sesuai jadwal yang telah ditentukan';
+        }
+        
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+
+        if (data.notifikasiId && data.modalType === 'notification' && data.isUnread === 'true') {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            if (csrfToken) {
+                fetch('/notifikasi-jadwal/mark-as-read/' + data.notifikasiId, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+                        'Content-Type': 'application/json'
+                    }
+                }).then(function(response) {
+                    if (response.ok) {
+                        const currentItem = document.querySelector('[data-notifikasi-id="' + data.notifikasiId + '"]');
+                        if (currentItem) {
+                            currentItem.classList.remove('unread-glow');
+                            currentItem.classList.add('read-dim');
+                            currentItem.dataset.isUnread = 'false';
+                        }
+                    }
+                }).catch(function(error) {
+                    console.error('Error marking as read:', error);
+                });
+            }
+        }
+    }
+    
+    items.forEach(function(item) {
+        item.addEventListener('click', function() {
+            openModal(this.dataset);
+        });
+    });
+    
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeModal);
+    }
+
     window.addEventListener('click', function(event) {
         if (event.target == modal || event.target.classList.contains('modal-overlay-bg')) {
             closeModal();
         }
     });
 
-    // Tutup dengan tombol ESC
     document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape' && modal.style.display === 'block') {
+        if (event.key === 'Escape' && modal && modal.style.display === 'flex') {
             closeModal();
         }
     });

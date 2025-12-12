@@ -9,9 +9,9 @@ class Pendaftaran extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
+   protected $fillable = [
         'user_id',
-        'jadwal_praktek_id', // <-- TAMBAHKAN INI
+        'jadwal_praktek_id', 
         'nama_layanan',
         'nama_lengkap',
         'tanggal_lahir',
@@ -22,6 +22,7 @@ class Pendaftaran extends Model
         'jadwal_dipilih',
         'status',
         'no_antrian',
+
     ];
 
     /**
@@ -48,7 +49,7 @@ class Pendaftaran extends Model
     {
         return $this->hasOne(Pemeriksaan::class);
     }
-    public function jadwalPraktek()
+   public function jadwalPraktek() // <-- DIPERLUKAN UNTUK NOTIFIKASI
     {
         return $this->belongsTo(JadwalPraktek::class, 'jadwal_praktek_id');
     }

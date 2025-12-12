@@ -311,7 +311,7 @@
         }
 
         .illustration-logo img {
-            width: 80px;
+            width: 150px;
             height: auto;
             position: relative;
             z-index: 1;

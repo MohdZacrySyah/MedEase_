@@ -35,9 +35,8 @@ class JadwalPraktek extends Model
     /**
      * Mendefinisikan relasi bahwa JadwalPraktek dimiliki oleh TenagaMedis.
      */
-    public function tenagaMedis() // <-- Nama relasi diubah
+    public function tenagaMedis() // <-- DIPERLUKAN UNTUK NOTIFIKASI
     {
-        // Relasi ke Model TenagaMedis menggunakan foreign key 'user_id'
         return $this->belongsTo(TenagaMedis::class, 'tenaga_medis_id');
     }
 }
