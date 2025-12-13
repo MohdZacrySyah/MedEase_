@@ -57,7 +57,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/logout', 'logout')->name('logout');
 
     // Lupa Password
-    Route::get('forgot-password', 'showLinkRequestForm')->name('password.request');
+    Route::get('forgot-password', 'showForgotPasswordForm')->name('password.request'); // FIX: Diubah ke showForgotPasswordForm
     Route::post('forgot-password', 'sendOtp')->name('password.send_otp');
     Route::get('verify-otp', 'showVerifyOtpForm')->name('password.verify.form');
     Route::post('verify-otp', 'verifyOtp')->name('password.verify.otp');
@@ -97,6 +97,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/notifikasi-jadwal', 'notifikasiList')->name('notifikasi.list');
         Route::get('/notifikasi-jadwal/{pendaftaran}', 'notifikasiDetail')->name('notifikasi.detail');
         Route::post('/notifikasi-jadwal/mark-as-read/{id}', 'markNotificationAsRead')->name('notifikasi.read');
+        
+        // 🔥 PENAMBAHAN ROUTE API UNTUK STATUS ANTRIAN DINAMIS 🔥
+        Route::get('/api/queue-status-today/{jadwal}', 'getQueueStatus')->name('api.queue.status');
     });
 
     // 🔥 ROUTE KHUSUS POP-UP & KONFIRMASI (PENTING) 🔥

@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pemeriksaan;
-use App\Models\Pendaftaran; // <-- Tambahkan ini
+use App\Models\Pendaftaran; 
 use Illuminate\Http\Request;
 use App\Models\PemeriksaanAwal;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Resep; // <-- Tambahkan ini
-use Carbon\Carbon; // Pastikan ini ter-import
-use Illuminate\Support\Facades\DB; // Pastikan ini ter-import
+use App\Models\Resep; 
+use Carbon\Carbon; 
+use Illuminate\Support\Facades\DB; 
 
 class PemeriksaanController extends Controller
 {
@@ -21,7 +21,7 @@ class PemeriksaanController extends Controller
      */
     public function getModalDataJson(Pendaftaran $pendaftaran)
     {
-        // ... (Metode ini tetap sama)
+        // ... (Metode ini tidak diubah)
         $pendaftaran->load('user', 'pemeriksaanAwal', 'pemeriksaan');
         $pemeriksaanAwal = $pendaftaran->pemeriksaanAwal;
         $pemeriksaanSOAP = $pendaftaran->pemeriksaan; // Ini adalah data SOAP
@@ -91,12 +91,13 @@ class PemeriksaanController extends Controller
                 [
                     'pasien_id' =>$pendaftaran->user_id, 
                     'tenaga_medis_id' => Auth::guard('tenaga_medis')->id(),
-                    'subjektif' => $validatedData['subjektif'],
-                    'objektif' => $validatedData['objektif'],
-                    'assessment' => $validatedData['assessment'],
-                    'plan' => $validatedData['plan'],
-                    'resep_obat' => $validatedData['resep_obat'],
-                    'harga' => $validatedData['harga'],
+                    // FIX: Menggunakan Null Coalescing (??) untuk mencegah QueryException jika field kosong
+                    'subjektif' => $validatedData['subjektif'] ?? '',
+                    'objektif' => $validatedData['objektif'] ?? '',
+                    'assessment' => $validatedData['assessment'] ?? '', 
+                    'plan' => $validatedData['plan'] ?? '',
+                    'resep_obat' => $validatedData['resep_obat'] ?? '',
+                    'harga' => $validatedData['harga'] ?? 0, 
                 ]
             );
 
@@ -120,29 +121,33 @@ class PemeriksaanController extends Controller
             $pendaftaran->waktu_selesai_periksa = $waktu_selesai_aktual; 
             $pendaftaran->status = 'Selesai';
             $pendaftaran->status_antrian = 'Selesai Dilayani';
-            // Save di akhir block transaction
 
             // 4. Hitung Perubahan Waktu (Core Logic)
             
-            // Perbaikan: Pastikan $pendaftaran->estimasi_dilayani di-parse sebagai Carbon.
-            // Jika estimasi_dilayani hanya berisi "H:i:s" (TIME), kita kombinasikan dengan tanggal hari ini.
-            $estimasi_dilayani_awal = Carbon::parse($pendaftaran->jadwal_dipilih . ' ' . $pendaftaran->estimasi_dilayani);
+            // FIX TIME SHIFT: Pastikan estimasi_dilayani di-parse sebagai Carbon dari tanggal dan waktu
+            $estimasi_dilayani_awal_carbon = Carbon::parse($pendaftaran->jadwal_dipilih . ' ' . $pendaftaran->estimasi_dilayani);
 
-            // Hitung perkiraan waktu selesai awal (Estimasi Dilayani Awal + Durasi Standar 20 menit)
-            $estimasi_selesai_awal = $estimasi_dilayani_awal->addMinutes(self::DURASI_SESI_STANDAR);
+            // Gunakan CLONE agar objek asli tidak berubah
+            $estimasi_selesai_awal = clone $estimasi_dilayani_awal_carbon;
+            $estimasi_selesai_awal->addMinutes(self::DURASI_SESI_STANDAR); // Waktu SELESAI yang DIHARAPKAN
 
             // Hitung selisih waktu (dalam menit)
-            // Selisih NEGATIF berarti pemeriksaan selesai lebih cepat dari estimasi
-            $perubahan_waktu_menit = $estimasi_selesai_awal->diffInMinutes($waktu_selesai_aktual, false) * -1; 
+            // $A->diffInMinutes($B, false) adalah B - A
+            // Selisih = (Waktu Selesai Aktual) - (Waktu Selesai Diharapkan)
+            $selisih_aktual_vs_estimasi = $waktu_selesai_aktual->diffInMinutes($estimasi_selesai_awal, false); 
             
+            // Perubahan yang diterapkan harus berlawanan tanda dengan selisih.
+            // Jika selisih -10 (lebih cepat), perubahan harus +10 (maju).
+            $perubahan_waktu_menit = $selisih_aktual_vs_estimasi * -1; 
+
             // 5. Update estimasi untuk antrian berikutnya jika ada perubahan
             if ($perubahan_waktu_menit !== 0) {
                 
-                $tanggal_pemeriksaan = $pendaftaran->jadwal_dipilih; // Menggunakan kolom tanggal yang pasti string/tanggal
+                $tanggal_pemeriksaan = $pendaftaran->jadwal_dipilih; 
 
                 $antrian_berikutnya = Pendaftaran::where('jadwal_praktek_id', $pendaftaran->jadwal_praktek_id)
                                                  ->where('no_antrian', '>', $pendaftaran->no_antrian)
-                                                 ->whereDate('jadwal_dipilih', '=', $tanggal_pemeriksaan) // Menggunakan kolom tanggal yang aman
+                                                 ->whereDate('jadwal_dipilih', '=', $tanggal_pemeriksaan) 
                                                  ->where('status', '!=', 'Batal') 
                                                  ->where('status', '!=', 'Selesai') 
                                                  ->orderBy('no_antrian', 'asc')
@@ -150,19 +155,21 @@ class PemeriksaanController extends Controller
 
                 foreach ($antrian_berikutnya as $antrian) {
                     
-                    // Perbaikan: Parse estimasi lama sebelum ditambahkan
+                    // Parse estimasi lama dari kolom tanggal dan waktu
                     $estimasi_lama = Carbon::parse($antrian->jadwal_dipilih . ' ' . $antrian->estimasi_dilayani);
                     
-                    $estimasi_baru = $estimasi_lama->addMinutes($perubahan_waktu_menit);
+                    // FIX TIME SHIFT: Gunakan CLONE agar mutasi tidak merusak loop
+                    $estimasi_baru = clone $estimasi_lama;
+                    $estimasi_baru->addMinutes($perubahan_waktu_menit);
                     
-                    // Simpan kembali sebagai TIME string saja jika kolomnya hanya TIME
+                    // Simpan kembali sebagai TIME string saja
                     $antrian->estimasi_dilayani = $estimasi_baru->format('H:i:s');
                     $antrian->save();
                 }
             }
             
-            // Simpan perubahan pada pendaftaran yang baru selesai (termasuk waktu_selesai_periksa)
-            $pendaftaran->save(); // 👈 Baris ini memastikan data pendaftaran yang baru selesai juga tersimpan
+            // Simpan perubahan pada pendaftaran yang baru selesai
+            $pendaftaran->save(); 
 
             // [OPSIONAL] PANGGIL EVENT BROADCASTING DI SINI
         });
