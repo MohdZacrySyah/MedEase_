@@ -98,12 +98,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/notifikasi-jadwal/{pendaftaran}', 'notifikasiDetail')->name('notifikasi.detail');
         Route::post('/notifikasi-jadwal/mark-as-read/{id}', 'markNotificationAsRead')->name('notifikasi.read');
         
-        // 🔥 PENAMBAHAN ROUTE API UNTUK STATUS ANTRIAN DINAMIS 🔥
+        // 🔥 Route API Status Antrian
         Route::get('/api/queue-status-today/{jadwal}', 'getQueueStatus')->name('api.queue.status');
     });
 
-    // 🔥 ROUTE KHUSUS POP-UP & KONFIRMASI (PENTING) 🔥
-    
     // 1. Cek Panggilan (Polling)
     Route::get('/check-panggilan', function () {
         $user = Auth::user();
@@ -118,17 +116,13 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('check.panggilan');
 
-    // 2. Stop Alarm (Hanya mematikan suara & popup)
-    // Menggunakan Closure agar tidak perlu edit Controller Pasien lagi
+    // 2. Stop Alarm
     Route::post('/stop-alarm/{id}', function($id) {
         $pendaftaran = Pendaftaran::findOrFail($id);
-        
-        // Pastikan hanya pemilik yang bisa stop
         if($pendaftaran->user_id == Auth::id()) {
             $pendaftaran->status_panggilan = 'menunggu'; 
             $pendaftaran->save();
         }
-        
         return response()->json(['success' => true]);
     })->name('stop.alarm');
 });
@@ -137,9 +131,10 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth:web,tenaga_medis'])->group(function () {
     Route::get('/chat/{partnerId?}', [ChatController::class, 'index'])->name('chat.index');
     Route::post('/chat/send', [ChatController::class, 'sendMessage'])->name('chat.send');
-    
-    // 🔥 TAMBAHKAN INI:
     Route::post('/chat/mark-read/{partnerId}', [ChatController::class, 'markRead'])->name('chat.markRead');
+
+    // 🔥 TAMBAHKAN BARIS INI (WAJIB UNTUK AUTO LOAD):
+    Route::get('/chat/get-messages/{partnerId}', [ChatController::class, 'getMessages'])->name('chat.getMessages');
 });
 
 /*
@@ -170,25 +165,22 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
         Route::get('/pasien/{user}/riwayat', 'riwayatPasien')->name('pasien.riwayat');
         Route::delete('/pasien/{user}', 'hapusPasien')->name('pasien.hapus');
         
-        // --- 🔥 SISTEM PEMANGGILAN (PERBAIKAN) 🔥 ---
+        // --- Sistem Pemanggilan ---
         Route::post('/panggil-pasien/{id}', 'panggilPasien')->name('panggil.pasien');
-        Route::post('/tandai-hadir/{id}', 'tandaiHadir')->name('tandai.hadir'); // Wajib Ada
+        Route::post('/tandai-hadir/{id}', 'tandaiHadir')->name('tandai.hadir');
         Route::post('/stop-panggil/{id}', 'stopPanggil')->name('stop.panggil');
         Route::post('/alihkan-pasien/{id}', 'alihkanPasien')->name('alihkan.pasien');
     });
 
-    // Resource Controllers
     Route::resource('tenaga-medis', AdminTenagaMedisController::class); 
     Route::resource('kelolajadwalpraktek', JadwalPraktekController::class);
 
-    // Pemeriksaan Awal
     Route::controller(PemeriksaanAwalController::class)->group(function() {
         Route::get('/pendaftaran/{pendaftaran}/periksa-awal', 'create')->name('pemeriksaan-awal.create');
         Route::post('/pendaftaran/{pendaftaran}/periksa-awal', 'store')->name('pemeriksaan-awal.store');
         Route::get('/pendaftaran/{pendaftaran}/periksa-awal-data', 'getModalDataJson')->name('pemeriksaan-awal.json');
     });
 
-    // Pembatalan Jadwal
     Route::post('/jadwal/cancel', [AdminJadwalController::class, 'cancelJadwal'])->name('jadwal.cancel'); 
 });
 
@@ -212,7 +204,6 @@ Route::controller(TenagaMedisController::class)->prefix('tenaga-medis')->name('t
 Route::middleware(['auth:tenaga_medis'])->prefix('tenaga-medis')->name('tenaga-medis.')->group(function () {
     Route::post('/jadwal/cancel', [AdminJadwalController::class, 'cancelJadwal'])->name('jadwal.cancel'); 
     
-    
     Route::controller(TenagaMedisController::class)->group(function () {
         Route::get('/dashboard', 'dashboard')->name('dashboard');
         Route::get('/pasien', 'lihatPasien')->name('pasien.index');
@@ -222,7 +213,6 @@ Route::middleware(['auth:tenaga_medis'])->prefix('tenaga-medis')->name('tenaga-m
         Route::get('/laporan', 'laporan')->name('laporan');
     });
 
-    // Pemeriksaan
     Route::controller(PemeriksaanController::class)->group(function () {
         Route::get('/pasien/{pendaftaran}/periksa', 'create')->name('pemeriksaan.create');
         Route::post('/pasien/{pendaftaran}/periksa', 'store')->name('pemeriksaan.store');

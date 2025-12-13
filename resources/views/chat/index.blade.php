@@ -8,22 +8,7 @@
 
 @section('content')
 
-{{-- Jika Tenaga Medis, kita bungkus dengan struktur Dashboard agar rapi --}}
-@if($myRole == 'medis')
-<div class="page-heading">
-    <div class="page-title">
-        <div class="row">
-            <div class="col-12 col-md-6 order-md-1 order-last">
-                <h3>Chat Konsultasi</h3>
-                <p class="text-subtitle text-muted">Berkomunikasi langsung dengan pasien.</p>
-            </div>
-        </div>
-    </div>
-    <section class="section">
-        <div class="card">
-            <div class="card-body p-0">
-@else
-{{-- Jika Pasien, Tampilkan Header Banner Cantik --}}
+{{-- HEADER BANNER UNTUK SEMUA ROLE (PASIEN & TENAGA MEDIS) --}}
 <div class="chat-header-banner">
     <div class="header-content">
         <div class="header-icon">
@@ -44,7 +29,6 @@
         </div>
     </div>
 </div>
-@endif
 
 {{-- MAIN CHAT CONTAINER --}}
 <div class="chat-container">
@@ -126,10 +110,12 @@
                 </div>
 
                 {{-- MESSAGES AREA --}}
-                <div id="chat-messages" class="chat-messages">
+                @php
+                    $lastMessageId = $messages->count() > 0 ? $messages->last()->id : 0;
+                @endphp
+                <div id="chat-messages" class="chat-messages" data-last-id="{{ $lastMessageId }}">
                     @foreach($messages as $message)
                         @php
-                            // FIX: Menggunakan $myId yang dikirim dari controller
                             $isMe = $message->sender_id == $myId && $message->sender_type == $myType;
                             $mediaPath = $message->media_path ?? null;
                             $mediaType = $message->media_type ?? null;
@@ -148,7 +134,6 @@
                             @endif
                             
                             <div class="message-bubble">
-                                {{-- TAMPILAN MEDIA --}}
                                 @if($mediaPath)
                                     <div class="message-media {{ $isImage ? 'is-image' : 'is-document' }}">
                                         @if($isImage)
@@ -189,7 +174,6 @@
                         @csrf
                         <input type="hidden" id="receiver-id" value="{{ $partnerId }}">
                         
-                        {{-- INPUT FILE TERSEMBUNYI --}}
                         <input type="file" name="media" id="media-input" style="display: none;" 
                                accept="image/*,.pdf,.doc,.docx,.mp4,.mov" />
                         
@@ -209,7 +193,6 @@
                     </form>
                 </div>
             @else
-                {{-- EMPTY STATE --}}
                 <div class="chat-empty-state">
                     <div class="empty-icon">
                         <i class="fas fa-comments"></i>
@@ -221,13 +204,6 @@
         </div>
     </div>
 </div>
-
-@if($myRole == 'medis')
-            </div>
-        </div>
-    </section>
-</div>
-@endif
 
 @endsection
 
@@ -250,25 +226,25 @@
         --shadow: 0 8px 30px rgba(57, 166, 22, 0.1);
     }
 
-    /* Penyesuaian agar tidak bentrok dengan layout Dashboard */
-    .page-heading .chat-container {
-        padding: 0;
-        margin: 0;
-        max-width: 100%;
-    }
-    .page-heading .chat-wrapper {
-        border: none;
-        box-shadow: none;
-        border-radius: 0;
-        height: 75vh;
+    /* ===== DARK MODE VARIABLES ===== */
+    [data-theme="dark"] {
+        --bg-primary: #1a1a1a;
+        --bg-secondary: #242424;
+        --bg-tertiary: #2d2d2d;
+        --text-primary: #f3f4f6;
+        --text-secondary: #d1d5db;
+        --text-muted: #9ca3af;
+        --border-color: rgba(57, 166, 22, 0.2);
+        --shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
     }
 
     body {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         background: var(--bg-secondary);
+        transition: background 0.3s ease, color 0.3s ease;
     }
 
-    /* ===== HEADER BANNER (Only for Patient) ===== */
+    /* ===== HEADER BANNER (SAMA UNTUK SEMUA) ===== */
     .chat-header-banner {
         margin-bottom: 30px;
     }
@@ -397,6 +373,8 @@
         border: 1px solid var(--border-color);
         height: 75vh;
         min-height: 600px;
+        max-height: calc(100vh - 250px);
+        transition: background 0.3s ease, border 0.3s ease;
     }
 
     /* ===== SIDEBAR ===== */
@@ -406,12 +384,16 @@
         display: flex;
         flex-direction: column;
         height: 100%;
+        overflow: hidden;
+        transition: background 0.3s ease;
     }
 
     .sidebar-header {
         padding: 24px;
         background: var(--bg-primary);
         border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+        transition: background 0.3s ease;
     }
 
     .sidebar-title {
@@ -422,6 +404,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
+        transition: color 0.3s ease;
     }
 
     .sidebar-title i {
@@ -463,6 +446,7 @@
     .contacts-list {
         overflow-y: auto;
         flex: 1;
+        min-height: 0;
     }
 
     .contacts-list::-webkit-scrollbar { width: 6px; }
@@ -570,6 +554,7 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        transition: color 0.3s ease;
     }
 
     .contact-item.active .contact-message {
@@ -594,6 +579,8 @@
         flex-direction: column;
         height: 100%;
         background: var(--bg-primary);
+        overflow: hidden;
+        transition: background 0.3s ease;
     }
 
     /* ===== CHAT HEADER ===== */
@@ -604,6 +591,8 @@
         padding: 20px 28px;
         background: var(--bg-primary);
         border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+        transition: all 0.3s ease;
     }
 
     .chat-partner-info {
@@ -643,6 +632,10 @@
         border: 3px solid white;
     }
 
+    [data-theme="dark"] .status-dot {
+        border-color: var(--bg-primary);
+    }
+
     .status-dot.online {
         background: #10b981;
     }
@@ -656,6 +649,7 @@
         font-weight: 700;
         color: var(--text-primary);
         margin: 0 0 4px 0;
+        transition: color 0.3s ease;
     }
 
     .partner-status {
@@ -676,6 +670,10 @@
         background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.25));
         color: #065f46;
         border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    [data-theme="dark"] .status-badge.online {
+        color: #10b981;
     }
 
     .status-badge i {
@@ -716,16 +714,26 @@
     .chat-messages {
         flex: 1;
         overflow-y: auto;
+        overflow-x: hidden;
         padding: 24px;
         background: var(--bg-secondary);
         display: flex;
         flex-direction: column;
         gap: 16px;
+        min-height: 0;
+        scroll-behavior: smooth;
+        transition: background 0.3s ease;
     }
 
     .chat-messages::-webkit-scrollbar { width: 8px; }
     .chat-messages::-webkit-scrollbar-track { background: var(--bg-tertiary); }
-    .chat-messages::-webkit-scrollbar-thumb { background: var(--p1); border-radius: 10px; }
+    .chat-messages::-webkit-scrollbar-thumb { 
+        background: var(--p1); 
+        border-radius: 10px; 
+    }
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+        background: var(--p2);
+    }
 
     .message-wrapper {
         display: flex;
@@ -780,6 +788,8 @@
         border-radius: 16px;
         position: relative;
         word-wrap: break-word;
+        word-break: break-word;
+        transition: all 0.3s ease;
     }
 
     .message-sent .message-bubble {
@@ -799,6 +809,8 @@
         margin: 0 0 6px 0;
         font-size: 0.95rem;
         line-height: 1.5;
+        white-space: pre-wrap;
+        word-wrap: break-word;
     }
 
     /* Media Styles */
@@ -852,6 +864,8 @@
         padding: 20px 24px;
         background: var(--bg-primary);
         border-top: 1px solid var(--border-color);
+        flex-shrink: 0;
+        transition: all 0.3s ease;
     }
 
     .chat-form {
@@ -897,6 +911,10 @@
         font-family: 'Inter', sans-serif;
     }
 
+    .message-input::placeholder {
+        color: var(--text-muted);
+    }
+
     .message-input:focus {
         outline: none;
         border-color: var(--p1);
@@ -939,6 +957,7 @@
         text-align: center;
         padding: 40px;
         background: var(--bg-secondary);
+        transition: background 0.3s ease;
     }
 
     .empty-icon {
@@ -963,20 +982,22 @@
         font-weight: 700;
         color: var(--text-primary);
         margin: 0 0 12px 0;
+        transition: color 0.3s ease;
     }
 
     .chat-empty-state p {
         font-size: 1rem;
         color: var(--text-secondary);
         margin: 0;
+        transition: color 0.3s ease;
     }
 
     /* ===== RESPONSIVE ===== */
     @media (max-width: 992px) {
         .chat-wrapper {
             grid-template-columns: 1fr;
-            height: auto;
-            min-height: 70vh;
+            height: calc(100vh - 180px);
+            min-height: 500px;
         }
 
         .chat-sidebar {
@@ -991,6 +1012,10 @@
 
         .hero-decoration {
             display: none;
+        }
+        
+        .chat-messages {
+            padding: 16px;
         }
     }
 
@@ -1010,11 +1035,11 @@
         }
 
         .message-wrapper {
-            max-width: 85%;
+            max-width: 90%;
         }
 
         .chat-input-area {
-            padding: 16px;
+            padding: 12px 16px;
         }
 
         .btn-attach {
@@ -1025,6 +1050,16 @@
         .btn-send {
             width: 40px;
             height: 40px;
+        }
+        
+        .message-input {
+            padding: 12px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .chat-wrapper {
+            height: calc(100vh - 150px);
+            min-height: 450px;
         }
     }
 </style>
@@ -1043,24 +1078,68 @@ document.addEventListener('DOMContentLoaded', function() {
     const messageInput = document.getElementById('message-input');
     const csrfToken = '{{ csrf_token() }}';
     const myType = '{{ $myType ?? "" }}';
+    const myId = {{ $myId ?? 0 }};
 
-    // Scroll otomatis ke bawah
-    if (chatContainer) {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-        
-        if (partnerId) {
-            markReadStatus(partnerId);
+    let lastMessageId = chatContainer ? parseInt(chatContainer.getAttribute('data-last-id')) : 0;
+
+    function scrollToBottom(smooth = false) {
+        if (chatContainer) {
+            if (smooth) {
+                chatContainer.scrollTo({
+                    top: chatContainer.scrollHeight,
+                    behavior: 'smooth'
+                });
+            } else {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
         }
     }
 
-    // Escape HTML
+    scrollToBottom();
+    
+    if (partnerId) {
+        markReadStatus(partnerId);
+        
+        setInterval(() => {
+            fetchMessages(partnerId);
+        }, 3000);
+    }
+
+    function fetchMessages(pid) {
+        fetch(`/chat/get-messages/${pid}?last_id=${lastMessageId}`)
+            .then(response => response.json())
+            .then(data => {
+                if(data.messages && data.messages.length > 0) {
+                    data.messages.forEach(msg => {
+                        const isMe = (msg.sender_id == myId && msg.sender_type == myType);
+                        
+                        addMessageToChat(
+                            msg.message, 
+                            isMe, 
+                            msg.media_path, 
+                            msg.media_type, 
+                            msg.created_at_formatted
+                        );
+                        
+                        lastMessageId = msg.id;
+                    });
+                    
+                    if(data.messages.some(msg => msg.sender_id != myId)) {
+                        markReadStatus(pid);
+                        scrollToBottom(true);
+                    }
+                }
+            })
+            .catch(err => console.error("Polling error:", err));
+    }
+
     function escapeHtml(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
     
-    // Format media display
     function formatMediaDisplay(mediaPath, mediaType) {
         if (!mediaPath || !mediaType) return '';
 
@@ -1088,14 +1167,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Add message to chat
-    function addMessageToChat(messageText, isMe, mediaPath = null, mediaType = null) {
+    function addMessageToChat(messageText, isMe, mediaPath = null, mediaType = null, timeStr = null) {
         if (!chatContainer) return;
 
         const messageWrapper = document.createElement('div');
         messageWrapper.className = `message-wrapper ${isMe ? 'message-sent' : 'message-received'}`;
         
-        const currentTime = new Date().toLocaleTimeString('id-ID', { 
+        const currentTime = timeStr || new Date().toLocaleTimeString('id-ID', { 
             hour: '2-digit', 
             minute: '2-digit' 
         });
@@ -1104,7 +1182,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const messageTextHTML = messageText ? 
             `<p class="message-text">${escapeHtml(messageText)}</p>` : '';
 
+        let avatarHTML = '';
+        if (!isMe) {
+            avatarHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+            `;
+        }
+
         messageWrapper.innerHTML = `
+            ${avatarHTML}
             <div class="message-bubble">
                 ${mediaHTML}
                 ${messageTextHTML}
@@ -1116,10 +1204,9 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
 
         chatContainer.appendChild(messageWrapper);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        scrollToBottom(true);
     }
 
-    // Mark read status
     function markReadStatus(id) {
         fetch(`/chat/mark-read/${id}`, {
             method: 'POST',
@@ -1140,14 +1227,12 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => console.error('Error mark read:', error));
     }
 
-    // Button attach media
     if (btnAttach) {
         btnAttach.addEventListener('click', () => {
             mediaInput.click();
         });
     }
 
-    // Show filename
     if (mediaInput) {
         mediaInput.addEventListener('change', function() {
             if (this.files.length > 0) {
@@ -1158,7 +1243,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Handle submit
     if (chatForm) {
         chatForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1194,6 +1278,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if(data.status === 'success' || data.success) {
                     addMessageToChat(messageText, true, data.media_path || null, data.media_type || null); 
                     
+                    if(data.message_id) {
+                        lastMessageId = data.message_id; 
+                    }
+
                     messageInput.value = '';
                     mediaInput.value = '';
                     mediaFilenameDisplay.textContent = '';

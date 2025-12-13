@@ -210,4 +210,51 @@ class ChatController extends Controller
                
         return response()->json(['status' => 'success']);
     }
-}
+    
+
+public function getMessages(Request $request, $partnerId)
+    {
+        $user = $this->getAuthenticatedUser();
+        if (!$user) return response()->json([], 401);
+
+        // Tentukan role
+        if ($user instanceof \App\Models\User) {
+            $myType = 'user';
+            $targetType = 'medis';
+        } else {
+            $myType = 'medis';
+            $targetType = 'user';
+        }
+        $myId = $user->id;
+
+        // Ambil ID pesan terakhir dari request client
+        $lastId = $request->query('last_id', 0);
+
+        // Ambil pesan BARU saja (id > last_id)
+        $messages = Message::where('id', '>', $lastId)
+            ->where(function($q) use ($myId, $partnerId, $myType, $targetType) {
+                $q->where(function($sub) use ($myId, $partnerId, $myType, $targetType) {
+                    $sub->where('sender_id', $myId)->where('sender_type', $myType)
+                        ->where('receiver_id', $partnerId)->where('receiver_type', $targetType);
+                })->orWhere(function($sub) use ($myId, $partnerId, $myType, $targetType) {
+                    $sub->where('sender_id', $partnerId)->where('sender_type', $targetType)
+                        ->where('receiver_id', $myId)->where('receiver_type', $myType);
+                });
+            })
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(function($msg) {
+                return [
+                    'id' => $msg->id,
+                    'message' => $msg->message,
+                    'media_path' => $msg->media_path,
+                    'media_type' => $msg->media_type,
+                    'sender_id' => $msg->sender_id,
+                    'sender_type' => $msg->sender_type,
+                    'created_at_formatted' => $msg->created_at->format('H:i'),
+                    'is_read' => $msg->is_read
+                ];
+            });
+
+        return response()->json(['messages' => $messages]);
+    }}
