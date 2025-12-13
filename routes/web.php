@@ -57,7 +57,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/logout', 'logout')->name('logout');
 
     // Lupa Password
-    Route::get('forgot-password', 'showForgotPasswordForm')->name('password.request'); // FIX: Diubah ke showForgotPasswordForm
+    Route::get('forgot-password', 'showForgotPasswordForm')->name('password.request');
     Route::post('forgot-password', 'sendOtp')->name('password.send_otp');
     Route::get('verify-otp', 'showVerifyOtpForm')->name('password.verify.form');
     Route::post('verify-otp', 'verifyOtp')->name('password.verify.otp');
@@ -136,7 +136,10 @@ Route::middleware(['auth'])->group(function () {
 // Chat System
 Route::middleware(['auth:web,tenaga_medis'])->group(function () {
     Route::get('/chat/{partnerId?}', [ChatController::class, 'index'])->name('chat.index');
-    Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send');
+    Route::post('/chat/send', [ChatController::class, 'sendMessage'])->name('chat.send');
+    
+    // 🔥 TAMBAHKAN INI:
+    Route::post('/chat/mark-read/{partnerId}', [ChatController::class, 'markRead'])->name('chat.markRead');
 });
 
 /*

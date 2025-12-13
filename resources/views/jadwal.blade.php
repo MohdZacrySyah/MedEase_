@@ -48,27 +48,58 @@
     @php
         if (!function_exists('formatHariFleksibelUser')) {
             function formatHariFleksibelUser($hariArray) {
-                if (empty($hariArray) || !is_array($hariArray)) return 'Tidak ada jadwal';
-                if (count($hariArray) == 7) return 'Setiap Hari';
-                $semuaHari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-                $indeksHari = array_map(fn($h) => array_search($h, $semuaHari), $hariArray); sort($indeksHari); $rentang = [];
-                for ($i = 0, $j = 0, $n = count($indeksHari); $i < $n; $i = $j) {
-                    $j = $i + 1; while ($j < $n && $indeksHari[$j] == $indeksHari[$j-1] + 1) $j++; $rentang[] = [$indeksHari[$i], $indeksHari[$j-1]];
+                if (empty($hariArray) || !is_array($hariArray)) {
+                    return 'Tidak ada jadwal';
                 }
+                
+                if (count($hariArray) == 7) {
+                    return 'Setiap Hari';
+                }
+                
+                $semuaHari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+                
+                // Map hari ke index
+                $indeksHari = [];
+                foreach ($hariArray as $h) {
+                    $idx = array_search($h, $semuaHari);
+                    if ($idx !== false) {
+                        $indeksHari[] = $idx;
+                    }
+                }
+                sort($indeksHari);
+                
+                // Buat rentang
+                $rentang = [];
+                $n = count($indeksHari);
+                for ($i = 0; $i < $n;) {
+                    $j = $i + 1;
+                    while ($j < $n && $indeksHari[$j] == $indeksHari[$j-1] + 1) {
+                        $j++;
+                    }
+                    $rentang[] = [$indeksHari[$i], $indeksHari[$j-1]];
+                    $i = $j;
+                }
+                
+                // Format output
                 $outputStrings = [];
-                foreach ($rentang as $r) { $awal = $semuaHari[$r[0]]; $akhir = $semuaHari[$r[1]]; $outputStrings[] = ($awal == $akhir) ? $awal : "$awal - $akhir"; }
+                foreach ($rentang as $r) {
+                    $awal = $semuaHari[$r[0]];
+                    $akhir = $semuaHari[$r[1]];
+                    $outputStrings[] = ($awal == $akhir) ? $awal : "$awal - $akhir";
+                }
+                
                 return implode(', ', $outputStrings);
             }
         }
         
-        Carbon\Carbon::setLocale('id');
-        $hariIni = Carbon\Carbon::now()->translatedFormat('l');
+        \Carbon\Carbon::setLocale('id');
+        $hariIni = \Carbon\Carbon::now()->translatedFormat('l');
     @endphp
 
     {{-- ID "jadwal-grid-container" ditambahkan untuk Auto Refresh --}}
     <div class="jadwal-grid" id="jadwal-grid-container">
         @forelse ($jadwals as $index => $jadwal)
-            <div class="jadwal-card"> {{-- Animasi dihapus --}}
+            <div class="jadwal-card">
                 <div class="card-gradient-bg"></div>
                 
                 <div class="card-header">
@@ -116,7 +147,14 @@
                 </div>
                 
                 <div class="card-footer">
-                    @if(is_array($jadwal->hari) && in_array($hariIni, $jadwal->hari))
+                    {{-- LOGIKA BARU: Cek DoctorAvailability (Penutupan Spesifik) --}}
+                    @if(isset($jadwal->is_closed_today) && $jadwal->is_closed_today)
+                        <span class="status-badge status-libur" style="color: #991b1b; background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.25)); border: 1px solid rgba(239, 68, 68, 0.3);">
+                            <span class="status-dot" style="background: #ef4444; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);"></span>
+                            Jadwal Ditutup Hari Ini
+                        </span>
+                    {{-- LOGIKA ASLI: Cek Hari Praktek Reguler --}}
+                    @elseif(is_array($jadwal->hari) && in_array($hariIni, $jadwal->hari))
                         <span class="status-badge status-tersedia">
                             <span class="status-dot"></span>
                             Buka Hari Ini
@@ -464,6 +502,11 @@
         animation: pulse 2s ease-in-out infinite;
     }
     
+    @keyframes pulse-dot {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.2); opacity: 0.7; }
+    }
+    
     .header-info { 
         line-height: 1.5; 
         flex: 1; 
@@ -582,12 +625,7 @@
         animation: pulse-dot 2s ease-in-out infinite;
     }
     
-    @keyframes pulse-dot {
-        0%, 100% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.2); opacity: 0.7; }
-    }
-    
-    .status-tersedia { 
+    .status-tersedia {
         color: #065f46; 
         background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.25));
         border: 1px solid rgba(16, 185, 129, 0.3);
@@ -649,6 +687,7 @@
     .btn-daftar-langsung:hover { 
         transform: translateY(-3px) scale(1.05);
         box-shadow: 0 12px 35px rgba(57, 166, 22, 0.45);
+        opacity: 1 !important;
     }
     
     .btn-daftar-langsung:active { 
@@ -709,6 +748,7 @@
         color: var(--text-secondary);
         margin: 0; 
     }
+
     /* ===== MODAL PREMIUM (NO ANIMATION) ===== */
     .modal-overlay { 
         display: none; 
@@ -794,7 +834,7 @@
         border-bottom: 2px solid rgba(57, 166, 22, 0.15);
     }
     
-    .form-title { 
+    .form-title {
         color: var(--p1);
         font-weight: 700; 
         font-size: 2rem; 
@@ -1028,7 +1068,7 @@
         position: relative;
         z-index: 1;
     }
-    
+
     .btn-secondary-confirm {
         flex: 1;
         background: var(--bg-secondary);
@@ -1081,42 +1121,6 @@
             font-size: 40px;
         }
         
-        .layanan-card-inner { 
-            flex-direction: column; 
-            align-items: flex-start; 
-            padding: 24px; 
-        }
-        
-        .card-left-section { 
-            width: 100%; 
-            flex-direction: column; 
-            align-items: center; 
-            text-align: center; 
-        }
-        
-        .layanan-info { 
-            align-items: center; 
-        }
-        
-        .nama-layanan { 
-            justify-content: center; 
-        }
-        
-        .schedule-info { 
-            flex-direction: column; 
-            gap: 10px; 
-            align-items: center; 
-        }
-        
-        .card-right-section { 
-            width: 100%; 
-        }
-        
-        .btn-daftar { 
-            width: 100%; 
-            justify-content: center; 
-        }
-        
         .form-grid { 
             grid-template-columns: 1fr; 
         }
@@ -1144,12 +1148,6 @@
     @media (max-width: 576px) {
         .page-title {
             font-size: 1.5rem;
-        }
-        
-        .layanan-avatar {
-            width: 80px;
-            height: 80px;
-            font-size: 36px;
         }
         
         .nama-dokter {
@@ -1189,16 +1187,13 @@ document.addEventListener('DOMContentLoaded', function () {
     function bindModalEvents() {
         const links = document.querySelectorAll('.open-form-modal');
         links.forEach(link => {
-            // remove old listener to avoid duplicates
             link.removeEventListener('click', handleModalOpen);
-            // add new listener
             link.addEventListener('click', handleModalOpen);
         });
     }
 
     async function handleModalOpen(event) {
         event.preventDefault(); 
-        // use currentTarget because listener is on the link
         const link = event.currentTarget;
         const jsonUrl = link.dataset.url;
         const jadwalId = link.dataset.jadwalId;
@@ -1224,6 +1219,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.warn('Gagal mengambil tanggal tertutup');
             }
 
+            // 3. Generate CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
             const formHtml = `
                 <div class="form-header">
                     <h2 class="form-title">Form Pendaftaran</h2>
@@ -1232,7 +1230,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </p>
                 </div>
                 <form action="${data.form_action}" method="POST" id="pendaftaranForm">
-                    @csrf
+                    <input type="hidden" name="_token" value="${csrfToken}">
                     <input type="hidden" name="nama_layanan" value="${data.layanan_name}">
                     <input type="hidden" name="jadwal_praktek_id" value="${data.jadwal_id}">
                     
@@ -1285,9 +1283,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 </form>
             `;
             
-            modalContent.innerHTML = formHtml.replace('@csrf', '{{ csrf_field() }}');
+            modalContent.innerHTML = formHtml;
 
-            // 3. Initialize Flatpickr
+            // 4. Initialize Flatpickr
             if (flatpickrInstance) flatpickrInstance.destroy();
             
             flatpickrInstance = flatpickr("#modal_jadwal_datepicker", {

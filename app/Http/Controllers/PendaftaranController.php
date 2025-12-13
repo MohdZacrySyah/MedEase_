@@ -225,16 +225,35 @@ class PendaftaranController extends Controller
 
         // Hitung Estimasi Waktu (Setiap Pasien 20 Menit)
         if ($jadwalPraktek->jam_mulai) {
-            // Gabungkan tanggal yang dipilih ($jadwalDipilih) dengan jam mulai praktek
-            // Ini memastikan perhitungan Carbon dimulai dari waktu yang benar pada tanggal yang benar.
-            $startTime = Carbon::parse($jadwalDipilih . ' ' . $jadwalPraktek->jam_mulai); 
-            $durasiPerPasien = 20; 
             
+            // 1. Tentukan Waktu Mulai Jadwal yang Sesungguhnya
+            // Gabungkan tanggal yang dipilih ($jadwalDipilih) dengan jam mulai praktek
+            $scheduledStartTime = Carbon::parse($jadwalDipilih . ' ' . $jadwalPraktek->jam_mulai); 
+            $currentTime = Carbon::now();
+            $baseTimeForAntrian1 = $scheduledStartTime->copy(); // Default: Sesuai jadwal
+            
+            // Cek apakah pendaftaran hari ini
+            $isToday = Carbon::parse($jadwalDipilih)->isToday();
+
+            if ($isToday) {
+                // 🔥 PERBAIKAN KRITIS UNTUK WAKTU ESTIMASI 🔥
+                // Jika jadwal sudah lewat, gunakan waktu pendaftaran sekarang sebagai Base Time.
+                // Jika jadwal belum lewat, gunakan waktu jadwal.
+                if ($scheduledStartTime->isBefore($currentTime)) {
+                    // Gunakan waktu sekarang (waktu pendaftaran) sebagai waktu awal,
+                    // karena jadwal sudah terlewat.
+                    $baseTimeForAntrian1 = $currentTime->copy();
+                }
+            }
+            
+            // 2. Kalkulasi Durasi Tambahan
+            $durasiPerPasien = 20; 
             $menitTambahan = ($pendaftaran->no_antrian - 1) * $durasiPerPasien;
             
-            // 🔥 PERBAIKAN KRITIS: Gunakan copy() agar $startTime tidak termutasi
-            // Ini memastikan setiap antrian dihitung dari waktu mulai yang bersih.
-            $estimasiWaktu = $startTime->copy()->addMinutes($menitTambahan); // <-- Perbaikan ada di sini
+            // 3. Hitung Waktu Estimasi Final
+            // Gunakan copy() dari Base Time yang sudah ditentukan
+            $estimasiWaktu = $baseTimeForAntrian1->addMinutes($menitTambahan);
+
             $pendaftaran->estimasi_dilayani = $estimasiWaktu->format('H:i:s');
         }
 

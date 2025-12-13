@@ -836,11 +836,12 @@
                         <i class="fas fa-chart-line"></i>Laporan Saya
                     </a>
                 </li>
-                <li class="nav-item">
-    <a class="nav-link {{ request()->routeIs('chat.*') ? 'active' : '' }}" href="{{ route('chat.index') }}">
-        <i class="fas fa-comments"></i> Chat Pasien
-    </a>
-</li>
+                {{-- FIX: Menggunakan class list dan a yang sesuai dengan sidebar style, bukan Bootstrap nav-item --}}
+                <li class="{{ request()->routeIs('chat.*') ? 'active' : '' }}">
+                    <a href="{{ route('chat.index') }}" data-turbo-scroll="false">
+                        <i class="fas fa-comments"></i>Chat Pasien
+                    </a>
+                </li>
             </ul>
         </div>
 

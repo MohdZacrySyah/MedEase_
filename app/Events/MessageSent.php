@@ -6,11 +6,11 @@ use App\Models\Message;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast; // <--- Wajib ada
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast; 
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class MessageSent implements ShouldBroadcast // <--- Jangan lupa "implements"
+class MessageSent implements ShouldBroadcast 
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -21,15 +21,49 @@ class MessageSent implements ShouldBroadcast // <--- Jangan lupa "implements"
         $this->message = $message;
     }
 
+    /**
+     * Get the channels the event should broadcast on.
+     * Logika ini memastikan pesan dikirim ke channel penerima yang sesuai.
+     */
     public function broadcastOn(): array
-{
-    // Jika pengirim Pasien -> Kirim ke channel Tenaga Medis
-    if ($this->message->sender_type == 'pasien') {
-        return [new PrivateChannel('tenagamedis.' . $this->message->tenaga_medis_id)];
-    } 
-    // Jika pengirim Tenaga Medis -> Kirim ke channel Pasien
-    else {
-        return [new PrivateChannel('pasien.' . $this->message->user_id)];
+    {
+        $receiverId = $this->message->receiver_id;
+        $receiverType = $this->message->receiver_type;
+        
+        // Tentukan channel berdasarkan tipe penerima ('user' untuk pasien, 'medis' untuk tenaga medis)
+        if ($receiverType == 'medis') {
+            // Channel untuk Tenaga Medis
+            return [new PrivateChannel('tenagamedis.' . $receiverId)];
+        } else {
+            // Channel untuk Pasien ('user')
+            return [new PrivateChannel('pasien.' . $receiverId)];
+        }
     }
-}
+    
+    /**
+     * Opsional: Tentukan data yang akan di-broadcast.
+     * Ini penting untuk client-side (Echo)
+     */
+    public function broadcastWith(): array
+    {
+        // Muat pengirim pesan untuk ditampilkan di sisi penerima
+        $sender = $this->message->sender_type == 'user' 
+                  ? \App\Models\User::find($this->message->sender_id)
+                  : \App\Models\TenagaMedis::find($this->message->sender_id);
+
+        return [
+            'message' => [
+                'id' => $this->message->id,
+                'sender_id' => $this->message->sender_id,
+                'sender_type' => $this->message->sender_type,
+                'message' => $this->message->message,
+                'created_at' => $this->message->created_at->format('H:i'),
+                'is_me' => false, // Disesuaikan di client-side
+            ],
+            'sender' => $sender ? [
+                'id' => $sender->id,
+                'name' => $sender->name,
+            ] : null,
+        ];
+    }
 }
