@@ -267,7 +267,7 @@ class AuthController extends Controller
         // 1. Cek Prioritas 1: Antrian yang Sedang diperiksa oleh dokter ('Sedang Diperiksa')
         $antrianAktif = Pendaftaran::with('user')
                                    ->where('jadwal_praktek_id', $jadwal->id)
-                                   ->where('status_antrian', 'Sedang Diperiksa')
+                                   ->where('status', 'Sedang Diperiksa') // FIX: Menggunakan field 'status'
                                    ->whereDate('jadwal_dipilih', $today)
                                    ->orderBy('no_antrian')
                                    ->first();
@@ -277,10 +277,10 @@ class AuthController extends Controller
             $currentQueueInfo = "No. {$currentQueueNumber} (a/n {$antrianAktif->user->name}) **SEDANG DILAYANI**";
         } else {
             
-            // 2. Cek Prioritas 2: Antrian yang Sudah diperiksa awal dan menunggu giliran dokter ('Diperiksa Awal')
+            // 2. Cek Prioritas 2 (Sesuai permintaan Anda): Antrian yang Sudah diperiksa awal dan menunggu giliran dokter ('Diperiksa Awal')
             $antrianAktif = Pendaftaran::with('user')
                                        ->where('jadwal_praktek_id', $jadwal->id)
-                                       ->where('status_antrian', 'Diperiksa Awal')
+                                       ->where('status', 'Diperiksa Awal') // FIX: Menggunakan field 'status'
                                        ->whereDate('jadwal_dipilih', $today)
                                        ->orderBy('no_antrian')
                                        ->first();
@@ -290,17 +290,18 @@ class AuthController extends Controller
                 $currentQueueInfo = "No. {$currentQueueNumber} (a/n {$antrianAktif->user->name}) **DI RUANG PERSIAPAN**";
             } else {
                 
-                // 3. Cek Prioritas 3: Antrian yang baru daftar dan menunggu diperiksa awal ('Menunggu')
+                // 3. Cek Prioritas 3: Antrian yang baru daftar dan menunggu diperiksa awal ('Menunggu' atau 'Hadir')
                 $antrianAktif = Pendaftaran::with('user')
                                            ->where('jadwal_praktek_id', $jadwal->id)
-                                           ->where('status_antrian', 'Menunggu')
+                                           ->whereIn('status', ['Menunggu', 'Hadir']) // FIX: Menggunakan field 'status' & mencakup 'Hadir'
                                            ->whereDate('jadwal_dipilih', $today)
                                            ->orderBy('no_antrian')
                                            ->first();
 
                 if ($antrianAktif) {
                     $currentQueueNumber = $antrianAktif->no_antrian;
-                    $currentQueueInfo = "No. {$currentQueueNumber} (a/n {$antrianAktif->user->name}) **MENUNGGU DIPERIKSA AWAL**";
+                    $statusText = $antrianAktif->status == 'Hadir' ? 'HADIR' : 'BARU';
+                    $currentQueueInfo = "No. {$currentQueueNumber} (a/n {$antrianAktif->user->name}) **MENUNGGU DIPERIKSA AWAL ({$statusText})**";
                 }
             }
         }
@@ -309,7 +310,7 @@ class AuthController extends Controller
         $myPendaftaran = Pendaftaran::where('user_id', $pasien->id)
                                     ->where('jadwal_praktek_id', $jadwal->id)
                                     ->whereDate('jadwal_dipilih', $today)
-                                    ->whereIn('status_antrian', ['Menunggu', 'Sedang Diperiksa', 'Diperiksa Awal'])
+                                    ->whereIn('status', ['Menunggu', 'Hadir', 'Diperiksa Awal', 'Sedang Diperiksa']) // FIX: Menggunakan field 'status'
                                     ->first();
         
         $myEstimatedTime = $myPendaftaran && $myPendaftaran->estimasi_dilayani

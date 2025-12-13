@@ -225,11 +225,16 @@ class PendaftaranController extends Controller
 
         // Hitung Estimasi Waktu (Setiap Pasien 20 Menit)
         if ($jadwalPraktek->jam_mulai) {
-            $jamMulai = Carbon::parse($jadwalPraktek->jam_mulai);
+            // Gabungkan tanggal yang dipilih ($jadwalDipilih) dengan jam mulai praktek
+            // Ini memastikan perhitungan Carbon dimulai dari waktu yang benar pada tanggal yang benar.
+            $startTime = Carbon::parse($jadwalDipilih . ' ' . $jadwalPraktek->jam_mulai); 
             $durasiPerPasien = 20; 
+            
             $menitTambahan = ($pendaftaran->no_antrian - 1) * $durasiPerPasien;
             
-            $estimasiWaktu = $jamMulai->copy()->addMinutes($menitTambahan);
+            // 🔥 PERBAIKAN KRITIS: Gunakan copy() agar $startTime tidak termutasi
+            // Ini memastikan setiap antrian dihitung dari waktu mulai yang bersih.
+            $estimasiWaktu = $startTime->copy()->addMinutes($menitTambahan); // <-- Perbaikan ada di sini
             $pendaftaran->estimasi_dilayani = $estimasiWaktu->format('H:i:s');
         }
 
