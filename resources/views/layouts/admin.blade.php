@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}"> {{-- Tambahkan CSRF Token --}}
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}" />
     <title>@yield('title') - Panel Admin</title> 
 
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
@@ -840,7 +840,9 @@
             updateThemeIcon(icon, savedTheme);
             
             // Remove old listeners
-            themeToggle.removeEventListener('click', window.themeToggleHandler);
+            if (window.themeToggleHandler) {
+                themeToggle.removeEventListener('click', window.themeToggleHandler);
+            }
             
             window.themeToggleHandler = () => {
                 const currentTheme = html.getAttribute('data-theme');
@@ -922,10 +924,10 @@
             const sidebarOverlay = document.getElementById('sidebarOverlay');
 
             if (window.menuToggleClickListener) {
-                menuToggle.removeEventListener('click', window.menuToggleClickListener);
+                menuToggle?.removeEventListener('click', window.menuToggleClickListener);
             }
             if (window.sidebarOverlayClickListener) {
-                sidebarOverlay.removeEventListener('click', window.sidebarOverlayClickListener);
+                sidebarOverlay?.removeEventListener('click', window.sidebarOverlayClickListener);
             }
 
             window.menuToggleClickListener = () => {
@@ -1019,9 +1021,6 @@
             }
             
             initTheme();
-            
-            // REMOVED PAGE LOAD ANIMATION
-            // document.body.style.opacity = '1'; (Default browser behavior is fine)
         }
 
         // =========================
@@ -1098,7 +1097,7 @@
         /**
          * Fitur: Update elemen spesifik tanpa reload halaman & tanpa scroll ke atas
          * Digunakan untuk real-time update pada tabel/card
-         * Perbaikan: Anti-Cache & Trim whitespace
+         * Perbaikan: Smart Pause (berhenti saat ada modal/swal/ketik)
          */
         window.initAutoRefresh = function(selectors, interval = 5000) {
             if (window.autoRefreshInterval) {
@@ -1110,6 +1109,27 @@
             let isUpdating = false;
 
             window.autoRefreshInterval = setInterval(() => {
+                
+                // 🛑 STOP REFRESH JIKA:
+                // 1. Ada Modal Bootstrap yang terbuka
+                const isModalOpen = document.querySelector('.modal.show') || 
+                                    (document.querySelector('.modal-overlay') && getComputedStyle(document.querySelector('.modal-overlay')).display !== 'none');
+                
+                // 2. Ada SweetAlert yang terbuka
+                const isSwalOpen = Swal.isVisible();
+
+                // 3. User sedang mengetik di input/textarea
+                const isTyping = document.activeElement && (
+                    document.activeElement.tagName === 'INPUT' || 
+                    document.activeElement.tagName === 'TEXTAREA' ||
+                    document.activeElement.isContentEditable
+                );
+
+                if (isModalOpen || isSwalOpen || isTyping) {
+                    // console.log('⏸️ Refresh paused: User busy');
+                    return;
+                }
+
                 if (isUpdating) return;
                 isUpdating = true;
 
@@ -1131,8 +1151,16 @@
                         if (oldEl && newEl) {
                             if (oldEl.innerHTML.trim() !== newEl.innerHTML.trim()) {
                                 console.log('⚡ Data changed! Updating:', selector);
+                                
+                                // Simpan posisi scroll sebelum update
+                                const scrollY = window.scrollY;
+
                                 oldEl.innerHTML = newEl.innerHTML;
                                 
+                                // Kembalikan posisi scroll (agar tidak lompat)
+                                window.scrollTo(0, scrollY);
+                                
+                                // Rebind Event Listeners (penting agar tombol di konten baru jalan)
                                 if (typeof window.rebindEvents === 'function') {
                                     window.rebindEvents();
                                 }

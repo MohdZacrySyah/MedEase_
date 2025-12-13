@@ -1066,7 +1066,7 @@
 @endpush
 
 @section('content')
-<div class="container-fluid-modern">
+
     <div class="page-header-banner">
         <div class="header-content">
             <div class="header-icon">

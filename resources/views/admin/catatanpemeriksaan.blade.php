@@ -75,6 +75,7 @@
     @endif
 
     {{-- MAIN CONTENT (ANTRIAN) --}}
+    {{-- Container ini yang akan di-refresh secara otomatis --}}
     <div class="schedule-section" id="queue-data-container">
         <div class="section-header">
             <h2><i class="fas fa-stethoscope"></i> Antrian Per Layanan</h2>
@@ -186,7 +187,7 @@
                                                     @endif
                                                 </td>
 
-                                                {{-- AKSI PANGGIL (Logic Diperbaiki) --}}
+                                                {{-- AKSI PANGGIL (AJAX) --}}
                                                 <td class="text-center">
                                                     @if($pendaftaran->status == 'Menunggu')
                                                         <div class="action-group">
@@ -196,7 +197,6 @@
                                                             </button>
 
                                                             {{-- Tombol Konfirmasi Hadir --}}
-                                                            {{-- Ini akan memicu 'tandaiHadir' di controller --}}
                                                             <button onclick="konfirmasiHadir(this, {{ $pendaftaran->id }})" class="btn-stop-call" title="Konfirmasi Pasien Hadir">
                                                                 <i class="fas fa-check"></i> Hadir
                                                             </button>
@@ -217,10 +217,9 @@
                                                     @endif
                                                 </td>
 
-                                                {{-- Aksi Data (Logic Diperbaiki: Hanya jika 'Hadir') --}}
+                                                {{-- Aksi Data --}}
                                                 <td class="text-center">
                                                     @if($pendaftaran->status == 'Hadir')
-                                                        {{-- Tombol Input Data: HANYA MUNCUL JIKA SUDAH HADIR --}}
                                                         <button type="button" 
                                                                 class="btn-action-primary open-periksa-modal"
                                                                 data-url="{{ route('admin.pemeriksaan-awal.json', $pendaftaran->id) }}">
@@ -236,7 +235,6 @@
                                                             <i class="fas fa-check-double"></i> Selesai
                                                         </button>
                                                     @else
-                                                        {{-- Jika masih menunggu, tombol input dikunci --}}
                                                         <button class="btn-action-disabled" disabled title="Panggil dan konfirmasi hadir terlebih dahulu">
                                                             <i class="fas fa-lock"></i> Input
                                                         </button>
@@ -715,7 +713,7 @@
         transform: rotate(90deg);
     }
 
-    /* ===== TABS SYSTEM (NO ANIMATION) ===== */
+    /* ===== TABS SYSTEM (NO ANIMATION ON LOAD) ===== */
     .tabs-wrapper {
         display: flex;
         gap: 15px;
@@ -773,13 +771,21 @@
         color: var(--text-muted);
     }
 
+    /* PENTING: Hilangkan animasi fadeIn agar tidak kedip saat auto-reload */
     .tab-pane {
         display: none;
+        /* animation: fadeIn 0.3s ease-in-out; <- DIHAPUS */
     }
 
     .tab-pane.active {
         display: block;
     }
+
+    /* Keyframes fadeIn sudah tidak dipakai, bisa dihapus atau tetap ada untuk keperluan lain */
+    /* @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+    } */
 
     /* ===== SCHEDULE SECTION (NO ANIMATION) ===== */
     .schedule-section {
@@ -838,7 +844,8 @@
         box-shadow: 0 8px 30px var(--shadow-color);
         border: 1px solid var(--border-color);
         overflow: hidden;
-        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        /* Transition bisa dikurangi atau dihilangkan jika masih terasa kedip */
+        /* transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); */
     }
 
     .schedule-container-modern:hover {
@@ -1402,38 +1409,91 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    // --- 1. TAB NAVIGATION ---
-    function openTab(evt, tabName) {
-        var i, tabcontent, tablinks;
+    // ==========================================
+    // 1. MANAJEMEN TAB & STATE
+    // ==========================================
+    
+    // Fungsi untuk mengaplikasikan state tab (Dipanggil saat klik tab dan setelah refresh)
+    function applyTabState(activeTabId) {
+        if(!activeTabId) return;
         
-        tabcontent = document.getElementsByClassName("tab-pane");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].style.display = "none";
-            tabcontent[i].classList.remove("active");
-        }
-        
-        tablinks = document.getElementsByClassName("tab-btn");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].className = tablinks[i].className.replace(" active", "");
-        }
-        
-        const selectedTab = document.getElementById(tabName);
-        if(selectedTab) {
-            selectedTab.style.display = "block";
-            setTimeout(() => {
-                selectedTab.classList.add("active");
-            }, 10);
-        }
-        
-        if(evt) evt.currentTarget.className += " active";
+        // Sembunyikan semua tab dan nonaktifkan tombol
+        document.querySelectorAll('.tab-pane').forEach(el => {
+            el.style.display = 'none';
+            el.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
 
-        // SIMPAN TAB AKTIF KE STORAGE (PENTING UNTUK AUTO REFRESH)
-        if (tabName) {
-            sessionStorage.setItem('activeQueueTab', tabName);
+        // Tampilkan tab yang sesuai
+        const pane = document.getElementById(activeTabId);
+        if(pane) {
+            pane.style.display = 'block';
+            pane.classList.add('active');
+        }
+        
+        // Aktifkan tombol yang sesuai
+        const btnId = 'btn-' + activeTabId;
+        const btn = document.getElementById(btnId);
+        if(btn) btn.classList.add('active');
+    }
+    
+    function openTab(evt, tabName) {
+        // Simpan ID tab yang aktif ke storage
+        sessionStorage.setItem('activeQueueTab', tabName);
+        
+        // Panggil fungsi untuk mengaplikasikan state tab
+        applyTabState(tabName);
+
+        // Mencegah scroll jump
+        if (evt) {
+            evt.preventDefault();
         }
     }
 
-    // --- 2. CALLING SYSTEM ---
+    // ==========================================
+    // 2. FUNGSI FORCE REFRESH (TANPA RELOAD)
+    // ==========================================
+    
+    // Fungsi ini dipanggil setelah tombol aksi diklik (Panggil/Hadir)
+    window.forceRefreshQueueData = function() {
+        const container = document.getElementById('queue-data-container');
+        const url = new URL(window.location.href);
+        
+        // Tambahkan parameter unik untuk mencegah caching
+        url.searchParams.set('auto_reload_time', new Date().getTime());
+
+        fetch(url.toString(), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newContent = doc.getElementById('queue-data-container');
+
+            if (newContent) {
+                // Simpan posisi scroll
+                const scrollPos = window.scrollY;
+                
+                // Ganti isi container
+                container.innerHTML = newContent.innerHTML;
+                
+                // Restore posisi scroll
+                window.scrollTo(0, scrollPos);
+                
+                // Panggil rebindEvents untuk memulihkan Tab yang aktif
+                if (typeof window.rebindEvents === 'function') {
+                    window.rebindEvents();
+                }
+            }
+        })
+        .catch(err => console.error('Force Refresh Error:', err));
+    };
+
+    // ==========================================
+    // 3. FUNGSI TOMBOL AKSI (AJAX SMOOTH)
+    // ==========================================
+
     window.panggilPasien = function(btnElement, id) {
         const originalContent = btnElement.innerHTML;
         btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
@@ -1448,38 +1508,33 @@
         })
         .then(res => res.json())
         .then(data => {
-            btnElement.innerHTML = originalContent;
-            btnElement.disabled = false;
-            
             if(data.success) {
                 const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-                audio.play().catch(e => console.log('Audio autoplay blocked')); 
+                audio.play().catch(e => console.log('Audio error:', e));
 
-                Swal.fire({
-                    title: 'Memanggil...',
-                    text: `Pasien dipanggil ke-${data.jumlah_panggilan}`,
-                    icon: 'success',
-                    timer: 1500,
-                    showConfirmButton: false,
+                const Toast = Swal.mixin({
+                    toast: true,
                     position: 'top-end',
-                    toast: true
-                }).then(() => {
-                    // Force refresh manual untuk update status segera
-                    window.location.reload(); 
+                    showConfirmButton: false,
+                    timer: 3000
                 });
+                Toast.fire({ icon: 'success', title: `Memanggil... (${data.jumlah_panggilan}x)` });
+
+                // REFRESH DATA TANPA RELOAD
+                window.forceRefreshQueueData();
             } else {
-                Swal.fire('Error', 'Gagal memanggil pasien', 'error');
+                Swal.fire('Error', data.message, 'error');
+                btnElement.innerHTML = originalContent;
+                btnElement.disabled = false;
             }
         })
         .catch(err => {
-            console.error(err);
             btnElement.innerHTML = originalContent;
             btnElement.disabled = false;
-            Swal.fire('Error', 'Terjadi kesalahan koneksi', 'error');
+            Swal.fire('Error', 'Koneksi gagal', 'error');
         });
     }
 
-    // --- FUNGSI KONFIRMASI HADIR (PERBAIKAN UTAMA) ---
     window.konfirmasiHadir = function(btnElement, id) {
         Swal.fire({
             title: 'Konfirmasi Pasien Hadir?',
@@ -1491,11 +1546,10 @@
             confirmButtonText: 'Ya, Pasien Hadir'
         }).then((result) => {
             if (result.isConfirmed) {
-                const originalContent = btnElement.innerHTML;
+                // Loading state
                 btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                 btnElement.disabled = true;
 
-                // MENGGUNAKAN ROUTE TANDAI HADIR (BUKAN STOP PANGGIL)
                 fetch(`/admin/tandai-hadir/${id}`, {
                     method: 'POST',
                     headers: {
@@ -1512,20 +1566,19 @@
                             icon: 'success',
                             timer: 1500,
                             showConfirmButton: false
-                        }).then(() => {
-                            window.location.reload(); 
                         });
+                        // REFRESH DATA TANPA RELOAD
+                        window.forceRefreshQueueData();
                     } else {
-                        btnElement.innerHTML = originalContent;
+                        btnElement.innerHTML = '<i class="fas fa-check"></i> Hadir';
                         btnElement.disabled = false;
                         Swal.fire('Error', 'Gagal update status', 'error');
                     }
                 })
                 .catch(err => {
-                    console.error(err);
-                    btnElement.innerHTML = originalContent;
+                    btnElement.innerHTML = '<i class="fas fa-check"></i> Hadir';
                     btnElement.disabled = false;
-                    Swal.fire('Error', 'Terjadi kesalahan koneksi', 'error');
+                    Swal.fire('Error', 'Koneksi gagal', 'error');
                 });
             }
         });
@@ -1552,20 +1605,18 @@
                 .then(res => res.json())
                 .then(data => {
                     if(data.success) {
-                        Swal.fire({
-                            title: 'Berhasil',
-                            text: 'Pasien telah dialihkan',
-                            icon: 'info',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => window.location.reload());
+                        // REFRESH DATA TANPA RELOAD
+                        window.forceRefreshQueueData();
                     }
+                })
+                .catch(err => {
+                    Swal.fire('Error', 'Koneksi gagal', 'error');
                 });
             }
         });
     }
 
-    // --- 3. FLATPICKR ---
+    // --- 4. FLATPICKR ---
     flatpickr("#tanggalFilter", {
         dateFormat: "Y-m-d",
         altInput: true,
@@ -1574,18 +1625,16 @@
         locale: { firstDayOfWeek: 1 }
     });
 
-    // --- 4. MODAL ---
+    // --- 5. LOGIC MODAL ---
     const modal = document.getElementById('periksaAwalModal');
     const modalContent = document.getElementById('modalFormContent');
     const closeModalBtn = document.getElementById('closeModalBtn');
     
-    // Gunakan Delegation untuk Modal (karena tombol bisa di-refresh AJAX)
     document.addEventListener('click', async function(e) {
         const btn = e.target.closest('.open-periksa-modal');
         if (btn) {
             e.preventDefault();
             const jsonUrl = btn.dataset.url;
-            
             modal.style.display = 'flex';
             modalContent.innerHTML = '<div class="loading-spinner"></div>';
 
@@ -1636,11 +1685,9 @@
         }
     });
 
-    if(closeModalBtn) {
-        closeModalBtn.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-    }
+    if(closeModalBtn) closeModalBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
     
     window.addEventListener('click', (event) => {
         if (event.target == modal) {
@@ -1648,7 +1695,7 @@
         }
     });
 
-    // --- 5. INITIALIZE AUTO REFRESH (WITH TAB STATE HANDLING) ---
+    // --- 6. INITIALIZE & REBINDING ---
     document.addEventListener('DOMContentLoaded', function() {
         
         // Panggil Global Auto Refresh untuk kontainer antrian
@@ -1656,43 +1703,25 @@
             window.initAutoRefresh(['#queue-data-container']);
         }
 
-        // Fungsi Rebind (Dipanggil otomatis setiap kali data di-refresh)
+        // ----------------------------------------------------------------
+        // FUNGSI INI WAJIB DIJALANKAN SETELAH DOM DI-UPDATE OLEH AJAX/AUTOLOAD
+        // ----------------------------------------------------------------
         window.rebindEvents = function() {
             // Restore Active Tab dari Session Storage
             const activeTab = sessionStorage.getItem('activeQueueTab');
             
-            // Sembunyikan semua tab dulu (karena HTML baru datang dengan default tab 1)
-            document.querySelectorAll('.tab-pane').forEach(el => {
-                el.style.display = 'none'; 
-                el.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-
             if (activeTab && document.getElementById(activeTab)) {
-                // Aktifkan Konten Tab
-                document.getElementById(activeTab).style.display = 'block';
-                setTimeout(() => document.getElementById(activeTab).classList.add('active'), 10);
-
-                // Aktifkan Tombol Tab
-                const btnId = 'btn-' + activeTab;
-                const btn = document.getElementById(btnId);
-                if (btn) btn.classList.add('active');
+                applyTabState(activeTab);
             } else {
-                // Fallback: Jika tidak ada di storage (baru buka), aktifkan yang pertama
+                // Fallback: Default ke tab pertama jika session tidak ada/valid
                 const firstTab = document.querySelector('.tab-pane');
-                const firstBtn = document.querySelector('.tab-btn');
-                if (firstTab) {
-                    firstTab.style.display = 'block';
-                    firstTab.classList.add('active');
-                }
-                if (firstBtn) firstBtn.classList.add('active');
+                if(firstTab) applyTabState(firstTab.id);
             }
-            
-            console.log('✅ Queue data updated & Tab restored:', activeTab);
+            // console.log('✅ Queue data updated & Tab restored:', currentTab);
         };
-
-        // Jalankan rebindEvents sekali di awal untuk memastikan state benar saat load/reload manual
-        // window.rebindEvents(); // Opsional, karena server-side rendering sudah menangani load awal
+        
+        // Restore tab saat load pertama kali
+        window.rebindEvents();
     });
 
     // Auto Hide Alert
