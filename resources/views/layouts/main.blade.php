@@ -163,7 +163,7 @@
             border-radius: 50%;
             cursor: pointer;
             z-index: 20;
-            display: flex;
+            display: none; /* Default hidden on desktop */
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
@@ -1235,24 +1235,28 @@
         
     </script>
 
+    {{-- 🔥 SCRIPT KHUSUS UNTUK POP-UP PEMANGGILAN PASIEN 🔥 --}}
     @auth
     <script>
         setInterval(() => {
+            // Jangan cek kalau swal sudah muncul
             if (Swal.isVisible()) return; 
 
             fetch('{{ route("check.panggilan") }}')
                 .then(response => response.json())
                 .then(data => {
                     if (data.dipanggil) {
+                        // Mainkan Audio
                         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); 
                         audio.play().catch(e => console.log('Audio autoplay blocked'));
 
+                        // Tampilkan Pop-up
                         Swal.fire({
                             title: '📢 GILIRAN ANDA!',
                             html: `
                                 <div style="font-size: 1.1rem; line-height: 1.6;">
                                     Halo <b>{{ Auth::user()->name }}</b>,<br>
-                                    Silakan menuju ke staff admin.<br><br>
+                                    Silakan menuju ke ruangan pemeriksaan.<br><br>
                                     <div style="background: #e8f5e9; padding: 15px; border-radius: 10px; border: 2px solid #39A616;">
                                         <span style="font-size: 2.5rem; font-weight: 800; color: #39A616; display: block;">NO. ${data.data.no_antrian}</span>
                                         <span style="color: #1D8208; font-weight: 600;">${data.data.nama_layanan}</span>
@@ -1260,13 +1264,14 @@
                                 </div>
                             `,
                             icon: 'info',
-                            confirmButtonText: '<i class="fas fa-walking"></i> Saya Menuju Kesana',
+                            confirmButtonText: '<i class="fas fa-volume-mute"></i> Matikan Alarm & Saya Masuk',
                             confirmButtonColor: '#39A616',
                             allowOutsideClick: false,
                             backdrop: `rgba(0,0,0,0.8) left top no-repeat`,
                             
+                            // Saat tombol diklik, panggil endpoint stop-alarm
                             preConfirm: () => {
-                                return fetch(`/konfirmasi-datang/${data.data.id}`, {
+                                return fetch(`/stop-alarm/${data.data.id}`, {
                                     method: 'POST',
                                     headers: {
                                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -1278,14 +1283,15 @@
                                     return response.json()
                                 })
                                 .catch(error => {
-                                    Swal.showValidationMessage(`Request failed: ${error}`)
+                                    Swal.showValidationMessage(`Gagal mematikan alarm: ${error}`)
                                 })
                             }
                         }).then((result) => {
                             if (result.isConfirmed) {
+                                // Setelah sukses matikan alarm
                                 Swal.fire({
-                                    title: 'Terima Kasih!',
-                                    text: 'Segera menuju ke staff admin.',
+                                    title: 'Silakan Masuk',
+                                    text: 'Segera menuju ke ruangan dokter.',
                                     icon: 'success',
                                     timer: 2000,
                                     showConfirmButton: false
@@ -1295,7 +1301,7 @@
                     }
                 })
                 .catch(err => console.error('Error polling:', err));
-        }, 5000); 
+        }, 3000); // Cek setiap 3 detik
     </script>
     @endauth
 

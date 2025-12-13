@@ -154,21 +154,30 @@
                                                 <td>
                                                     @if($pendaftaran->status == 'Menunggu')
                                                         <span class="status-badge-modern status-waiting">
-                                                            <i class="fas fa-clock"></i> {{ $pendaftaran->status }}
+                                                            <i class="fas fa-clock"></i> Menunggu
+                                                        </span>
+                                                    @elseif($pendaftaran->status == 'Hadir')
+                                                        <span class="status-badge-modern status-done">
+                                                            <i class="fas fa-user-check"></i> Hadir
                                                         </span>
                                                     @elseif($pendaftaran->status == 'Diperiksa Awal')
                                                         <span class="status-badge-modern status-checking">
-                                                            <i class="fas fa-stethoscope"></i> {{ $pendaftaran->status }}
+                                                            <i class="fas fa-stethoscope"></i> Diperiksa
+                                                        </span>
+                                                    @elseif($pendaftaran->status == 'Selesai')
+                                                        <span class="status-badge-modern status-done">
+                                                            <i class="fas fa-check-circle"></i> Selesai
                                                         </span>
                                                     @else
-                                                        <span class="status-badge-modern status-done">
-                                                            <i class="fas fa-check-circle"></i> {{ $pendaftaran->status }}
+                                                        <span class="status-badge-modern status-waiting">
+                                                            {{ $pendaftaran->status }}
                                                         </span>
                                                     @endif
 
+                                                    {{-- Indikator Panggilan --}}
                                                     @if($pendaftaran->status_panggilan == 'dipanggil')
-                                                        <br><span class="badge-call-status">
-                                                            <i class="fas fa-volume-up"></i> Dipanggil ({{ $pendaftaran->jumlah_panggilan }}x)
+                                                        <br><span class="badge-call-status" style="animation: pulse-red 1s infinite;">
+                                                            <i class="fas fa-volume-up"></i> Memanggil ({{ $pendaftaran->jumlah_panggilan }}x)
                                                         </span>
                                                     @elseif($pendaftaran->status_panggilan == 'dialihkan')
                                                         <br><span class="badge-call-status badge-skipped">
@@ -177,43 +186,59 @@
                                                     @endif
                                                 </td>
 
-                                                {{-- AKSI PANGGIL --}}
+                                                {{-- AKSI PANGGIL (Logic Diperbaiki) --}}
                                                 <td class="text-center">
-                                                    @if(!in_array($pendaftaran->status, ['Selesai', 'Dibatalkan']))
+                                                    @if($pendaftaran->status == 'Menunggu')
                                                         <div class="action-group">
+                                                            {{-- Tombol Panggil --}}
                                                             <button onclick="panggilPasien(this, {{ $pendaftaran->id }})" class="btn-call-modern" title="Panggil Pasien">
                                                                 <i class="fas fa-bullhorn"></i> Panggil
                                                             </button>
 
-                                                            @if($pendaftaran->status_panggilan == 'dipanggil')
-                                                                <button onclick="stopPanggil(this, {{ $pendaftaran->id }})" class="btn-stop-call" title="Pasien Hadir">
-                                                                    <i class="fas fa-check"></i> Hadir
-                                                                </button>
-                                                            @endif
+                                                            {{-- Tombol Konfirmasi Hadir --}}
+                                                            {{-- Ini akan memicu 'tandaiHadir' di controller --}}
+                                                            <button onclick="konfirmasiHadir(this, {{ $pendaftaran->id }})" class="btn-stop-call" title="Konfirmasi Pasien Hadir">
+                                                                <i class="fas fa-check"></i> Hadir
+                                                            </button>
 
+                                                            {{-- Tombol Skip --}}
                                                             @if($pendaftaran->jumlah_panggilan >= 2)
                                                                 <button onclick="alihkanPasien({{ $pendaftaran->id }})" class="btn-skip-modern" title="Lewati Pasien">
                                                                     <i class="fas fa-forward"></i> Skip
                                                                 </button>
                                                             @endif
                                                         </div>
+                                                    @elseif($pendaftaran->status == 'Hadir')
+                                                        <span style="font-size: 0.85rem; color: #155724; font-weight:600;">
+                                                            <i class="fas fa-check"></i> Pasien Hadir
+                                                        </span>
                                                     @else
                                                         <span style="font-size: 0.85rem; font-style: italic; color: var(--text-muted);">-</span>
                                                     @endif
                                                 </td>
 
-                                                {{-- Aksi Data --}}
+                                                {{-- Aksi Data (Logic Diperbaiki: Hanya jika 'Hadir') --}}
                                                 <td class="text-center">
-                                                    @if($pendaftaran->status == 'Menunggu' || $pendaftaran->status == 'Diperiksa Awal')
+                                                    @if($pendaftaran->status == 'Hadir')
+                                                        {{-- Tombol Input Data: HANYA MUNCUL JIKA SUDAH HADIR --}}
                                                         <button type="button" 
                                                                 class="btn-action-primary open-periksa-modal"
                                                                 data-url="{{ route('admin.pemeriksaan-awal.json', $pendaftaran->id) }}">
                                                             <span>Input Data</span>
                                                             <i class="fas fa-clipboard-check"></i>
                                                         </button>
-                                                    @else
+                                                    @elseif($pendaftaran->status == 'Diperiksa Awal')
+                                                        <button class="btn-action-disabled" disabled>
+                                                            <i class="fas fa-user-md"></i> Sedang Diperiksa
+                                                        </button>
+                                                    @elseif($pendaftaran->status == 'Selesai')
                                                         <button type="button" class="btn-action-disabled" disabled>
                                                             <i class="fas fa-check-double"></i> Selesai
+                                                        </button>
+                                                    @else
+                                                        {{-- Jika masih menunggu, tombol input dikunci --}}
+                                                        <button class="btn-action-disabled" disabled title="Panggil dan konfirmasi hadir terlebih dahulu">
+                                                            <i class="fas fa-lock"></i> Input
                                                         </button>
                                                     @endif
                                                 </td>
@@ -260,6 +285,13 @@
 
 @push('styles')
 <style>
+    /* Tambahan animasi pulse merah untuk status panggilan */
+    @keyframes pulse-red {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
     /* ===== COMPLETE CSS SYSTEM ===== */
     * { 
         box-sizing: border-box;
@@ -327,7 +359,6 @@
     /* ===== HEADER BANNER (NO ANIMATION) ===== */
     .dashboard-header-banner {
         margin-bottom: 40px;
-        /* Animation removed */
     }
 
     .header-content {
@@ -374,7 +405,6 @@
         position: relative;
         z-index: 1;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        /* Animation removed for stability */
     }
 
     .header-text {
@@ -396,7 +426,6 @@
         font-weight: 600;
         margin-bottom: 15px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        /* Animation removed */
     }
 
     .page-title {
@@ -405,7 +434,6 @@
         font-size: 2.2rem;
         margin: 0 0 10px 0;
         letter-spacing: -0.5px;
-        /* Animation removed */
     }
 
     .page-subtitle {
@@ -416,7 +444,6 @@
         font-size: 1.05rem;
         font-weight: 500;
         margin: 0;
-        /* Animation removed */
     }
 
     .hero-illustration {
@@ -441,7 +468,6 @@
         justify-content: center;
     }
 
-    /* Keep pulse animation for aesthetic */
     .pulse-circle {
         position: absolute;
         border: 2px solid rgba(255, 255, 255, 0.4);
@@ -489,7 +515,6 @@
     /* ===== FILTER SECTION (NO ANIMATION) ===== */
     .stats-section {
         margin-bottom: 40px;
-        /* Animation removed */
     }
 
     .filter-card-modern {
@@ -633,7 +658,6 @@
         padding: 20px 28px;
         border-radius: 20px;
         margin-bottom: 30px;
-        /* Animation removed */
         box-shadow: 0 8px 25px rgba(0,0,0,0.12);
     }
 
@@ -645,18 +669,6 @@
     .alert-info-modern {
         background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
         border: 2px solid #17a2b8;
-    }
-
-    [data-theme="dark"] .alert-success-modern,
-    .dark-mode .alert-success-modern {
-        background: linear-gradient(135deg, rgba(46, 204, 113, 0.2), rgba(39, 174, 96, 0.3));
-        border-color: #28a745;
-    }
-
-    [data-theme="dark"] .alert-info-modern,
-    .dark-mode .alert-info-modern {
-        background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(41, 128, 185, 0.3));
-        border-color: #17a2b8;
     }
 
     .alert-icon {
@@ -763,7 +775,6 @@
 
     .tab-pane {
         display: none;
-        /* Animation removed to prevent flicker on refresh */
     }
 
     .tab-pane.active {
@@ -773,7 +784,6 @@
     /* ===== SCHEDULE SECTION (NO ANIMATION) ===== */
     .schedule-section {
         margin-bottom: 30px;
-        /* Animation removed */
     }
 
     .layanan-group-modern {
@@ -871,11 +881,9 @@
         text-align: center;
     }
 
-    /* ROW ANIMATIONS REMOVED FOR AUTO-REFRESH STABILITY */
     .schedule-row {
         border-bottom: 1px solid var(--border-color);
         transition: all 0.3s ease;
-        /* No animation, No opacity: 0 */
     }
 
     .schedule-row:hover {
@@ -979,27 +987,6 @@
         background: linear-gradient(135deg, rgba(46, 204, 113, 0.15), rgba(39, 174, 96, 0.25));
         color: #155724;
         border: 1px solid rgba(46, 204, 113, 0.3);
-    }
-
-    [data-theme="dark"] .status-waiting,
-    .dark-mode .status-waiting {
-        background: linear-gradient(135deg, rgba(243, 156, 18, 0.2), rgba(230, 126, 34, 0.3));
-        color: #fbbf24;
-        border-color: rgba(243, 156, 18, 0.4);
-    }
-
-    [data-theme="dark"] .status-checking,
-    .dark-mode .status-checking {
-        background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(41, 128, 185, 0.3));
-        color: #60a5fa;
-        border-color: rgba(52, 152, 219, 0.4);
-    }
-
-    [data-theme="dark"] .status-done,
-    .dark-mode .status-done {
-        background: linear-gradient(135deg, rgba(46, 204, 113, 0.2), rgba(39, 174, 96, 0.3));
-        color: #34d399;
-        border-color: rgba(46, 204, 113, 0.4);
     }
 
     /* ===== CALLING SYSTEM BUTTONS ===== */
@@ -1176,7 +1163,6 @@
         font-size: 4.5rem;
         margin-bottom: 24px;
         opacity: 0.3;
-        /* Animation removed */
     }
 
     .empty-schedule p {
@@ -1199,7 +1185,6 @@
         background-color: var(--modal-overlay);
         justify-content: center;
         align-items: center;
-        /* Animation removed */
         backdrop-filter: blur(8px);
     }
 
@@ -1210,7 +1195,6 @@
         width: 90%;
         max-width: 650px;
         box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        /* Animation removed */
         max-height: 90vh;
         display: flex;
         flex-direction: column;
@@ -1481,7 +1465,6 @@
                     toast: true
                 }).then(() => {
                     // Force refresh manual untuk update status segera
-                    // Tapi karena ada auto-refresh, bisa juga dibiarkan
                     window.location.reload(); 
                 });
             } else {
@@ -1496,43 +1479,55 @@
         });
     }
 
-    window.stopPanggil = function(btnElement, id) {
-        const originalContent = btnElement.innerHTML;
-        btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        btnElement.disabled = true;
+    // --- FUNGSI KONFIRMASI HADIR (PERBAIKAN UTAMA) ---
+    window.konfirmasiHadir = function(btnElement, id) {
+        Swal.fire({
+            title: 'Konfirmasi Pasien Hadir?',
+            text: "Status akan diubah menjadi 'Hadir' dan form input data akan dibuka.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, Pasien Hadir'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const originalContent = btnElement.innerHTML;
+                btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                btnElement.disabled = true;
 
-        fetch(`/admin/stop-panggil/${id}`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.success) {
-                Swal.fire({
-                    title: 'Selesai',
-                    text: 'Panggilan dihentikan. Pasien ditandai hadir.',
-                    icon: 'success',
-                    timer: 1500,
-                    showConfirmButton: false,
-                    position: 'top-end',
-                    toast: true
-                }).then(() => {
-                    window.location.reload(); 
+                // MENGGUNAKAN ROUTE TANDAI HADIR (BUKAN STOP PANGGIL)
+                fetch(`/admin/tandai-hadir/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        Swal.fire({
+                            title: 'Berhasil',
+                            text: 'Pasien dikonfirmasi hadir.',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload(); 
+                        });
+                    } else {
+                        btnElement.innerHTML = originalContent;
+                        btnElement.disabled = false;
+                        Swal.fire('Error', 'Gagal update status', 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    btnElement.innerHTML = originalContent;
+                    btnElement.disabled = false;
+                    Swal.fire('Error', 'Terjadi kesalahan koneksi', 'error');
                 });
-            } else {
-                btnElement.innerHTML = originalContent;
-                btnElement.disabled = false;
-                Swal.fire('Error', 'Gagal menghentikan panggilan', 'error');
             }
-        })
-        .catch(err => {
-            console.error(err);
-            btnElement.innerHTML = originalContent;
-            btnElement.disabled = false;
-            Swal.fire('Error', 'Terjadi kesalahan koneksi', 'error');
         });
     }
 

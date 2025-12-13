@@ -30,6 +30,9 @@ use App\Http\Controllers\Apoteker\RiwayatController;
 use App\Http\Controllers\Apoteker\LaporanController;
 use App\Http\Controllers\Auth\GoogleController;
 
+// --- Import Model (Untuk Logic Closure) ---
+use App\Models\Pendaftaran;
+
 /*
 |--------------------------------------------------------------------------
 | Google OAuth Routes
@@ -96,12 +99,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/notifikasi-jadwal/mark-as-read/{id}', 'markNotificationAsRead')->name('notifikasi.read');
     });
 
-    // 🔥 ROUTE KHUSUS POP-UP & KONFIRMASI (PENTING)
+    // 🔥 ROUTE KHUSUS POP-UP & KONFIRMASI (PENTING) 🔥
     
     // 1. Cek Panggilan (Polling)
     Route::get('/check-panggilan', function () {
         $user = Auth::user();
-        $panggilan = \App\Models\Pendaftaran::where('user_id', $user->id)
+        $panggilan = Pendaftaran::where('user_id', $user->id)
             ->whereDate('jadwal_dipilih', Carbon::today())
             ->where('status_panggilan', 'dipanggil')
             ->first();
@@ -112,11 +115,19 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('check.panggilan');
 
-    // 2. Stop Alarm (Hanya mematikan suara, tidak ubah status hadir)
-    Route::post('/stop-alarm/{id}', [PendaftaranController::class, 'stopAlarmPasien'])->name('stop.alarm');
-    
-    // 3. Konfirmasi Datang (Backup jika masih dipakai)
-    Route::post('/konfirmasi-datang/{id}', [PendaftaranController::class, 'konfirmasiDatang'])->name('konfirmasi.datang');
+    // 2. Stop Alarm (Hanya mematikan suara & popup)
+    // Menggunakan Closure agar tidak perlu edit Controller Pasien lagi
+    Route::post('/stop-alarm/{id}', function($id) {
+        $pendaftaran = Pendaftaran::findOrFail($id);
+        
+        // Pastikan hanya pemilik yang bisa stop
+        if($pendaftaran->user_id == Auth::id()) {
+            $pendaftaran->status_panggilan = 'menunggu'; 
+            $pendaftaran->save();
+        }
+        
+        return response()->json(['success' => true]);
+    })->name('stop.alarm');
 });
 
 // Chat System
@@ -153,12 +164,9 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
         Route::get('/pasien/{user}/riwayat', 'riwayatPasien')->name('pasien.riwayat');
         Route::delete('/pasien/{user}', 'hapusPasien')->name('pasien.hapus');
         
-        // --- SISTEM PEMANGGILAN ---
+        // --- 🔥 SISTEM PEMANGGILAN (PERBAIKAN) 🔥 ---
         Route::post('/panggil-pasien/{id}', 'panggilPasien')->name('panggil.pasien');
-        
-        // INI YANG SEBELUMNYA KURANG (Penyebab Error Tombol Hadir):
-        Route::post('/tandai-hadir/{id}', 'tandaiHadir')->name('tandai.hadir');
-        
+        Route::post('/tandai-hadir/{id}', 'tandaiHadir')->name('tandai.hadir'); // Wajib Ada
         Route::post('/stop-panggil/{id}', 'stopPanggil')->name('stop.panggil');
         Route::post('/alihkan-pasien/{id}', 'alihkanPasien')->name('alihkan.pasien');
     });

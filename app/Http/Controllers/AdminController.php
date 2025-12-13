@@ -38,7 +38,10 @@ class AdminController extends Controller
         $jumlahMenunggu = Pendaftaran::whereDate('jadwal_dipilih', $today)->where('status', 'Menunggu')->count();
         $jumlahSelesai = Pendaftaran::whereDate('jadwal_dipilih', $today)->where('status', 'Selesai')->count();
         $jumlahTenagaMedis = TenagaMedis::count();
-        $jumlahTotalPasien = User::where('role', 'pasien')->orWhereNull('role')->count();
+        
+        $jumlahTotalPasien = User::where('role', 'pasien')
+            ->orWhereNull('role')
+            ->count();
 
         // Hitung Dokter Aktif
         $jumlahDokterAktifHariIni = JadwalPraktek::whereJsonContains('hari', $namaHariIni)
@@ -122,20 +125,27 @@ class AdminController extends Controller
         return view('admin.keloladatapasien', compact('pasiens', 'search'));
     }
 
+    // ==========================================
+    // MENU CATATAN PEMERIKSAAN (ANTRIAN)
+    // ==========================================
     public function catatanpemeriksaan(Request $request)
     {
         $tanggal = $request->input('tanggal'); 
         $targetDate = $tanggal ? $tanggal : Carbon::today();
 
+        // 1. Ambil Layanan yang tersedia di jadwal
         $semuaLayanan = JadwalPraktek::select('layanan')
             ->distinct()
             ->orderBy('layanan', 'asc')
             ->pluck('layanan');
 
+        // 2. Query Pendaftaran
+        // Order by Status: Menunggu & Hadir duluan, baru Diperiksa Awal, lalu Selesai
         $query = Pendaftaran::with(['user', 'jadwalPraktek.tenagaMedis'])
             ->whereDate('jadwal_dipilih', $targetDate);
 
-        $pendaftaransGrouped = $query->orderByRaw("FIELD(status, 'Menunggu', 'Diperiksa Awal', 'Selesai')")
+        $pendaftaransGrouped = $query
+            ->orderByRaw("FIELD(status, 'Menunggu', 'Hadir', 'Diperiksa Awal', 'Selesai', 'Dibatalkan')")
             ->orderBy('no_antrian', 'asc')
             ->get()
             ->groupBy('nama_layanan');
@@ -150,8 +160,11 @@ class AdminController extends Controller
         return view('admin.catatanpemeriksaan', compact('pendaftarans', 'tanggal')); 
     }
 
-    // --- SISTEM PEMANGGILAN ---
+    // ==========================================
+    // 🔥 SISTEM PEMANGGILAN & KEHADIRAN 🔥
+    // ==========================================
 
+    // 1. Panggil Pasien (Bunyikan Alarm)
     public function panggilPasien(Request $request, $id)
     {
         try {
@@ -170,6 +183,48 @@ class AdminController extends Controller
         }
     }
 
+    // 2. Tandai Hadir (Kunci alur: Membuka tombol Input Data)
+    public function tandaiHadir(Request $request, $id)
+    {
+        try {
+            $pendaftaran = Pendaftaran::findOrFail($id);
+            
+            // Matikan status panggilan (biar bersih)
+            $pendaftaran->status_panggilan = 'hadir'; 
+            
+            // Ubah Status Utama jadi 'Hadir'
+            // Inilah trigger agar tombol "Input Data" di view terbuka
+            $pendaftaran->status = 'Hadir'; 
+            
+            $pendaftaran->save();
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Pasien dikonfirmasi hadir. Menu input data dibuka.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // 3. Stop Panggil Manual (Opsional, jika admin salah panggil tapi pasien belum datang)
+    public function stopPanggil(Request $request, $id)
+    {
+        try {
+            $pendaftaran = Pendaftaran::findOrFail($id);
+            $pendaftaran->status_panggilan = 'menunggu'; 
+            $pendaftaran->save();
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Panggilan dihentikan sementara.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // 4. Alihkan / Skip Pasien
     public function alihkanPasien(Request $request, $id)
     {
         try {
@@ -186,45 +241,9 @@ class AdminController extends Controller
         }
     }
 
-    // --- FUNGSI UTAMA TOMBOL HADIR ---
-
-    public function tandaiHadir(Request $request, $id)
-    {
-        try {
-            $pendaftaran = Pendaftaran::findOrFail($id);
-            
-            // 1. Matikan Alarm/Panggilan
-            $pendaftaran->status_panggilan = 'hadir'; 
-
-            // 2. Logika Status Utama (AMAN)
-            // Jika status masih 'Menunggu', ubah jadi 'Hadir'.
-            // Jika sudah 'Diperiksa Awal' (karena sudah input data), JANGAN ubah jadi 'Hadir'.
-            if ($pendaftaran->status == 'Menunggu') {
-                $pendaftaran->status = 'Hadir'; 
-            }
-            
-            $pendaftaran->save();
-
-            return response()->json([
-                'success' => true, 
-                'message' => 'Status kehadiran berhasil diperbarui.'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false, 
-                'message' => 'Gagal memproses data: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    // Fungsi Backup untuk kompatibilitas tombol lama (Stop Panggil)
-    public function stopPanggil(Request $request, $id)
-    {
-        // Panggil logika yang sama dengan tandaiHadir
-        return $this->tandaiHadir($request, $id);
-    }
-
-    // --- LAPORAN & RIWAYAT ---
+    // ==========================================
+    // LAPORAN & RIWAYAT
+    // ==========================================
 
     public function laporan(Request $request)
     {
@@ -298,5 +317,4 @@ class AdminController extends Controller
         
         return view('admin.riwayat.index', compact('riwayats', 'layanans', 'tenagaMedisList', 'request', 'user'));
     }
-
 }
