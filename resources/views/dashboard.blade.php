@@ -4,6 +4,862 @@
 
 @push('styles')
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { 
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* ===== WARNA BARU ===== */
+        :root {
+            --p1: #39A616;
+            --p2: #1D8208;
+            --p3: #0C5B00;
+            --grad: linear-gradient(135deg, #39A616, #1D8208, #0C5B00);
+            --grad-reverse: linear-gradient(135deg, #0C5B00, #1D8208, #39A616);
+            --bg-primary: #ffffff; /* Asumsi background putih */
+            --bg-secondary: #f4f7f6; /* Asumsi background sekunder */
+            --text-primary: #1f2937; /* Asumsi teks utama */
+            --text-secondary: #4b5563; /* Asumsi teks sekunder */
+            --text-muted: #6b7280; /* Asumsi teks muted */
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .container-fluid-modern {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* ===== TABLE RESPONSIVE WRAPPER ===== */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling di iOS */
+            padding-bottom: 10px; /* Memberi ruang untuk scrollbar */
+        }
+
+        /* Custom Scrollbar untuk Tabel */
+        .table-responsive::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .table-responsive::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+            background-color: rgba(57, 166, 22, 0.3);
+            border-radius: 4px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(57, 166, 22, 0.6);
+        }
+        
+        /* Mencegah teks wrap (turun baris) agar kolom tetap rapi */
+        .schedule-table th, 
+        .schedule-table td {
+            white-space: nowrap;
+        }
+
+        /* ===== HEADER BANNER (NO ANIMATION) ===== */
+        .dashboard-header-banner {
+            margin-bottom: 40px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 20px; 
+            background: var(--grad);
+            padding: 35px 40px;
+            border-radius: 24px;
+            box-shadow: 0 15px 50px rgba(57, 166, 22, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-content::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .header-icon {
+            width: 75px;
+            height: 75px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: #fff;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .header-text {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .greeting-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(12px);
+            padding: 10px 20px;
+            border-radius: 25px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .greeting-badge i {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        .page-title {
+            color: #fff;
+            font-weight: 800;
+            font-size: 2.2rem;
+            margin: 0 0 10px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .page-subtitle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.05rem;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .hero-illustration {
+            width: 130px;
+            height: 130px;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(15px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-shrink: 0;
+            z-index: 1;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .hero-illustration > i {
+            font-size: 55px;
+            color: white;
+            z-index: 2;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.1); }
+            50% { transform: scale(1); }
+            75% { transform: scale(1.05); }
+        }
+
+        .pulse-circle {
+            position: absolute;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            animation: pulse-ring 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        .pulse-1 { width: 100%; height: 100%; animation-delay: 0s; }
+        .pulse-2 { width: 120%; height: 120%; animation-delay: 0.8s; }
+        .pulse-3 { width: 140%; height: 140%; animation-delay: 1.6s; }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.9); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        /* ===== SECTION HEADER ===== */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .section-header h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+        }
+
+        .section-header h2 i {
+            color: var(--p1);
+            font-size: 1.4rem;
+        }
+
+        .schedule-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--grad);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            box-shadow: 0 6px 20px rgba(57, 166, 22, 0.3);
+        }
+        
+        /* ===== STATS SECTION (NO ANIMATION) ===== */
+        .stats-section {
+            margin-bottom: 40px;
+        }
+        
+        .stats-grid-modern {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 28px;
+        }
+
+        .stat-card-modern {
+            background: var(--bg-primary);
+            border-radius: 24px;
+            padding: 32px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            box-shadow: 0 8px 30px rgba(57, 166, 22, 0.1);
+            border: 1px solid rgba(57, 166, 22, 0.15);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stat-card-modern:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(57, 166, 22, 0.25);
+            border-color: rgba(57, 166, 22, 0.4);
+        }
+
+        .card-gradient-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: var(--grad);
+            opacity: 0.06;
+            transition: opacity 0.5s ease;
+        }
+
+        .stat-card-modern:hover .card-gradient-bg {
+            opacity: 0.12;
+        }
+
+        .stat-icon-wrapper {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            background: var(--grad);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: white;
+            position: relative;
+            flex-shrink: 0;
+            z-index: 1;
+            box-shadow: 0 8px 25px rgba(57, 166, 22, 0.35);
+        }
+
+        .stat-info-icon {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.35);
+        }
+
+        .stat-content {
+            flex: 1;
+            z-index: 1;
+        }
+
+        .stat-value-modern {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .stat-label-modern {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .stat-period {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .stat-decoration {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            font-size: 80px;
+            color: rgba(57, 166, 22, 0.08);
+            z-index: 0;
+        }
+
+        /* ===== INFO SECTION (NO ANIMATION) ===== */
+        .info-section {
+            margin-bottom: 40px;
+        }
+
+        .info-grid-modern {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 28px;
+        }
+
+        .info-card {
+            background: var(--bg-primary);
+            border-radius: 24px;
+            box-shadow: 0 8px 30px rgba(57, 166, 22, 0.1);
+            border: 1px solid rgba(57, 166, 22, 0.15);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .info-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(57, 166, 22, 0.25);
+            border-color: rgba(57, 166, 22, 0.4);
+        }
+
+        .card-notification-bg {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .card-tips-bg {
+            background: var(--grad);
+        }
+
+        .card-clinic-bg {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+        
+        /* NEW CARD STYLES for Real-time Queue */
+        .queue-realtime-card .card-gradient-bg {
+             background: linear-gradient(135deg, #00C853, #1de9b6) !important;
+             opacity: 0.08 !important;
+        }
+        .realtime-icon-header {
+            background: linear-gradient(135deg, #00C853, #1de9b6) !important;
+            opacity: 0.2 !important;
+        }
+        .realtime-icon-wrapper {
+            background: rgba(0, 200, 83, 0.15) !important;
+        }
+        .realtime-icon-wrapper i {
+            color: #00C853 !important;
+        }
+        .notif-icon-wrapper-mine {
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.15), rgba(230, 126, 34, 0.25));
+        }
+        .notif-icon-wrapper-mine i {
+            color: #f39c12;
+        }
+        .queue-dynamic-value {
+             font-weight: 700;
+             color: var(--p3);
+        }
+
+
+        .info-card:hover .card-gradient-bg {
+            opacity: 0.12;
+        }
+
+        .card-content-modern {
+            padding: 32px 28px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-header-icon {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 55px;
+            height: 55px;
+            border-radius: 14px;
+            background: var(--grad);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            opacity: 0.15;
+        }
+
+        .tips-icon-header {
+            background: var(--grad);
+        }
+
+        .clinic-icon-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .card-title-modern {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            padding-bottom: 18px;
+            border-bottom: 2px solid rgba(57, 166, 22, 0.1);
+        }
+
+        .card-body-modern {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Info Row Style Premium */
+        .info-row {
+            display: flex;
+            align-items: flex-start;
+            padding: 18px;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+        }
+
+        .info-row:hover {
+            background: rgba(57, 166, 22, 0.05);
+            border-color: rgba(57, 166, 22, 0.2);
+            transform: translateX(6px);
+            box-shadow: 0 4px 15px rgba(57, 166, 22, 0.1);
+        }
+
+        .info-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(57, 166, 22, 0.15), rgba(57, 166, 22, 0.25));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .notif-icon {
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.15), rgba(230, 126, 34, 0.25));
+        }
+
+        .tips-icon {
+            background: linear-gradient(135deg, rgba(57, 166, 22, 0.15), rgba(57, 166, 22, 0.25));
+        }
+
+        .clinic-icon {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(41, 128, 185, 0.25));
+        }
+
+        .info-icon-wrapper i {
+            color: var(--p1);
+            font-size: 20px;
+        }
+
+        .notif-icon i {
+            color: #f39c12;
+        }
+
+        .clinic-icon i {
+            color: #3498db;
+        }
+
+        .info-text {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+        }
+
+        .info-text .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-text .value {
+            font-size: 1.05rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            line-height: 1.6;
+        }
+
+        /* ===== QUEUE & ESTIMATION STYLE ===== */
+        .queue-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .queue-badge, .pending-badge, .estimation-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .queue-badge {
+            background: var(--grad);
+            color: white;
+        }
+
+        .estimation-badge {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .pending-badge {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3.5rem;
+            margin-bottom: 18px;
+            opacity: 0.3;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+
+        /* ===== SCHEDULE SECTION (NO ANIMATION) ===== */
+        .schedule-section {
+            margin-bottom: 30px;
+        }
+
+        .schedule-container-modern {
+            background: var(--bg-primary);
+            border-radius: 24px;
+            box-shadow: 0 8px 30px rgba(57, 166, 22, 0.1);
+            border: 1px solid rgba(57, 166, 22, 0.15);
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .schedule-container-modern:hover {
+            box-shadow: 0 20px 60px rgba(57, 166, 22, 0.25);
+            border-color: rgba(57, 166, 22, 0.4);
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .schedule-table thead {
+            background: var(--grad);
+        }
+
+        .schedule-table thead th {
+            padding: 20px 24px;
+            text-align: left;
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .schedule-table thead th i {
+            margin-right: 10px;
+            opacity: 0.95;
+        }
+
+        /* ROW ANIMATIONS REMOVED FOR STABILITY */
+        .schedule-row {
+            border-bottom: 1px solid rgba(57, 166, 22, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .schedule-row:hover {
+            background: rgba(57, 166, 22, 0.04);
+        }
+
+        .schedule-table tbody td {
+            padding: 20px 24px;
+            color: var(--text-secondary);
+        }
+
+        .doctor-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .doctor-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--grad);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+            flex-shrink: 0;
+            overflow: hidden;
+            border: 3px solid rgba(57, 166, 22, 0.1);
+            box-shadow: 0 4px 12px rgba(57, 166, 22, 0.2);
+        }
+
+        .doctor-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .doctor-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .service-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(41, 128, 185, 0.2));
+            color: #1976d2;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+        }
+
+        .time-badge-modern {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.1), rgba(230, 126, 34, 0.2));
+            color: #856404;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid rgba(243, 156, 18, 0.2);
+        }
+
+        .empty-schedule {
+            text-align: center;
+            padding: 70px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-schedule i {
+            font-size: 4.5rem;
+            margin-bottom: 24px;
+            opacity: 0.3;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .empty-schedule p {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+        }
+
+        .empty-schedule small {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .stats-grid-modern,
+            .info-grid-modern {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container-fluid-modern {
+                padding: 20px 15px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                padding: 30px 24px;
+            }
+
+            .page-title {
+                font-size: 1.8rem;
+            }
+
+            .hero-illustration {
+                width: 110px;
+                height: 110px;
+            }
+
+            .hero-illustration > i {
+                font-size: 45px;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stat-card-modern {
+                padding: 24px;
+            }
+
+            .stat-icon-wrapper {
+                width: 70px;
+                height: 70px;
+                font-size: 32px;
+            }
+
+            .stat-value-modern {
+                font-size: 2.4rem;
+            }
+
+            .schedule-table {
+                font-size: 0.9rem;
+            }
+
+            .schedule-table thead th,
+            .schedule-table tbody td {
+                padding: 14px 12px;
+            }
+
+            .doctor-avatar {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .greeting-badge {
+                font-size: 0.8rem;
+                padding: 8px 16px;
+            }
+
+            .stat-card-modern {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .card-header-icon {
+                top: 18px;
+                right: 18px;
+                width: 50px;
+                height: 50px;
+                font-size: 22px;
+            }
+
+            .info-row {
+                padding: 14px;
+            }
+
+            .info-icon-wrapper {
+                width: 42px;
+                height: 42px;
+            }
+
+            .info-icon-wrapper i {
+                font-size: 18px;
+            }
+
+            .schedule-table thead th {
+                font-size: 0.8rem;
+                padding: 12px 10px;
+            }
+
+            .schedule-table tbody td {
+                padding: 12px 10px;
+            }
+
+            .service-badge,
+            .time-badge-modern {
+                font-size: 0.8rem;
+                padding: 8px 14px;
+            }
+        }
+</style>
 @endpush
 
 @section('content')
@@ -82,7 +938,55 @@
         
         {{-- ID "live-info" untuk Auto Load Notifikasi --}}
         <div class="info-grid-modern" id="live-info">
-            {{-- Kartu Notifikasi (Jadwal & Antrian) --}}
+            
+            {{-- NEW: Kartu Status Antrian Aktif (Hanya jika ada pendaftaran hari ini dan sudah dapat no antrian) --}}
+            @if ($notifikasiHariIni && $notifikasiHariIni->no_antrian && $notifikasiHariIni->jadwal_praktek_id)
+            <div class="info-card queue-realtime-card" id="queue-realtime-card">
+                <div class="card-gradient-bg card-realtime-bg"></div>
+                <div class="card-content-modern">
+                    <div class="card-header-icon realtime-icon-header">
+                        <i class="fas fa-bullhorn"></i>
+                    </div>
+                    <h3 class="card-title-modern">Status Antrian Aktif</h3>
+                    <div class="card-body-modern">
+                        {{-- Status Antrian Sedang Berjalan --}}
+                        <div class="info-row">
+                            <div class="info-icon-wrapper realtime-icon-wrapper">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="info-text">
+                                <span class="label">Antrian Sedang Dilayani (Dokter {{ $notifikasiHariIni->jadwalPraktek?->tenagaMedis?->name ?? 'N/A' }})</span>
+                                {{-- ID untuk diupdate oleh JavaScript/Echo --}}
+                                <span class="value queue-dynamic-value" id="antrian-sedang-berjalan">
+                                    Memuat...
+                                </span>
+                            </div>
+                        </div>
+                        
+                        {{-- Estimasi Waktu Pasien Sendiri --}}
+                        <div class="info-row">
+                            <div class="info-icon-wrapper notif-icon-wrapper-mine">
+                                <i class="fas fa-ticket-alt"></i>
+                            </div>
+                            <div class="info-text">
+                                <span class="label">Estimasi Anda (No. {{ $notifikasiHariIni->no_antrian }})</span>
+                                {{-- ID untuk diupdate oleh JavaScript/Echo --}}
+                                <span class="value queue-dynamic-value" id="estimasi-saya">
+                                    {{-- Initial Load --}}
+                                    {{ \Carbon\Carbon::parse($notifikasiHariIni->estimasi_dilayani)->format('H:i') ?? 'Menunggu Estimasi' }} WIB
+                                </span>
+                            </div>
+                        </div>
+                        <div class="text-center mt-3">
+                            {{-- ID untuk waktu terakhir diperbarui --}}
+                            <small class="text-muted" id="last-updated-text">Data dimuat ulang otomatis.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            {{-- Kartu Notifikasi (Jadwal & Antrian) - MODIFIKASI: Hapus Estimasi Waktu di dalam badge --}}
             <div class="info-card">
                 <div class="card-gradient-bg card-notification-bg"></div>
                 <div class="card-content-modern">
@@ -98,21 +1002,16 @@
                                 </div>
                                 <div class="info-text">
                                     <span class="label">Jadwal Konsultasi</span>
-                                    <span class="value">{{ $notifikasiHariIni->nama_layanan }}</span>
+                                    <span class="value">{{ $notifikasiHariIni->nama_layanan }} - {{ $notifikasiHariIni->jadwalPraktek->tenagaMedis->name ?? 'N/A' }}</span>
                                     
                                     @if ($notifikasiHariIni->no_antrian)
                                         <div class="queue-container">
                                             <span class="queue-badge">
                                                 <i class="fas fa-ticket-alt"></i> 
-                                                No. {{ $notifikasiHariIni->no_antrian }}
+                                                No. Antrian Anda: {{ $notifikasiHariIni->no_antrian }}
                                             </span>
 
-                                            @if(isset($notifikasiHariIni->estimasi_dilayani))
-                                                <span class="queue-badge estimation-badge">
-                                                    <i class="fas fa-clock"></i> 
-                                                    Estimasi: {{ \Carbon\Carbon::parse($notifikasiHariIni->estimasi_dilayani)->format('H:i') }} WIB
-                                                </span>
-                                            @endif
+                                            {{-- BAGIAN INI DIHAPUS karena sudah ada di kartu Status Antrian Aktif --}}
                                         </div>
                                     @else
                                         <span class="pending-badge">
@@ -228,7 +1127,7 @@
                                     <div class="doctor-info">
                                         <div class="doctor-avatar">
                                             @if($jadwal->tenagaMedis?->profile_photo_path)
-                                                <img src="{{ asset('storage/' . $jadwal->tenagaMedis->profile_photo_path) }}" alt="Foto">                             
+                                                <img src="{{ asset('storage/' . $jadwal->tenagaMedis->profile_photo_path) }}" alt="Foto"> 
                                             @else
                                                 <i class="fas fa-user-md"></i>
                                             @endif
@@ -271,835 +1170,67 @@
 
 @endsection
 
-@push('styles')
-<style>
-    * { 
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
-    
-    /* ===== WARNA BARU ===== */
-    :root {
-        --p1: #39A616;
-        --p2: #1D8208;
-        --p3: #0C5B00;
-        --grad: linear-gradient(135deg, #39A616, #1D8208, #0C5B00);
-        --grad-reverse: linear-gradient(135deg, #0C5B00, #1D8208, #39A616);
-    }
-    
-    body {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
-
-    .container-fluid-modern {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 40px 20px;
-    }
-
-    /* ===== TABLE RESPONSIVE WRAPPER ===== */
-    .table-responsive {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch; /* Smooth scrolling di iOS */
-        padding-bottom: 10px; /* Memberi ruang untuk scrollbar */
-    }
-
-    /* Custom Scrollbar untuk Tabel */
-    .table-responsive::-webkit-scrollbar {
-        height: 6px;
-    }
-
-    .table-responsive::-webkit-scrollbar-track {
-        background: var(--bg-secondary);
-        border-radius: 4px;
-    }
-
-    .table-responsive::-webkit-scrollbar-thumb {
-        background-color: rgba(57, 166, 22, 0.3);
-        border-radius: 4px;
-    }
-
-    .table-responsive::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(57, 166, 22, 0.6);
-    }
-    
-    /* Mencegah teks wrap (turun baris) agar kolom tetap rapi */
-    .schedule-table th, 
-    .schedule-table td {
-        white-space: nowrap;
-    }
-
-    /* ===== HEADER BANNER (NO ANIMATION) ===== */
-    .dashboard-header-banner {
-        margin-bottom: 40px;
-    }
-
-    .header-content {
-        display: flex;
-        align-items: center;
-        gap: 20px; 
-        background: var(--grad);
-        padding: 35px 40px;
-        border-radius: 24px;
-        box-shadow: 0 15px 50px rgba(57, 166, 22, 0.25);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .header-content::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -10%;
-        width: 350px;
-        height: 350px;
-        background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
-        border-radius: 50%;
-        animation: rotate 20s linear infinite;
-    }
-    
-    @keyframes rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-
-    .header-icon {
-        width: 75px;
-        height: 75px;
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-        border-radius: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 36px;
-        color: #fff;
-        flex-shrink: 0;
-        position: relative;
-        z-index: 1;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    }
-    
-    .header-text {
-        flex: 1;
-        position: relative;
-        z-index: 1;
-    }
-
-    .greeting-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        background: rgba(255, 255, 255, 0.25);
-        backdrop-filter: blur(12px);
-        padding: 10px 20px;
-        border-radius: 25px;
-        color: white;
-        font-size: 14px;
-        font-weight: 600;
-        margin-bottom: 15px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .greeting-badge i {
-        animation: pulse 2s ease-in-out infinite;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.2); opacity: 0.8; }
-    }
-
-    .page-title {
-        color: #fff;
-        font-weight: 800;
-        font-size: 2.2rem;
-        margin: 0 0 10px 0;
-        letter-spacing: -0.5px;
-    }
-
-    .page-subtitle {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: rgba(255, 255, 255, 0.95);
-        font-size: 1.05rem;
-        font-weight: 500;
-        margin: 0;
-    }
-
-    .hero-illustration {
-        width: 130px;
-        height: 130px;
-        background: rgba(255, 255, 255, 0.18);
-        backdrop-filter: blur(15px);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        flex-shrink: 0;
-        z-index: 1;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    }
-
-    .hero-illustration > i {
-        font-size: 55px;
-        color: white;
-        z-index: 2;
-        animation: heartbeat 1.5s ease-in-out infinite;
-    }
-    
-    @keyframes heartbeat {
-        0%, 100% { transform: scale(1); }
-        25% { transform: scale(1.1); }
-        50% { transform: scale(1); }
-        75% { transform: scale(1.05); }
-    }
-
-    .pulse-circle {
-        position: absolute;
-        border: 2px solid rgba(255, 255, 255, 0.4);
-        border-radius: 50%;
-        animation: pulse-ring 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    }
-
-    .pulse-1 { width: 100%; height: 100%; animation-delay: 0s; }
-    .pulse-2 { width: 120%; height: 120%; animation-delay: 0.8s; }
-    .pulse-3 { width: 140%; height: 140%; animation-delay: 1.6s; }
-    
-    @keyframes pulse-ring {
-        0% { transform: scale(0.9); opacity: 1; }
-        100% { transform: scale(1.5); opacity: 0; }
-    }
-
-    /* ===== SECTION HEADER ===== */
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 28px;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-
-    .section-header h2 {
-        font-size: 1.6rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin: 0;
-    }
-
-    .section-header h2 i {
-        color: var(--p1);
-        font-size: 1.4rem;
-    }
-
-    .schedule-count {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        background: var(--grad);
-        color: white;
-        padding: 12px 24px;
-        border-radius: 25px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        box-shadow: 0 6px 20px rgba(57, 166, 22, 0.3);
-    }
-    
-    /* ===== STATS SECTION (NO ANIMATION) ===== */
-    .stats-section {
-        margin-bottom: 40px;
-    }
-    
-    .stats-grid-modern {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        gap: 28px;
-    }
-
-    .stat-card-modern {
-        background: var(--bg-primary);
-        border-radius: 24px;
-        padding: 32px;
-        display: flex;
-        align-items: center;
-        gap: 24px;
-        box-shadow: 0 8px 30px rgba(57, 166, 22, 0.1);
-        border: 1px solid rgba(57, 166, 22, 0.15);
-        position: relative;
-        overflow: hidden;
-        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .stat-card-modern:hover {
-        transform: translateY(-12px) scale(1.02);
-        box-shadow: 0 20px 60px rgba(57, 166, 22, 0.25);
-        border-color: rgba(57, 166, 22, 0.4);
-    }
-
-    .card-gradient-bg {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 100%;
-        background: var(--grad);
-        opacity: 0.06;
-        transition: opacity 0.5s ease;
-    }
-
-    .stat-card-modern:hover .card-gradient-bg {
-        opacity: 0.12;
-    }
-
-    .stat-icon-wrapper {
-        width: 80px;
-        height: 80px;
-        border-radius: 20px;
-        background: var(--grad);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 36px;
-        color: white;
-        position: relative;
-        flex-shrink: 0;
-        z-index: 1;
-        box-shadow: 0 8px 25px rgba(57, 166, 22, 0.35);
-    }
-
-    .stat-info-icon {
-        background: linear-gradient(135deg, #3498db, #2980b9);
-        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.35);
-    }
-
-    .stat-content {
-        flex: 1;
-        z-index: 1;
-    }
-
-    .stat-value-modern {
-        font-size: 2.8rem;
-        font-weight: 800;
-        color: var(--text-primary);
-        line-height: 1;
-        margin-bottom: 10px;
-    }
-
-    .stat-label-modern {
-        font-size: 1.05rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-        margin-bottom: 5px;
-    }
-
-    .stat-period {
-        font-size: 0.9rem;
-        color: var(--text-muted);
-        font-weight: 500;
-    }
-
-    .stat-decoration {
-        position: absolute;
-        bottom: 15px;
-        right: 15px;
-        font-size: 80px;
-        color: rgba(57, 166, 22, 0.08);
-        z-index: 0;
-    }
-
-    /* ===== INFO SECTION (NO ANIMATION) ===== */
-    .info-section {
-        margin-bottom: 40px;
-    }
-
-    .info-grid-modern {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-        gap: 28px;
-    }
-
-    .info-card {
-        background: var(--bg-primary);
-        border-radius: 24px;
-        box-shadow: 0 8px 30px rgba(57, 166, 22, 0.1);
-        border: 1px solid rgba(57, 166, 22, 0.15);
-        position: relative;
-        overflow: hidden;
-        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .info-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 60px rgba(57, 166, 22, 0.25);
-        border-color: rgba(57, 166, 22, 0.4);
-    }
-
-    .card-notification-bg {
-        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-    }
-
-    .card-tips-bg {
-        background: var(--grad);
-    }
-
-    .card-clinic-bg {
-        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-    }
-
-    .info-card:hover .card-gradient-bg {
-        opacity: 0.12;
-    }
-
-    .card-content-modern {
-        padding: 32px 28px;
-        position: relative;
-        z-index: 1;
-    }
-
-    .card-header-icon {
-        position: absolute;
-        top: 24px;
-        right: 24px;
-        width: 55px;
-        height: 55px;
-        border-radius: 14px;
-        background: var(--grad);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        color: white;
-        opacity: 0.15;
-    }
-
-    .tips-icon-header {
-        background: var(--grad);
-    }
-
-    .clinic-icon-header {
-        background: linear-gradient(135deg, #3498db, #2980b9);
-    }
-
-    .card-title-modern {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 24px;
-        padding-bottom: 18px;
-        border-bottom: 2px solid rgba(57, 166, 22, 0.1);
-    }
-
-    .card-body-modern {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-    }
-
-    /* Info Row Style Premium */
-    .info-row {
-        display: flex;
-        align-items: flex-start;
-        padding: 18px;
-        background: var(--bg-secondary);
-        border-radius: 16px;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 1px solid transparent;
-    }
-
-    .info-row:hover {
-        background: rgba(57, 166, 22, 0.05);
-        border-color: rgba(57, 166, 22, 0.2);
-        transform: translateX(6px);
-        box-shadow: 0 4px 15px rgba(57, 166, 22, 0.1);
-    }
-
-    .info-icon-wrapper {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, rgba(57, 166, 22, 0.15), rgba(57, 166, 22, 0.25));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 16px;
-        flex-shrink: 0;
-    }
-
-    .notif-icon {
-        background: linear-gradient(135deg, rgba(243, 156, 18, 0.15), rgba(230, 126, 34, 0.25));
-    }
-
-    .tips-icon {
-        background: linear-gradient(135deg, rgba(57, 166, 22, 0.15), rgba(57, 166, 22, 0.25));
-    }
-
-    .clinic-icon {
-        background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(41, 128, 185, 0.25));
-    }
-
-    .info-icon-wrapper i {
-        color: var(--p1);
-        font-size: 20px;
-    }
-
-    .notif-icon i {
-        color: #f39c12;
-    }
-
-    .clinic-icon i {
-        color: #3498db;
-    }
-
-    .info-text {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        flex: 1;
-    }
-
-    .info-text .label {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .info-text .value {
-        font-size: 1.05rem;
-        color: var(--text-primary);
-        font-weight: 600;
-        line-height: 1.6;
-    }
-
-    /* ===== QUEUE & ESTIMATION STYLE ===== */
-    .queue-container {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-        margin-top: 10px;
-    }
-
-    .queue-badge, .pending-badge, .estimation-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 16px;
-        border-radius: 25px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .queue-badge {
-        background: var(--grad);
-        color: white;
-    }
-
-    .estimation-badge {
-        background: linear-gradient(135deg, #2ecc71, #27ae60);
-        color: white;
-    }
-
-    .pending-badge {
-        background: linear-gradient(135deg, #f39c12, #e67e22);
-        color: white;
-    }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 50px 20px;
-        color: var(--text-muted);
-    }
-
-    .empty-state i {
-        font-size: 3.5rem;
-        margin-bottom: 18px;
-        opacity: 0.3;
-    }
-
-    .empty-state p {
-        margin: 0;
-        font-size: 1.05rem;
-        font-weight: 500;
-    }
-
-    /* ===== SCHEDULE SECTION (NO ANIMATION) ===== */
-    .schedule-section {
-        margin-bottom: 30px;
-    }
-
-    .schedule-container-modern {
-        background: var(--bg-primary);
-        border-radius: 24px;
-        box-shadow: 0 8px 30px rgba(57, 166, 22, 0.1);
-        border: 1px solid rgba(57, 166, 22, 0.15);
-        overflow: hidden;
-        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .schedule-container-modern:hover {
-        box-shadow: 0 20px 60px rgba(57, 166, 22, 0.25);
-        border-color: rgba(57, 166, 22, 0.4);
-    }
-
-    .schedule-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .schedule-table thead {
-        background: var(--grad);
-    }
-
-    .schedule-table thead th {
-        padding: 20px 24px;
-        text-align: left;
-        color: white;
-        font-weight: 600;
-        font-size: 0.95rem;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-    }
-
-    .schedule-table thead th i {
-        margin-right: 10px;
-        opacity: 0.95;
-    }
-
-    /* ROW ANIMATIONS REMOVED FOR STABILITY */
-    .schedule-row {
-        border-bottom: 1px solid rgba(57, 166, 22, 0.08);
-        transition: all 0.3s ease;
-    }
-    
-    .schedule-row:hover {
-        background: rgba(57, 166, 22, 0.04);
-    }
-
-    .schedule-table tbody td {
-        padding: 20px 24px;
-        color: var(--text-secondary);
-    }
-
-    .doctor-info {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-    }
-
-    .doctor-avatar {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background: var(--grad);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 20px;
-        flex-shrink: 0;
-        overflow: hidden;
-        border: 3px solid rgba(57, 166, 22, 0.1);
-        box-shadow: 0 4px 12px rgba(57, 166, 22, 0.2);
-    }
-
-    .doctor-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .doctor-name {
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-
-    .service-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 20px;
-        background: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(41, 128, 185, 0.2));
-        color: #1976d2;
-        border-radius: 25px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        border: 1px solid rgba(52, 152, 219, 0.2);
-    }
-
-    .time-badge-modern {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 20px;
-        background: linear-gradient(135deg, rgba(243, 156, 18, 0.1), rgba(230, 126, 34, 0.2));
-        color: #856404;
-        border-radius: 25px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        border: 1px solid rgba(243, 156, 18, 0.2);
-    }
-
-    .empty-schedule {
-        text-align: center;
-        padding: 70px 20px;
-        color: var(--text-muted);
-    }
-
-    .empty-schedule i {
-        font-size: 4.5rem;
-        margin-bottom: 24px;
-        opacity: 0.3;
-        animation: float 3s ease-in-out infinite;
-    }
-
-    .empty-schedule p {
-        font-size: 1.15rem;
-        font-weight: 600;
-        margin-bottom: 10px;
-        color: var(--text-secondary);
-    }
-
-    .empty-schedule small {
-        font-size: 0.95rem;
-        color: var(--text-muted);
-    }
-
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 992px) {
-        .stats-grid-modern,
-        .info-grid-modern {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .container-fluid-modern {
-            padding: 20px 15px;
-        }
-
-        .header-content {
-            flex-direction: column;
-            text-align: center;
-            padding: 30px 24px;
-        }
-
-        .page-title {
-            font-size: 1.8rem;
-        }
-
-        .hero-illustration {
-            width: 110px;
-            height: 110px;
-        }
-
-        .hero-illustration > i {
-            font-size: 45px;
-        }
-
-        .section-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .stat-card-modern {
-            padding: 24px;
-        }
-
-        .stat-icon-wrapper {
-            width: 70px;
-            height: 70px;
-            font-size: 32px;
-        }
-
-        .stat-value-modern {
-            font-size: 2.4rem;
-        }
-
-        .schedule-table {
-            font-size: 0.9rem;
-        }
-
-        .schedule-table thead th,
-        .schedule-table tbody td {
-            padding: 14px 12px;
-        }
-
-        .doctor-avatar {
-            width: 45px;
-            height: 45px;
-            font-size: 18px;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .page-title {
-            font-size: 1.5rem;
-        }
-
-        .greeting-badge {
-            font-size: 0.8rem;
-            padding: 8px 16px;
-        }
-
-        .stat-card-modern {
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .card-header-icon {
-            top: 18px;
-            right: 18px;
-            width: 50px;
-            height: 50px;
-            font-size: 22px;
-        }
-
-        .info-row {
-            padding: 14px;
-        }
-
-        .info-icon-wrapper {
-            width: 42px;
-            height: 42px;
-        }
-
-        .info-icon-wrapper i {
-            font-size: 18px;
-        }
-
-        .schedule-table thead th {
-            font-size: 0.8rem;
-            padding: 12px 10px;
-        }
-
-        .schedule-table tbody td {
-            padding: 12px 10px;
-        }
-
-        .service-badge,
-        .time-badge-modern {
-            font-size: 0.8rem;
-            padding: 8px 14px;
-        }
-    }
-</style>
-@endpush
-
 @push('scripts')
 <script>
+    // Define Blade variables for JS
+    // Kita pastikan jadwalPraktek ada sebelum mencoba mengakses ID-nya
+    const activePendaftaranId = @json($notifikasiHariIni->id ?? null);
+    const activeJadwalId = @json($notifikasiHariIni->jadwalPraktek->id ?? null); 
+
+    // =============================
+    // FUNGSI UTAMA: UPDATE STATUS ANTRIAN MELALUI AJAX
+    // =============================
+    function updateDynamicQueueStatus() {
+        if (activeJadwalId === null) {
+            return;
+        }
+
+        // PERHATIAN: Pastikan rute ini telah didaftarkan di routes/api.php atau routes/web.php
+        // Contoh rute: Route::get('/api/queue-status-today/{jadwal}', [AuthController::class, 'getQueueStatus']);
+        const apiUrl = `/api/queue-status-today/${activeJadwalId}`; 
+
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Gagal memuat status antrian: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 1. Update Antrian Sedang Berjalan
+                const currentQueueElement = document.getElementById('antrian-sedang-berjalan');
+                if (currentQueueElement) {
+                    if (data.current_queue_info) {
+                         currentQueueElement.textContent = `${data.current_queue_info}`;
+                    } else {
+                         currentQueueElement.textContent = 'Tidak ada antrian aktif saat ini.';
+                    }
+                }
+
+                // 2. Update Estimasi Waktu Pasien Sendiri
+                const myEstimationElement = document.getElementById('estimasi-saya');
+                if (myEstimationElement && data.my_estimated_time) {
+                    myEstimationElement.textContent = data.my_estimated_time + ' WIB';
+                }
+                
+                // 3. Update waktu terakhir di-update
+                const lastUpdatedElement = document.getElementById('last-updated-text');
+                if (lastUpdatedElement) {
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    lastUpdatedElement.textContent = `Terakhir diperbarui: ${timeString}`;
+                }
+
+            })
+            .catch(error => {
+                console.error('Error fetching queue status:', error);
+                const currentQueueElement = document.getElementById('antrian-sedang-berjalan');
+                if (currentQueueElement) {
+                    currentQueueElement.textContent = 'Gagal memuat status.';
+                }
+            });
+    }
+    
     // =============================
     // UPDATE GREETING DENGAN ANIMASI
     // =============================
@@ -1173,13 +1304,39 @@
                 '#total-jadwal'   // Jumlah Jadwal
             ]);
         }
+        
+        // Tambahkan Polling Status Antrian (Jika ada pendaftaran hari ini)
+        if (activeJadwalId !== null) {
+            updateDynamicQueueStatus(); // Jalankan saat load pertama
+            // Polling setiap 10 detik
+            setInterval(updateDynamicQueueStatus, 10000); 
+        }
+
 
         // --- REBIND EVENTS ---
         // Dipanggil otomatis saat data di-refresh
         window.rebindEvents = function() {
             // Update greeting jika perlu (misal berubah jam)
             updateGreeting();
+            // Panggil fungsi status antrian setelah refresh Ajax container
+            if (activeJadwalId !== null) {
+                updateDynamicQueueStatus(); 
+            }
             console.log('✅ Patient Dashboard updated!');
+            
+            // --- LARAVEL ECHO (REAL-TIME) SETUP ---
+            if (typeof Echo !== 'undefined' && activeJadwalId !== null) {
+                // Untuk mencegah listener ganda jika rebindEvents dipanggil berkali-kali
+                // Anda mungkin perlu memastikan hanya ada satu listener per channel.
+                // Jika Echo didefinisikan secara global, kita bisa langsung pasang listener.
+                // Asumsi: Listener di sini aman atau Anda mengelola unlisten di tempat lain.
+                Echo.channel(`antrian-update.${activeJadwalId}`)
+                    .listen('QueueStatusUpdated', (e) => {
+                        console.log('Real-time update received:', e);
+                        // Panggil fungsi AJAX untuk memuat data terbaru saat event diterima
+                        updateDynamicQueueStatus(); 
+                    });
+            }
         };
         
         // --- SCROLL ANIMATION OBSERVER ---

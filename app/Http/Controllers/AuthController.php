@@ -221,10 +221,12 @@ class AuthController extends Controller
                                      ->get();
         
         // Notifikasi Hari Ini untuk dashboard
-        // 🔥 UPDATE: Jangan tampilkan jika status 'Dibatalkan' atau 'Selesai'
-        $notifikasiHariIni = Pendaftaran::where('user_id', $user->id)
+        // MODIFIKASI: Tambahkan eager loading untuk mendapatkan nama dokter/layanan di view
+        $notifikasiHariIni = Pendaftaran::with('jadwalPraktek.tenagaMedis') 
+                                         ->where('user_id', $user->id)
                                          ->whereDate('jadwal_dipilih', $today)
-                                         ->whereNotIn('status', ['Selesai', 'Dibatalkan']) // 👈 Exclude Dibatalkan
+                                         // Status Diperiksa Awal/Menunggu/Sedang Diperiksa 
+                                         ->whereNotIn('status', ['Selesai', 'Dibatalkan']) 
                                          ->first();
 
         $pemeriksaanTahunIni = Pemeriksaan::where('pasien_id', $pasienId)
@@ -242,6 +244,74 @@ class AuthController extends Controller
             'jumlahDokterDikunjungi'
         ));
     }
+
+    /**
+     * NEW: Endpoint API untuk mengembalikan status antrian dinamis (dipanggil oleh AJAX/Echo).
+     *
+     * @param JadwalPraktek $jadwal Jadwal praktek yang sedang diakses pasien.
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getQueueStatus(JadwalPraktek $jadwal)
+    {
+        // Pastikan pengguna sudah login
+        if (!Auth::check()) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
+        $pasien = Auth::user();
+        
+        // 1. Cari antrian yang sedang diperiksa (Current Queue)
+        $antrianBerjalan = Pendaftaran::with('user')
+                                      ->where('jadwal_praktek_id', $jadwal->id)
+                                      ->where('status_antrian', 'Sedang Diperiksa')
+                                      ->whereDate('jadwal_dipilih', Carbon::today())
+                                      ->orderBy('no_antrian')
+                                      ->first();
+        
+        $currentQueueInfo = null;
+        $currentQueueNumber = null;
+        if ($antrianBerjalan) {
+            $currentQueueNumber = $antrianBerjalan->no_antrian;
+            // Ambil nama pasien dari relasi user
+            $currentQueueInfo = "No. {$currentQueueNumber} (a/n {$antrianBerjalan->user->name})";
+        } else {
+            // Jika tidak ada yang sedang diperiksa, cari antrian Menunggu pertama
+            $antrianMenungguPertama = Pendaftaran::where('jadwal_praktek_id', $jadwal->id)
+                                                 ->whereIn('status_antrian', ['Menunggu', 'Diperiksa Awal']) // Perluas ke 'Diperiksa Awal'
+                                                 ->whereDate('jadwal_dipilih', Carbon::today())
+                                                 ->orderBy('no_antrian')
+                                                 ->first();
+            
+            if ($antrianMenungguPertama) {
+                $currentQueueNumber = $antrianMenungguPertama->no_antrian;
+                $currentQueueInfo = "No. {$currentQueueNumber} Menunggu Dipanggil";
+            } else {
+                // Jika semua sudah selesai, atau belum ada pendaftaran
+                $currentQueueInfo = "Tidak ada antrian aktif saat ini.";
+            }
+        }
+
+        // 2. Ambil estimasi waktu pasien yang sedang login
+        $myPendaftaran = Pendaftaran::where('user_id', $pasien->id)
+                                    ->where('jadwal_praktek_id', $jadwal->id)
+                                    ->whereDate('jadwal_dipilih', Carbon::today())
+                                    ->whereIn('status_antrian', ['Menunggu', 'Sedang Diperiksa', 'Diperiksa Awal'])
+                                    ->first();
+        
+        $myEstimatedTime = $myPendaftaran && $myPendaftaran->estimasi_dilayani
+                           ? Carbon::parse($myPendaftaran->estimasi_dilayani)->format('H:i')
+                           : 'Estimasi belum tersedia';
+
+        $myQueueNumber = $myPendaftaran ? $myPendaftaran->no_antrian : null;
+
+        return response()->json([
+            'current_queue_number' => $currentQueueNumber,
+            'current_queue_info' => $currentQueueInfo,
+            'my_estimated_time' => $myEstimatedTime,
+            'my_queue_number' => $myQueueNumber,
+        ]);
+    }
+
 
     public function riwayatPemeriksaan(Request $request)
     {

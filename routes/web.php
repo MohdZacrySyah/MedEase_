@@ -199,10 +199,13 @@ Route::controller(TenagaMedisController::class)->prefix('tenaga-medis')->name('t
     Route::get('reset-password/{token}', 'showResetForm')->name('password.reset');
     Route::post('reset-password', 'reset')->name('password.update');
     Route::post('logout', 'logout')->name('logout');
+    Route::post('/pemeriksaan/{pendaftaran}/mulai', [PemeriksaanController::class, 'mulaiPemeriksaan'])
+    ->name('tenaga-medis.pemeriksaan.mulai');
 });
 
 Route::middleware(['auth:tenaga_medis'])->prefix('tenaga-medis')->name('tenaga-medis.')->group(function () {
     Route::post('/jadwal/cancel', [AdminJadwalController::class, 'cancelJadwal'])->name('jadwal.cancel'); 
+    
     
     Route::controller(TenagaMedisController::class)->group(function () {
         Route::get('/dashboard', 'dashboard')->name('dashboard');
