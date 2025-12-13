@@ -41,14 +41,17 @@
         <div class="section-header">
             <h2><i class="fas fa-chart-bar"></i> Statistik Hari Ini</h2>
         </div>
-        <div class="stats-grid-modern">
+        
+        {{-- ID "live-stats" untuk Auto-Load --}}
+        <div class="stats-grid-modern" id="live-stats">
+            
             <div class="stat-card-modern">
                 <div class="card-gradient-bg"></div>
                 <div class="stat-icon-wrapper">
                     <i class="fas fa-users"></i>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-value-modern" data-count="{{ $jumlahPasienHariIni }}">0</div>
+                    <div class="stat-value-modern" data-count="{{ $jumlahPasienHariIni }}">{{ $jumlahPasienHariIni }}</div>
                     <div class="stat-label-modern">Total Pasien Hari Ini</div>
                     <div class="stat-period"><i class="fas fa-arrow-up"></i> Aktif</div>
                 </div>
@@ -63,7 +66,7 @@
                     <i class="fas fa-clock"></i>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-value-modern" data-count="{{ $jumlahMenunggu }}">0</div>
+                    <div class="stat-value-modern" data-count="{{ $jumlahMenunggu }}">{{ $jumlahMenunggu }}</div>
                     <div class="stat-label-modern">Pasien Menunggu</div>
                     <div class="stat-period"><i class="fas fa-hourglass-half"></i> Antrian</div>
                 </div>
@@ -78,7 +81,7 @@
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-value-modern" data-count="{{ $jumlahSelesai }}">0</div>
+                    <div class="stat-value-modern" data-count="{{ $jumlahSelesai }}">{{ $jumlahSelesai }}</div>
                     <div class="stat-label-modern">Pemeriksaan Selesai</div>
                     <div class="stat-period"><i class="fas fa-check"></i> Selesai</div>
                 </div>
@@ -93,7 +96,7 @@
                     <i class="fas fa-user-clock"></i>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-value-modern" data-count="{{ $jumlahDokterAktifHariIni }}">0</div>
+                    <div class="stat-value-modern" data-count="{{ $jumlahDokterAktifHariIni }}">{{ $jumlahDokterAktifHariIni }}</div>
                     <div class="stat-label-modern">Dokter Aktif Hari Ini</div>
                     <div class="stat-period"><i class="fas fa-briefcase-medical"></i> Bertugas</div>
                 </div>
@@ -108,7 +111,7 @@
                     <i class="fas fa-user-md"></i>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-value-modern" data-count="{{ $jumlahTenagaMedis }}">0</div>
+                    <div class="stat-value-modern" data-count="{{ $jumlahTenagaMedis }}">{{ $jumlahTenagaMedis }}</div>
                     <div class="stat-label-modern">Total Tenaga Medis</div>
                     <div class="stat-period"><i class="fas fa-hospital-user"></i> Terdaftar</div>
                 </div>
@@ -123,7 +126,7 @@
                     <i class="fas fa-user"></i>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-value-modern" data-count="{{ $jumlahTotalPasien }}">0</div>
+                    <div class="stat-value-modern" data-count="{{ $jumlahTotalPasien }}">{{ $jumlahTotalPasien }}</div>
                     <div class="stat-label-modern">Total Akun Pasien</div>
                     <div class="stat-period"><i class="fas fa-database"></i> Database</div>
                 </div>
@@ -141,7 +144,8 @@
         </div>
 
         {{-- Tabel Jadwal Tenaga Medis --}}
-        <div class="schedule-container-modern">
+        {{-- ID "live-jadwal" untuk Auto-Load --}}
+        <div class="schedule-container-modern" id="live-jadwal">
             <div class="table-card-header">
                 <h3 class="table-title">
                     <i class="fas fa-calendar-check"></i> 
@@ -162,7 +166,7 @@
                 </thead>
                 <tbody>
                     @forelse ($jadwalHariIni as $index => $jadwal)
-                        <tr class="schedule-row" style="animation-delay: {{ $index * 0.1 }}s">
+                        <tr class="schedule-row"> {{-- Animasi dihilangkan --}}
                             <td>
                                 <div class="doctor-info">
                                     <div class="doctor-avatar">
@@ -207,7 +211,8 @@
         </div>
 
         {{-- Tabel Daftar Antrian --}}
-        <div class="schedule-container-modern" style="margin-top: 25px;">
+        {{-- ID "live-antrian" untuk Auto-Load --}}
+        <div class="schedule-container-modern" id="live-antrian" style="margin-top: 25px;">
             <div class="table-card-header">
                 <h3 class="table-title">
                     <i class="fas fa-clipboard-list"></i> 
@@ -228,7 +233,7 @@
                 </thead>
                 <tbody>
                     @forelse ($pendaftaranMenunggu as $index => $pendaftaran)
-                        <tr class="schedule-row" style="animation-delay: {{ $index * 0.1 }}s">
+                        <tr class="schedule-row"> {{-- Animasi dihilangkan --}}
                             <td>
                                 <div class="doctor-info">
                                     <div class="doctor-avatar">
@@ -315,7 +320,7 @@
         --hover-bg: rgba(57, 166, 22, 0.15);
     }
 
-    /* Auto Dark Mode (sistem preference) */
+    /* Auto Dark Mode */
     @media (prefers-color-scheme: dark) {
         :root:not([data-theme="light"]) {
             --text-primary: #f9fafb;
@@ -343,10 +348,9 @@
         padding: 40px 20px;
     }
 
-    /* ===== HEADER BANNER PREMIUM ===== */
+    /* ===== HEADER BANNER (NO ANIMATION) ===== */
     .dashboard-header-banner {
         margin-bottom: 40px;
-        animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .header-content {
@@ -393,14 +397,8 @@
         position: relative;
         z-index: 1;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        /* animation: float 3s ease-in-out infinite; */
     }
     
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-    }
-
     .header-text {
         flex: 1;
         position: relative;
@@ -420,7 +418,6 @@
         font-weight: 600;
         margin-bottom: 15px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        animation: fadeIn 0.8s ease-out 0.2s both;
     }
 
     .page-title {
@@ -429,7 +426,6 @@
         font-size: 2.2rem;
         margin: 0 0 10px 0;
         letter-spacing: -0.5px;
-        animation: fadeIn 0.8s ease-out 0.3s both;
     }
 
     .page-subtitle {
@@ -440,12 +436,6 @@
         font-size: 1.05rem;
         font-weight: 500;
         margin: 0;
-        animation: fadeIn 0.8s ease-out 0.4s both;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .hero-illustration {
@@ -466,7 +456,6 @@
         gap: 12px;
         color: white;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-        /* animation: float 3s ease-in-out infinite; */
         min-width: 160px;
         justify-content: center;
     }
@@ -515,15 +504,9 @@
         font-size: 1.4rem;
     }
 
-    /* ===== STATS SECTION ===== */
+    /* ===== STATS SECTION (NO ANIMATION) ===== */
     .stats-section {
         margin-bottom: 40px;
-        animation: fadeInUp 0.6s ease-out 0.1s backwards;
-    }
-    
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .stats-grid-modern {
@@ -587,7 +570,6 @@
         flex-shrink: 0;
         z-index: 1;
         box-shadow: 0 8px 25px rgba(57, 166, 22, 0.35);
-        /* animation: float 3s ease-in-out infinite; */
     }
 
     .stat-warning-icon { background: linear-gradient(135deg, #f39c12, #e67e22); box-shadow: 0 8px 25px rgba(243, 156, 18, 0.35); }
@@ -632,7 +614,6 @@
         font-size: 80px;
         color: rgba(57, 166, 22, 0.08);
         z-index: 0;
-        /* animation: float 4s ease-in-out infinite; */
     }
 
     /* Dark mode decoration adjustment */
@@ -641,10 +622,9 @@
         color: rgba(57, 166, 22, 0.15);
     }
 
-    /* ===== SCHEDULE SECTION ===== */
+    /* ===== SCHEDULE SECTION (NO ANIMATION) ===== */
     .schedule-section {
         margin-bottom: 30px;
-        animation: fadeInUp 0.6s ease-out 0.3s backwards;
     }
 
     .schedule-container-modern {
@@ -724,18 +704,12 @@
         text-align: center;
     }
 
+    /* ROW ANIMATIONS REMOVED FOR STABILITY */
     .schedule-row {
         border-bottom: 1px solid var(--border-color);
         transition: all 0.3s ease;
-        animation: fadeInLeft 0.5s ease forwards;
-        opacity: 0;
     }
     
-    @keyframes fadeInLeft {
-        from { opacity: 0; transform: translateX(-20px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-
     .schedule-row:hover {
         background: var(--hover-bg);
     }
@@ -885,7 +859,6 @@
         font-size: 4.5rem;
         margin-bottom: 24px;
         opacity: 0.3;
-        /* animation: float 3s ease-in-out infinite; */
     }
 
     .empty-schedule p {
@@ -898,12 +871,6 @@
     .empty-schedule small {
         font-size: 0.95rem;
         color: var(--text-muted);
-    }
-
-    /* ===== ANIMATIONS ===== */
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     /* ===== RESPONSIVE ===== */
@@ -1012,76 +979,87 @@
 @push('scripts')
 <script>
     // =============================
-    // UPDATE WAKTU REAL-TIME
+    // FUNGSI UTAMA (Di-ekstrak agar bisa dipanggil ulang)
     // =============================
+    function initDashboardScripts() {
+        // 1. Update Waktu
+        updateTime();
+        if (window.dashboardTimeInterval) clearInterval(window.dashboardTimeInterval);
+        window.dashboardTimeInterval = setInterval(updateTime, 1000);
+        
+        // 2. Animasi Angka Awal
+        document.querySelectorAll('.stat-value-modern[data-count]').forEach(element => {
+            animateCounter(element);
+        });
+        
+        // 3. Jalankan Auto Refresh Global
+        if (typeof window.initAutoRefresh === 'function') {
+            window.initAutoRefresh([
+                '#live-stats',    // Card Statistik
+                '#live-jadwal',   // Tabel Jadwal
+                '#live-antrian'   // Tabel Antrian
+            ]);
+        }
+
+        // 4. Observer untuk Animasi Scroll (Opsional)
+        // setupObserver(); 
+    }
+
+    // Fungsi Waktu
     function updateTime() {
         const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-        const timeString = `${hours}:${minutes}:${seconds}`;
-        
+        const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
         const timeElement = document.getElementById('current-time');
-        if (timeElement) {
-            timeElement.textContent = timeString;
-        }
+        if (timeElement) timeElement.textContent = timeString;
     }
     
-    // =============================
-    // COUNTER ANIMATION
-    // =============================
+    // Fungsi Animasi Angka
     function animateCounter(element) {
-        const target = parseInt(element.getAttribute('data-count'));
-        const duration = 2000;
-        const step = target / (duration / 16);
-        let current = 0;
-        
-        const timer = setInterval(() => {
-            current += step;
-            if (current >= target) {
-                element.textContent = target;
-                clearInterval(timer);
+        const targetAttr = element.getAttribute('data-count');
+        const target = targetAttr ? parseInt(targetAttr) : parseInt(element.textContent);
+        if (isNaN(target)) return;
+
+        const duration = 1500;
+        const start = 0;
+        const startTime = performance.now();
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Easing function (easeOutExpo)
+            const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+            
+            element.textContent = Math.floor(start + (target - start) * ease);
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
             } else {
-                element.textContent = Math.floor(current);
+                element.textContent = target;
             }
-        }, 16);
+        }
+        requestAnimationFrame(update);
     }
-    
+
+    // Fungsi Rebind (Dipanggil otomatis saat data berubah)
+    window.rebindEvents = function() {
+        // Logika tambahan setelah refresh (jika ada)
+        console.log('✅ Dashboard updated!');
+    };
+
     // =============================
-    // INITIALIZE ON PAGE LOAD
+    // EVENT LISTENERS (PENTING!)
     // =============================
-    document.addEventListener('DOMContentLoaded', function() {
-        updateTime();
-        setInterval(updateTime, 1000);
-        
-        document.querySelectorAll('.stat-value-modern[data-count]').forEach(element => {
-            animateCounter(element);
-        });
-        
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-        
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.animationPlayState = 'running';
-                }
-            });
-        }, observerOptions);
-        
-        document.querySelectorAll('.stats-section, .schedule-section').forEach(section => {
-            observer.observe(section);
-        });
-    });
     
-    // For Turbo/Livewire compatibility
-    document.addEventListener('turbo:load', function() {
-        updateTime();
-        document.querySelectorAll('.stat-value-modern[data-count]').forEach(element => {
-            animateCounter(element);
-        });
+    // Jalan saat halaman pertama kali dibuka (Refresh F5)
+    document.addEventListener('DOMContentLoaded', initDashboardScripts);
+    
+    // Jalan saat pindah menu (Turbo Drive / SPA navigation)
+    document.addEventListener('turbo:load', initDashboardScripts);
+    
+    // Bersihkan interval saat pindah halaman agar tidak menumpuk
+    document.addEventListener('turbo:before-cache', () => {
+        if (window.dashboardTimeInterval) clearInterval(window.dashboardTimeInterval);
     });
 </script>
 @endpush

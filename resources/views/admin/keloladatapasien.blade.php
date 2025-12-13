@@ -90,7 +90,9 @@
                 <i class="fas fa-list"></i> 
                 Daftar Pasien Terdaftar
             </h3>
-            <span class="schedule-count">
+            
+            {{-- ID "total-pasien" untuk Auto Load --}}
+            <span class="schedule-count" id="total-pasien">
                 <i class="fas fa-users"></i>
                 {{ $pasiens->count() }} Pasien
             </span>
@@ -107,9 +109,11 @@
                     <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
                 </tr>
             </thead>
-            <tbody>
+            
+            {{-- ID "table-body" untuk Auto Load --}}
+            <tbody id="table-body">
                 @forelse ($pasiens as $index => $pasien)
-                    <tr class="schedule-row" style="animation-delay: {{ $index * 0.05 }}s">
+                    <tr class="schedule-row"> {{-- Animasi dihapus --}}
                         <td>
                             <span class="number-badge">{{ $index + 1 }}</span>
                         </td>
@@ -268,10 +272,9 @@
         padding: 40px 20px;
     }
 
-    /* ===== HEADER BANNER (SAMA DENGAN DASHBOARD) ===== */
+    /* ===== HEADER BANNER (NO ANIMATION) ===== */
     .page-header-banner {
         margin-bottom: 40px;
-        animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .header-content {
@@ -318,14 +321,8 @@
         position: relative;
         z-index: 1;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        animation: float 3s ease-in-out infinite;
     }
     
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-    }
-
     .header-text {
         flex: 1;
         position: relative;
@@ -345,7 +342,6 @@
         font-weight: 600;
         margin-bottom: 15px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        animation: fadeIn 0.8s ease-out 0.2s both;
     }
 
     .page-title {
@@ -354,7 +350,6 @@
         font-size: 2.2rem;
         margin: 0 0 10px 0;
         letter-spacing: -0.5px;
-        animation: fadeIn 0.8s ease-out 0.3s both;
     }
 
     .page-subtitle {
@@ -365,12 +360,6 @@
         font-size: 1.05rem;
         font-weight: 500;
         margin: 0;
-        animation: fadeIn 0.8s ease-out 0.4s both;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .hero-illustration {
@@ -435,17 +424,11 @@
         font-size: 1.4rem;
     }
 
-    /* ===== SEARCH SECTION ===== */
+    /* ===== SEARCH SECTION (NO ANIMATION) ===== */
     .search-section {
         margin-bottom: 30px;
-        animation: fadeInUp 0.6s ease-out 0.1s backwards;
     }
     
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
     .search-card {
         background: var(--bg-primary);
         border-radius: 24px;
@@ -585,7 +568,7 @@
         box-shadow: 0 4px 12px rgba(231, 76, 60, 0.35);
     }
 
-    /* ===== ALERT ===== */
+    /* ===== ALERT (NO ANIMATION) ===== */
     .alert-success-modern {
         display: flex;
         align-items: center;
@@ -593,7 +576,6 @@
         padding: 20px 28px;
         border-radius: 20px;
         margin-bottom: 30px;
-        animation: slideInDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         box-shadow: 0 8px 25px rgba(0,0,0,0.12);
         background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
         border: 2px solid #28a745;
@@ -640,7 +622,7 @@
         transform: rotate(90deg);
     }
 
-    /* ===== TABLE (SAMA DENGAN DASHBOARD) ===== */
+    /* ===== TABLE (NO ANIMATION) ===== */
     .schedule-container-modern {
         background: var(--bg-primary);
         border-radius: 24px;
@@ -648,7 +630,6 @@
         border: 1px solid var(--border-color);
         overflow: hidden;
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        animation: fadeInUp 0.6s ease-out 0.2s backwards;
     }
 
     .schedule-container-modern:hover {
@@ -718,18 +699,12 @@
         text-align: center !important;
     }
 
+    /* ROW ANIMATIONS REMOVED FOR STABILITY */
     .schedule-row {
         border-bottom: 1px solid var(--border-color);
         transition: all 0.3s ease;
-        animation: fadeInLeft 0.5s ease forwards;
-        opacity: 0;
     }
     
-    @keyframes fadeInLeft {
-        from { opacity: 0; transform: translateX(-20px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-
     .schedule-row:hover {
         background: var(--hover-bg);
     }
@@ -956,17 +931,6 @@
         box-shadow: 0 10px 30px rgba(57, 166, 22, 0.5);
     }
 
-    /* ===== ANIMATIONS ===== */
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes slideInDown {
-        from { transform: translateY(-20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-
     /* ===== RESPONSIVE ===== */
     @media (max-width: 992px) {
         .hero-illustration {
@@ -1068,7 +1032,23 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Auto-hide alert
+        
+        // 1. Inisialisasi Auto Refresh Global (Tanpa Animasi Masuk)
+        if (typeof window.initAutoRefresh === 'function') {
+            window.initAutoRefresh([
+                '#total-pasien', // Update jumlah pasien
+                '#table-body'    // Update isi tabel
+            ]);
+        }
+
+        // 2. Fungsi Rebind (Dijalankan setiap kali data di-refresh otomatis)
+        window.rebindEvents = function() {
+            // Pasang ulang event listener untuk tombol hapus
+            attachDeleteEvents();
+            console.log('♻️ Data pasien diperbarui & event listener dipasang ulang.');
+        };
+
+        // 3. Auto-hide alert
         const alert = document.getElementById('autoHideAlert');
         if (alert) {
             setTimeout(() => {
@@ -1078,15 +1058,25 @@
             }, 5000);
         }
 
-        // Delete confirmation
-        document.querySelectorAll('.delete-form').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                const patientName = this.closest('tr').querySelector('.doctor-name').textContent;
-                if (!confirm(`Yakin ingin menghapus pasien ${patientName}?\n\nData yang terhapus tidak dapat dikembalikan.`)) {
-                    e.preventDefault();
-                }
+        // 4. Handler Delete Confirmation
+        function attachDeleteEvents() {
+            document.querySelectorAll('.delete-form').forEach(form => {
+                // Hapus listener lama jika ada (prevent duplicate)
+                form.removeEventListener('submit', handleDeleteSubmit);
+                // Pasang listener baru
+                form.addEventListener('submit', handleDeleteSubmit);
             });
-        });
+        }
+
+        function handleDeleteSubmit(e) {
+            const patientName = this.closest('tr').querySelector('.doctor-name').textContent;
+            if (!confirm(`Yakin ingin menghapus pasien ${patientName}?\n\nData yang terhapus tidak dapat dikembalikan.`)) {
+                e.preventDefault();
+            }
+        }
+
+        // Jalankan attach pertama kali
+        attachDeleteEvents();
     });
 </script>
 @endpush

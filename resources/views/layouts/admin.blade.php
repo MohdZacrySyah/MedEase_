@@ -55,7 +55,7 @@
         html, body {
             height: 100%;
             overflow-x: hidden;
-            transition: background-color 0.5s ease, color 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease; /* Dipercepat */
         }
 
         body {
@@ -79,6 +79,7 @@
                 radial-gradient(circle at 50% 50%, rgba(12, 91, 0, 0.03) 0%, transparent 50%);
             pointer-events: none;
             z-index: 0;
+            /* Animation kept as it is subtle background */
             animation: backgroundPulse 15s ease-in-out infinite;
         }
         
@@ -100,7 +101,7 @@
             height: 100vh;
             padding: 0;
             overflow-y: auto;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Dipercepat */
             z-index: 1000;
             box-shadow: 4px 0 30px rgba(0, 0, 0, 0.2);
         }
@@ -116,7 +117,7 @@
         .sidebar.hidden { transform: translateX(-100%); }
         .sidebar.show { transform: translateX(0); }
 
-        /* Brand Section with Animation */
+        /* Brand Section */
         .sidebar-brand {
             text-align: center;
             padding: 30px 20px;
@@ -124,12 +125,7 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
             overflow: hidden;
-            animation: fadeInDown 0.6s ease-out;
-        }
-        
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+            /* Animation Removed */
         }
         
         .sidebar-brand::before {
@@ -164,17 +160,11 @@
             align-items: center;
             justify-content: center;
             margin: 0 auto 15px;
-            /* animation: float 3s ease-in-out infinite; */
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-12px); }
         }
         
         .brand-logo img {
             width: 100%;
-            height: auto;
+            height: 100%;
             filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
             transition: transform 0.3s ease;
         }
@@ -188,19 +178,14 @@
             font-size: 18px; 
             line-height: 1.3; 
             margin-bottom: 5px;
-            animation: fadeIn 0.8s ease-out 0.2s both;
+            /* Animation Removed */
         }
         
         .brand-subtitle { 
             font-size: 12px; 
             opacity: 0.9; 
             font-weight: 400;
-            animation: fadeIn 0.8s ease-out 0.4s both;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            /* Animation Removed */
         }
 
         /* User Profile Section with Glassmorphism */
@@ -215,17 +200,12 @@
             border-radius: 18px;
             text-decoration: none;
             color: white;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid rgba(255, 255, 255, 0.15);
             position: relative;
             overflow: hidden;
-            animation: fadeInUp 0.6s ease-out 0.3s both;
-            pointer-events: none; /* Khusus untuk Admin: dibuat tidak bisa diklik */
-        }
-        
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            pointer-events: none;
+            /* Animation Removed */
         }
         
         .user-profile::before {
@@ -266,6 +246,7 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
             position: relative;
             z-index: 1;
+            /* Animation kept (pulse) as it is status indicator */
             animation: pulse 2s ease-in-out infinite;
         }
         
@@ -312,7 +293,7 @@
             50% { opacity: 0.3; }
         }
 
-        /* Navigation Menu with Stagger Animation */
+        /* Navigation Menu */
         .sidebar-nav {
             padding: 10px 20px;
             flex-grow: 1;
@@ -326,12 +307,7 @@
             font-weight: 600;
             margin: 25px 0 12px 0;
             padding-left: 10px;
-            animation: fadeInLeft 0.5s ease-out;
-        }
-        
-        @keyframes fadeInLeft {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
+            /* Animation Removed */
         }
         
         .sidebar-menu { 
@@ -342,19 +318,8 @@
         
         .sidebar-menu li { 
             margin-bottom: 6px;
-            animation: fadeInLeft 0.5s ease-out both;
+            /* Animation Removed */
         }
-        
-        /* Staggered Delay for Menu Items (Perlu disesuaikan jika jumlah menu berubah) */
-        .sidebar-nav > ul:nth-child(2) > li:nth-child(1) { animation-delay: 0.4s; }
-        .sidebar-nav > ul:nth-child(2) > li:nth-child(2) { animation-delay: 0.5s; }
-        .sidebar-nav > ul:nth-child(2) > li:nth-child(3) { animation-delay: 0.6s; }
-
-        .sidebar-nav > .nav-section-title:nth-child(3) { animation-delay: 0.7s; }
-        .sidebar-nav > ul:nth-child(4) > li:nth-child(1) { animation-delay: 0.8s; }
-        .sidebar-nav > ul:nth-child(4) > li:nth-child(2) { animation-delay: 0.9s; }
-        .sidebar-nav > ul:nth-child(4) > li:nth-child(3) { animation-delay: 1.0s; }
-        
         
         .sidebar-menu a {
             display: flex;
@@ -363,7 +328,7 @@
             text-decoration: none;
             padding: 15px 18px;
             border-radius: 14px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Speed up */
             font-size: 14px;
             font-weight: 500;
             position: relative;
@@ -379,7 +344,7 @@
             width: 5px;
             background: white;
             transform: scaleY(0);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
         
@@ -404,7 +369,7 @@
             width: 22px;
             text-align: center;
             font-size: 17px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .sidebar-menu a:hover {
@@ -433,36 +398,13 @@
             transform: scaleY(1);
         }
         
-        .nav-badge {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: white;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 4px 8px;
-            border-radius: 12px;
-            margin-left: auto;
-            box-shadow: 0 3px 10px rgba(231, 76, 60, 0.5);
-            animation: pulse-badge 2s infinite, glow 2s ease-in-out infinite;
-            display: none; /* Dihilangkan karena tidak ada data yang relevan di Admin Dashboard ini */
-        }
-        
-        @keyframes pulse-badge {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-        }
-        
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 3px 10px rgba(231, 76, 60, 0.5); }
-            50% { box-shadow: 0 4px 20px rgba(231, 76, 60, 0.8); }
-        }
-
-        /* Sidebar Footer with Premium Design */
+        /* Sidebar Footer */
         .sidebar-footer {
             margin-top: auto;
             padding: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.12);
             background: rgba(0, 0, 0, 0.18);
-            animation: fadeInUp 0.6s ease-out 0.5s both;
+            /* Animation Removed */
         }
         
         .logout-link {
@@ -475,7 +417,7 @@
             justify-content: center;
             padding: 15px;
             border-radius: 14px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             background: linear-gradient(135deg, rgba(198, 40, 40, 0.9), rgba(183, 28, 28, 0.9));
             position: relative;
@@ -533,7 +475,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             width: calc(100% - 280px);
             position: relative;
             z-index: 1;
@@ -554,7 +496,7 @@
             left: 280px;
             right: 0;
             z-index: 900;
-            transition: all 0.4s ease;
+            transition: all 0.3s ease;
             box-shadow: var(--shadow-sm);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -564,7 +506,7 @@
             display: flex;
             align-items: center;
             gap: 20px;
-            animation: fadeInLeft 0.6s ease-out;
+            /* Animation Removed */
         }
         
         .menu-toggle {
@@ -605,12 +547,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            animation: fadeInRight 0.6s ease-out;
-        }
-        
-        @keyframes fadeInRight {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
+            /* Animation Removed */
         }
         
         /* Dark Mode Toggle Premium */
@@ -624,7 +561,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             color: var(--text-primary);
             font-size: 19px;
             box-shadow: var(--shadow-sm);
@@ -691,7 +628,7 @@
             padding-bottom: 40px;
             flex-grow: 1;
             overflow-y: auto;
-            animation: fadeIn 0.8s ease-out;
+            /* Animation Removed */
         }
         
         .page-content::-webkit-scrollbar { width: 10px; }
@@ -721,7 +658,7 @@
             -webkit-backdrop-filter: blur(8px);
             z-index: 999;
             opacity: 0;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.3s ease;
         }
         
         .sidebar-overlay.active { 
@@ -887,12 +824,11 @@
     
     <script>
         // =========================
-        // DARK MODE FUNCTIONALITY WITH SMOOTH TRANSITION
+        // DARK MODE FUNCTIONALITY
         // =========================
         
         function initTheme() {
             const themeToggle = document.getElementById('themeToggle');
-            // Pastikan themeToggle ada sebelum mencoba mengaksesnya
             if (!themeToggle) return; 
 
             const html = document.documentElement;
@@ -903,14 +839,14 @@
             html.setAttribute('data-theme', savedTheme);
             updateThemeIcon(icon, savedTheme);
             
-            // Toggle theme with animation
+            // Remove old listeners
             themeToggle.removeEventListener('click', window.themeToggleHandler);
             
             window.themeToggleHandler = () => {
                 const currentTheme = html.getAttribute('data-theme');
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
                 
-                document.body.style.transition = 'background-color 0.5s ease, color 0.3s ease';
+                document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
                 
                 html.setAttribute('data-theme', newTheme);
                 localStorage.setItem('theme', newTheme);
@@ -933,7 +869,6 @@
         }
         
         function showThemeNotification(theme) {
-            // Remove previous notifications first
             document.querySelectorAll('.theme-notification').forEach(n => n.remove());
 
             const message = theme === 'dark' ? '🌙 Mode Gelap Aktif' : '☀️ Mode Terang Aktif';
@@ -963,7 +898,6 @@
             }, 2500);
         }
         
-        // Add animation keyframes for notification
         const style = document.createElement('style');
         style.textContent = `
             @keyframes slideInRight {
@@ -987,7 +921,6 @@
             const sidebar = document.getElementById('sidebar');
             const sidebarOverlay = document.getElementById('sidebarOverlay');
 
-            // Remove old listeners to prevent duplicates
             if (window.menuToggleClickListener) {
                 menuToggle.removeEventListener('click', window.menuToggleClickListener);
             }
@@ -1066,7 +999,6 @@
                 }
             }
 
-            // Initialize
             setGreeting();
             updateDateTime();
             
@@ -1086,28 +1018,19 @@
                 });
             }
             
-            // Initialize theme
             initTheme();
             
-            // Add page load animation
-            document.body.style.opacity = '0';
-            setTimeout(() => {
-                document.body.style.transition = 'opacity 0.5s ease';
-                document.body.style.opacity = '1';
-            }, 100);
+            // REMOVED PAGE LOAD ANIMATION
+            // document.body.style.opacity = '1'; (Default browser behavior is fine)
         }
 
         // =========================
         // EVENT LISTENERS
         // =========================
         
-        // Run on first load (non-Turbo)
         document.addEventListener('DOMContentLoaded', initPageScripts);
-        
-        // Run every time Turbo loads a new page
         document.addEventListener('turbo:load', initPageScripts);
         
-        // Stop clock interval when page is unloaded by Turbo
         document.addEventListener('turbo:before-cache', () => {
             if (window.dateTimeInterval) {
                 clearInterval(window.dateTimeInterval);
@@ -1150,7 +1073,6 @@
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Show loading
                     Swal.fire({
                         title: 'Logging out...',
                         html: 'Mohon tunggu sebentar',
@@ -1160,7 +1082,6 @@
                         }
                     });
                     
-                    // Submit logout form
                     setTimeout(() => {
                         const form = document.getElementById('logout-form-admin');
                         form.setAttribute('data-turbo', 'false');
@@ -1171,9 +1092,67 @@
         }
         
         // =========================
-        // SMOOTH SCROLL FOR ANCHOR LINKS (Dihapus karena tidak relevan di Dashboard Admin)
+        // GLOBAL AUTO REFRESH SYSTEM (UPDATED FIX)
         // =========================
         
+        /**
+         * Fitur: Update elemen spesifik tanpa reload halaman & tanpa scroll ke atas
+         * Digunakan untuk real-time update pada tabel/card
+         * Perbaikan: Anti-Cache & Trim whitespace
+         */
+        window.initAutoRefresh = function(selectors, interval = 5000) {
+            if (window.autoRefreshInterval) {
+                clearInterval(window.autoRefreshInterval);
+            }
+
+            console.log('🔄 Auto refresh system started monitoring:', selectors);
+
+            let isUpdating = false;
+
+            window.autoRefreshInterval = setInterval(() => {
+                if (isUpdating) return;
+                isUpdating = true;
+
+                const url = new URL(window.location.href);
+                url.searchParams.set('auto_reload_time', new Date().getTime());
+
+                fetch(url.toString(), {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    selectors.forEach(selector => {
+                        const oldEl = document.querySelector(selector);
+                        const newEl = doc.querySelector(selector);
+
+                        if (oldEl && newEl) {
+                            if (oldEl.innerHTML.trim() !== newEl.innerHTML.trim()) {
+                                console.log('⚡ Data changed! Updating:', selector);
+                                oldEl.innerHTML = newEl.innerHTML;
+                                
+                                if (typeof window.rebindEvents === 'function') {
+                                    window.rebindEvents();
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(err => console.error('❌ Auto refresh error:', err))
+                .finally(() => {
+                    isUpdating = false;
+                });
+            }, interval);
+        };
+
+        document.addEventListener('turbo:before-cache', () => {
+            if (window.autoRefreshInterval) {
+                clearInterval(window.autoRefreshInterval);
+            }
+        });
+
     </script>
 
     @stack('scripts')

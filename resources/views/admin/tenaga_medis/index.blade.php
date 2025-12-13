@@ -79,10 +79,9 @@
         padding: 40px 20px;
     }
 
-    /* ===== HEADER BANNER (SAMA DENGAN DASHBOARD) ===== */
+    /* ===== HEADER BANNER (NO ANIMATION) ===== */
     .page-header-banner {
         margin-bottom: 40px;
-        animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .header-content {
@@ -129,14 +128,8 @@
         position: relative;
         z-index: 1;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        animation: float 3s ease-in-out infinite;
     }
     
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-    }
-
     .header-text {
         flex: 1;
         position: relative;
@@ -156,7 +149,6 @@
         font-weight: 600;
         margin-bottom: 15px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        animation: fadeIn 0.8s ease-out 0.2s both;
     }
 
     .page-title {
@@ -165,7 +157,6 @@
         font-size: 2.2rem;
         margin: 0 0 10px 0;
         letter-spacing: -0.5px;
-        animation: fadeIn 0.8s ease-out 0.3s both;
     }
 
     .page-subtitle {
@@ -176,12 +167,6 @@
         font-size: 1.05rem;
         font-weight: 500;
         margin: 0;
-        animation: fadeIn 0.8s ease-out 0.4s both;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .hero-illustration {
@@ -251,7 +236,7 @@
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     }
 
-    /* ===== ALERT ===== */
+    /* ===== ALERT (NO ANIMATION) ===== */
     .alert-success-modern {
         display: flex;
         align-items: center;
@@ -259,7 +244,6 @@
         padding: 20px 28px;
         border-radius: 20px;
         margin-bottom: 30px;
-        animation: slideInDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         box-shadow: 0 8px 25px rgba(0,0,0,0.12);
         background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
         border: 2px solid #28a745;
@@ -306,7 +290,7 @@
         transform: rotate(90deg);
     }
 
-    /* ===== TABLE (SAMA DENGAN DASHBOARD) ===== */
+    /* ===== TABLE (NO ANIMATION) ===== */
     .schedule-container-modern {
         background: var(--bg-primary);
         border-radius: 24px;
@@ -314,12 +298,6 @@
         border: 1px solid var(--border-color);
         overflow: hidden;
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        animation: fadeInUp 0.6s ease-out 0.2s backwards;
-    }
-    
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .schedule-container-modern:hover {
@@ -389,18 +367,12 @@
         text-align: center !important;
     }
 
+    /* ROW ANIMATIONS REMOVED FOR STABILITY */
     .schedule-row {
         border-bottom: 1px solid var(--border-color);
         transition: all 0.3s ease;
-        animation: fadeInLeft 0.5s ease forwards;
-        opacity: 0;
     }
     
-    @keyframes fadeInLeft {
-        from { opacity: 0; transform: translateX(-20px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-
     .schedule-row:hover {
         background: var(--hover-bg);
     }
@@ -424,8 +396,20 @@
         font-weight: 700;
         font-size: 20px;
         flex-shrink: 0;
+        overflow: hidden;
         border: 3px solid var(--border-color);
         box-shadow: 0 4px 12px rgba(57, 166, 22, 0.2);
+    }
+
+    .doctor-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .doctor-name {
+        font-weight: 600;
+        color: var(--text-primary);
     }
 
     /* Action Buttons */
@@ -494,7 +478,12 @@
         color: var(--text-secondary);
     }
 
-    /* ===== MODAL ===== */
+    .empty-schedule small {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+    }
+
+    /* ===== MODAL (NO ANIMATION) ===== */
     .modal-overlay {
         display: none;
         position: fixed;
@@ -508,7 +497,6 @@
         backdrop-filter: blur(8px);
         justify-content: center;
         align-items: center;
-        animation: fadeIn 0.3s;
     }
 
     .modal-card {
@@ -518,7 +506,6 @@
         width: 90%;
         max-width: 650px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         max-height: 90vh;
         display: flex;
         flex-direction: column;
@@ -820,27 +807,6 @@
         box-shadow: 0 10px 30px rgba(231, 76, 60, 0.5);
     }
 
-    /* ===== ANIMATIONS ===== */
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes slideInDown {
-        from { transform: translateY(-20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
-    @keyframes slideUp {
-        from { transform: translateY(50px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-
     /* ===== RESPONSIVE ===== */
     @media (max-width: 992px) {
         .hero-illustration {
@@ -967,7 +933,8 @@
     <div class="schedule-container-modern">
         <div class="table-card-header">
             <h3 class="table-title"><i class="fas fa-list"></i> Daftar Tenaga Medis</h3>
-            <span class="schedule-count"><i class="fas fa-users"></i> {{ $tenagaMedis->count() }} Akun Aktif</span>
+            {{-- Added ID for Auto Refresh --}}
+            <span class="schedule-count" id="total-count"><i class="fas fa-users"></i> {{ $tenagaMedis->count() }} Akun Aktif</span>
         </div>
 
         <table class="schedule-table" id="tableTenaga">
@@ -980,9 +947,10 @@
                     <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
                 </tr>
             </thead>
-            <tbody>
+            {{-- Added ID for Auto Refresh --}}
+            <tbody id="table-body">
                 @forelse($tenagaMedis as $index => $akun)
-                    <tr class="schedule-row" style="animation-delay: {{ $index * 0.05 }}s">
+                    <tr class="schedule-row"> {{-- Animation removed --}}
                         <td>
                             <span class="number-badge" style="display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; background: linear-gradient(135deg, #6c757d, #5a6268); color: white; border-radius: 12px; font-weight: 700; font-size: 1rem; padding: 0 10px; box-shadow: 0 2px 8px rgba(108, 117, 125, 0.25);">
                                 {{ $index + 1 }}
@@ -1170,7 +1138,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const baseUpdateUrl = '{{ url("admin/tenaga-medis") }}'; 
 
     // === Fungsi Modal Buat/Edit ===
-    function openModal(mode = 'create', data = null) {
+    window.openModal = function(mode = 'create', data = null) {
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         const errorsBox = document.getElementById('modalErrors');
@@ -1200,44 +1168,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function closeModal() {
+    window.closeModal = function() {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
     }
 
     // === Fungsi Modal Hapus ===
-    function openDeleteModal() {
+    window.openDeleteModal = function() {
         deleteModal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
 
-    function closeDeleteModal() {
+    window.closeDeleteModal = function() {
         deleteModal.style.display = 'none';
         document.body.style.overflow = 'auto';
         formToDelete = null; 
     }
 
-    // === Event Listener ===
+    // === Event Listeners Manual ===
     btnTambah.addEventListener('click', function() { openModal('create'); });
-
-    document.querySelectorAll('.btn-edit').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const data = {
-                id: this.dataset.id,
-                name: this.dataset.name,
-                email: this.dataset.email
-            };
-            openModal('edit', data);
-        });
-    });
-
-    document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', function() {
-            formToDelete = this.closest('form'); 
-            openDeleteModal(); 
-        });
-    });
-
     closeDeleteBtn.addEventListener('click', closeDeleteModal);
     cancelDeleteBtn.addEventListener('click', closeDeleteModal);
     confirmDeleteBtn.addEventListener('click', function() {
@@ -1245,7 +1194,6 @@ document.addEventListener('DOMContentLoaded', function() {
             formToDelete.submit(); 
         }
     });
-
     closeBtn.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
 
@@ -1258,6 +1206,58 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
         if (e.key === 'Escape' && deleteModal.style.display === 'flex') closeDeleteModal();
     });
+
+    // === AUTO LOAD & REBIND EVENTS ===
+    
+    // Fungsi untuk memasang event listener pada tombol tabel (Edit & Hapus)
+    // Dipisahkan agar bisa dipanggil ulang setelah Auto Refresh
+    window.bindTableEvents = function() {
+        // Edit Button
+        document.querySelectorAll('.btn-edit').forEach(btn => {
+            // Hapus listener lama untuk mencegah duplikasi
+            btn.removeEventListener('click', handleEditClick);
+            // Pasang listener baru
+            btn.addEventListener('click', handleEditClick);
+        });
+
+        // Delete Button
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.removeEventListener('click', handleDeleteClick);
+            btn.addEventListener('click', handleDeleteClick);
+        });
+    };
+
+    // Handler Terpisah
+    function handleEditClick() {
+        const data = {
+            id: this.dataset.id,
+            name: this.dataset.name,
+            email: this.dataset.email
+        };
+        openModal('edit', data);
+    }
+
+    function handleDeleteClick() {
+        formToDelete = this.closest('form'); 
+        openDeleteModal();
+    }
+
+    // Jalankan bindTableEvents saat pertama kali load
+    bindTableEvents();
+
+    // Inisialisasi Auto Refresh Global
+    if (typeof window.initAutoRefresh === 'function') {
+        window.initAutoRefresh([
+            '#total-count', // Jumlah Akun
+            '#table-body'   // Isi Tabel
+        ]);
+    }
+
+    // Fungsi Rebind Global (Dipanggil otomatis oleh script layout saat refresh)
+    window.rebindEvents = function() {
+        bindTableEvents();
+        console.log('♻️ Table events rebound!');
+    };
 
     // Auto-hide success alert
     const alert = document.getElementById('autoHideAlert');

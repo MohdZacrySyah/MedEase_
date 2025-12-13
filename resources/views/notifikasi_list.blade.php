@@ -41,14 +41,9 @@
         padding: 40px 20px;
     }
 
+    /* ===== HEADER (NO ANIMATION) ===== */
     .page-header-container {
         margin-bottom: 40px;
-        animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .header-content {
@@ -166,16 +161,11 @@
         to { transform: scale(1.5); opacity: 0; }
     }
 
+    /* ===== LIST NOTIFIKASI (NO ANIMATION) ===== */
     .notifikasi-list-ringkas {
         display: flex;
         flex-direction: column;
         gap: 24px;
-        animation: fadeInUp 0.6s ease-out 0.2s backwards;
-    }
-    
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .notifikasi-item-ringkas {
@@ -188,12 +178,6 @@
         position: relative;
         overflow: hidden;
         border: 1px solid rgba(57, 166, 22, 0.15);
-        animation: fadeInLeft 0.6s ease-out backwards;
-    }
-    
-    @keyframes fadeInLeft {
-        from { opacity: 0; transform: translateX(-30px); }
-        to { opacity: 1; transform: translateX(0); }
     }
 
     .notifikasi-item-ringkas:hover {
@@ -395,7 +379,6 @@
         width: fit-content;
     }
 
-    /* 🔥 STYLE UNTUK ESTIMASI WAKTU 🔥 */
     .queue-badge.estimation {
         background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(52, 152, 219, 0.25));
         border-color: rgba(52, 152, 219, 0.3);
@@ -556,15 +539,9 @@
         width: 100%;
         height: 100%;
         overflow: auto;
-        animation: fadeIn 0.3s;
         padding: 20px;
     }
     
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
     .modal-overlay-bg {
         position: fixed;
         top: 0;
@@ -582,12 +559,7 @@
         margin: 30px auto;
         width: 90%;
         max-width: 500px;
-        animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    
-    @keyframes slideUp {
-        from { transform: translateY(50px) scale(0.9); opacity: 0; }
-        to { transform: translateY(0) scale(1); opacity: 1; }
+        /* Animation removed */
     }
 
     .close-btn {
@@ -1000,7 +972,8 @@
         </div>
     </div>
 
-    <div class="notifikasi-list-ringkas">
+    {{-- ID "notifikasi-container" untuk Auto Refresh --}}
+    <div class="notifikasi-list-ringkas" id="notifikasi-container">
         @forelse ($paginatedNotifications as $index => $item)
             @php
                 $isCancellation = $item->is_cancellation;
@@ -1013,9 +986,8 @@
                 $jadwalDate = \Carbon\Carbon::parse($item->date);
             @endphp
             
-            {{-- 🔥 ATTRIBUTE DATA ESTIMASI DITAMBAHKAN DI SINI UNTUK MODAL 🔥 --}}
             <div class="notifikasi-item-ringkas open-modal-trigger {{ $statusClass }} {{ $isUnread ? 'unread-glow' : 'read-dim' }}" 
-                 style="animation-delay: {{ $index * 0.1 }}s"
+                 {{-- Animasi dihapus --}}
                  data-notifikasi-id="{{ $item->type === 'notification' ? $item->id : '' }}"
                  data-modal-type="{{ $item->type }}"
                  data-tanggal="{{ $jadwalDate->isoFormat('dddd, D MMMM YYYY') }}"
@@ -1069,7 +1041,6 @@
                                         <span>{{ $isPending ? 'Menunggu Antrian' : 'Antrian #' . $item->no_antrian }}</span>
                                     </div>
 
-                                    {{-- 🔥 BADGE ESTIMASI WAKTU DI DAFTAR 🔥 --}}
                                     @if(isset($item->estimasi_dilayani) && $item->estimasi_dilayani)
                                         <div class="queue-badge estimation">
                                             <i class="fas fa-clock"></i>
@@ -1157,7 +1128,6 @@
                         </div>
                     </div>
                     
-                    {{-- 🔥 ROW ESTIMASI DI MODAL (HIDDEN DEFAULT) 🔥 --}}
                     <div class="detail-row" id="modalEstimasiRow" style="display: none;">
                         <i class="fas fa-clock"></i>
                         <div class="detail-content">
@@ -1209,7 +1179,6 @@
                 <div class="barcode-line"></div>
                 <div class="barcode-line short"></div>
                 <div class="barcode-line"></div>
-                <div class="barcode-line"></div>
                 <div class="barcode-line short"></div>
                 <div class="barcode-line"></div>
             </div>
@@ -1224,7 +1193,36 @@
 document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('detailModal');
     const closeModalBtn = document.getElementById('closeModalBtn');
-    const items = document.querySelectorAll('.open-modal-trigger');
+    
+    // --- AUTO REFRESH LOGIC ---
+    if (typeof window.initAutoRefresh === 'function') {
+        window.initAutoRefresh(['#notifikasi-container']);
+    }
+
+    // --- REBIND EVENTS ---
+    window.rebindEvents = function() {
+        bindNotifEvents();
+        console.log('♻️ Notif list refreshed and events rebound!');
+    };
+
+    function bindNotifEvents() {
+        const items = document.querySelectorAll('.open-modal-trigger');
+        items.forEach(function(item) {
+            // cleanup old
+            item.removeEventListener('click', handleNotifClick);
+            // bind new
+            item.addEventListener('click', handleNotifClick);
+        });
+    }
+
+    // Extracted click handler
+    function handleNotifClick(event) {
+        event.preventDefault(); 
+        openModal(this.dataset);
+    }
+
+    // Initial binding
+    bindNotifEvents();
 
     function closeModal() {
         if (modal) {
@@ -1246,7 +1244,6 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('modalLayanan').textContent = data.layanan;
         document.getElementById('modalDokter').textContent = data.dokter.split('(')[0].trim();
         
-        // 🔥 LOGIKA MENAMPILKAN ESTIMASI DI MODAL 🔥
         if (data.estimasi) {
             document.getElementById('modalEstimasi').textContent = data.estimasi;
             estimasiRow.style.display = 'flex';
@@ -1261,7 +1258,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('modalTicketType').textContent = 'Pesan Pembatalan';
             document.getElementById('modalMessage').textContent = data.pesan;
             messageRow.style.display = 'flex';
-            estimasiRow.style.display = 'none'; // Sembunyikan estimasi jika batal
+            estimasiRow.style.display = 'none';
             document.getElementById('modalFooterText').textContent = '⚠️ Mohon segera buat jadwal baru';
         } else {
             antrianEl.textContent = data.antrian === '-' ? 'N/A' : data.antrian;
@@ -1298,12 +1295,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
-    
-    items.forEach(function(item) {
-        item.addEventListener('click', function() {
-            openModal(this.dataset);
-        });
-    });
     
     if (closeModalBtn) {
         closeModalBtn.addEventListener('click', closeModal);

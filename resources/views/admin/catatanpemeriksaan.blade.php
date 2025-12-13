@@ -74,8 +74,8 @@
         </div>
     @endif
 
-    {{-- MAIN CONTENT --}}
-    <div class="schedule-section">
+    {{-- MAIN CONTENT (ANTRIAN) --}}
+    <div class="schedule-section" id="queue-data-container">
         <div class="section-header">
             <h2><i class="fas fa-stethoscope"></i> Antrian Per Layanan</h2>
         </div>
@@ -85,7 +85,9 @@
             {{-- TAB NAVIGATION --}}
             <div class="tabs-wrapper">
                 @foreach ($pendaftarans as $layanan => $listPendaftaran)
-                    <button class="tab-btn {{ $loop->first ? 'active' : '' }}" onclick="openTab(event, 'tab-{{ Str::slug($layanan) }}')">
+                    <button class="tab-btn {{ $loop->first ? 'active' : '' }}" 
+                            id="btn-tab-{{ Str::slug($layanan) }}"
+                            onclick="openTab(event, 'tab-{{ Str::slug($layanan) }}')">
                         <i class="fas fa-hospital-user"></i>
                         {{ $layanan }}
                         <span class="tab-count">{{ count($listPendaftaran) }}</span>
@@ -123,7 +125,7 @@
                                     </thead>
                                     <tbody>
                                         @forelse ($listPendaftaran as $index => $pendaftaran)
-                                            <tr class="schedule-row" style="animation-delay: {{ $index * 0.05 }}s">
+                                            <tr class="schedule-row">
                                                 {{-- No Antrian --}}
                                                 <td>
                                                     <span class="queue-number-badge">{{ $pendaftaran->no_antrian ?? '-' }}</span>
@@ -175,30 +177,25 @@
                                                     @endif
                                                 </td>
 
-                                                {{-- AKSI PANGGIL (3 TOMBOL TERPISAH) --}}
+                                                {{-- AKSI PANGGIL --}}
                                                 <td class="text-center">
                                                     @if(!in_array($pendaftaran->status, ['Selesai', 'Dibatalkan']))
                                                         <div class="action-group">
-                                                            
-                                                            {{-- 1. Tombol Panggil (Selalu Ada) --}}
                                                             <button onclick="panggilPasien(this, {{ $pendaftaran->id }})" class="btn-call-modern" title="Panggil Pasien">
                                                                 <i class="fas fa-bullhorn"></i> Panggil
                                                             </button>
 
-                                                            {{-- 2. Tombol Hadir (Muncul jika sedang dipanggil) --}}
                                                             @if($pendaftaran->status_panggilan == 'dipanggil')
                                                                 <button onclick="stopPanggil(this, {{ $pendaftaran->id }})" class="btn-stop-call" title="Pasien Hadir">
                                                                     <i class="fas fa-check"></i> Hadir
                                                                 </button>
                                                             @endif
 
-                                                            {{-- 3. Tombol Skip (Muncul jika sudah dipanggil 2x) --}}
                                                             @if($pendaftaran->jumlah_panggilan >= 2)
                                                                 <button onclick="alihkanPasien({{ $pendaftaran->id }})" class="btn-skip-modern" title="Lewati Pasien">
                                                                     <i class="fas fa-forward"></i> Skip
                                                                 </button>
                                                             @endif
-
                                                         </div>
                                                     @else
                                                         <span style="font-size: 0.85rem; font-style: italic; color: var(--text-muted);">-</span>
@@ -327,10 +324,10 @@
         transition: background 0.3s ease, color 0.3s ease;
     }
 
-    /* ===== HEADER BANNER ===== */
+    /* ===== HEADER BANNER (NO ANIMATION) ===== */
     .dashboard-header-banner {
         margin-bottom: 40px;
-        animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        /* Animation removed */
     }
 
     .header-content {
@@ -377,12 +374,7 @@
         position: relative;
         z-index: 1;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        animation: float 3s ease-in-out infinite;
-    }
-
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
+        /* Animation removed for stability */
     }
 
     .header-text {
@@ -404,7 +396,7 @@
         font-weight: 600;
         margin-bottom: 15px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        animation: fadeIn 0.8s ease-out 0.2s both;
+        /* Animation removed */
     }
 
     .page-title {
@@ -413,7 +405,7 @@
         font-size: 2.2rem;
         margin: 0 0 10px 0;
         letter-spacing: -0.5px;
-        animation: fadeIn 0.8s ease-out 0.3s both;
+        /* Animation removed */
     }
 
     .page-subtitle {
@@ -424,12 +416,7 @@
         font-size: 1.05rem;
         font-weight: 500;
         margin: 0;
-        animation: fadeIn 0.8s ease-out 0.4s both;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+        /* Animation removed */
     }
 
     .hero-illustration {
@@ -450,11 +437,11 @@
         gap: 12px;
         color: white;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-        animation: float 3s ease-in-out infinite;
         min-width: 160px;
         justify-content: center;
     }
 
+    /* Keep pulse animation for aesthetic */
     .pulse-circle {
         position: absolute;
         border: 2px solid rgba(255, 255, 255, 0.4);
@@ -499,15 +486,10 @@
         font-size: 1.4rem;
     }
 
-    /* ===== FILTER SECTION ===== */
+    /* ===== FILTER SECTION (NO ANIMATION) ===== */
     .stats-section {
         margin-bottom: 40px;
-        animation: fadeInUp 0.6s ease-out 0.1s backwards;
-    }
-
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
+        /* Animation removed */
     }
 
     .filter-card-modern {
@@ -642,7 +624,7 @@
         box-shadow: 0 10px 30px rgba(108, 117, 125, 0.4);
     }
 
-    /* ===== ALERTS ===== */
+    /* ===== ALERTS (NO ANIMATION) ===== */
     .alert-success-modern,
     .alert-info-modern {
         display: flex;
@@ -651,7 +633,7 @@
         padding: 20px 28px;
         border-radius: 20px;
         margin-bottom: 30px;
-        animation: slideInDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        /* Animation removed */
         box-shadow: 0 8px 25px rgba(0,0,0,0.12);
     }
 
@@ -721,7 +703,7 @@
         transform: rotate(90deg);
     }
 
-    /* ===== TABS SYSTEM ===== */
+    /* ===== TABS SYSTEM (NO ANIMATION) ===== */
     .tabs-wrapper {
         display: flex;
         gap: 15px;
@@ -781,22 +763,17 @@
 
     .tab-pane {
         display: none;
-        animation: fadeInTab 0.5s ease-out;
+        /* Animation removed to prevent flicker on refresh */
     }
 
     .tab-pane.active {
         display: block;
     }
 
-    @keyframes fadeInTab {
-        from { opacity: 0; transform: translateY(15px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ===== SCHEDULE SECTION ===== */
+    /* ===== SCHEDULE SECTION (NO ANIMATION) ===== */
     .schedule-section {
         margin-bottom: 30px;
-        animation: fadeInUp 0.6s ease-out 0.2s backwards;
+        /* Animation removed */
     }
 
     .layanan-group-modern {
@@ -894,16 +871,11 @@
         text-align: center;
     }
 
+    /* ROW ANIMATIONS REMOVED FOR AUTO-REFRESH STABILITY */
     .schedule-row {
         border-bottom: 1px solid var(--border-color);
         transition: all 0.3s ease;
-        animation: fadeInLeft 0.5s ease forwards;
-        opacity: 0;
-    }
-
-    @keyframes fadeInLeft {
-        from { opacity: 0; transform: translateX(-20px); }
-        to { opacity: 1; transform: translateX(0); }
+        /* No animation, No opacity: 0 */
     }
 
     .schedule-row:hover {
@@ -1030,7 +1002,7 @@
         border-color: rgba(46, 204, 113, 0.4);
     }
 
-    /* ===== CALLING SYSTEM BUTTONS (3 TOMBOL TERPISAH) ===== */
+    /* ===== CALLING SYSTEM BUTTONS ===== */
     .action-group {
         display: flex;
         gap: 8px;
@@ -1204,7 +1176,7 @@
         font-size: 4.5rem;
         margin-bottom: 24px;
         opacity: 0.3;
-        animation: float 3s ease-in-out infinite;
+        /* Animation removed */
     }
 
     .empty-schedule p {
@@ -1227,7 +1199,7 @@
         background-color: var(--modal-overlay);
         justify-content: center;
         align-items: center;
-        animation: fadeIn 0.3s;
+        /* Animation removed */
         backdrop-filter: blur(8px);
     }
 
@@ -1238,7 +1210,7 @@
         width: 90%;
         max-width: 650px;
         box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        animation: slideDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        /* Animation removed */
         max-height: 90vh;
         display: flex;
         flex-direction: column;
@@ -1406,21 +1378,6 @@
         100% { transform: rotate(360deg); }
     }
 
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes slideInDown {
-        from { opacity: 0; transform: translateY(-20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes slideDown {
-        from { transform: translateY(-50px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-
     /* ===== RESPONSIVE ===== */
     @media (max-width: 992px) {
         .hero-illustration { display: none; }
@@ -1485,6 +1442,11 @@
         }
         
         if(evt) evt.currentTarget.className += " active";
+
+        // SIMPAN TAB AKTIF KE STORAGE (PENTING UNTUK AUTO REFRESH)
+        if (tabName) {
+            sessionStorage.setItem('activeQueueTab', tabName);
+        }
     }
 
     // --- 2. CALLING SYSTEM ---
@@ -1518,7 +1480,9 @@
                     position: 'top-end',
                     toast: true
                 }).then(() => {
-                    location.reload(); 
+                    // Force refresh manual untuk update status segera
+                    // Tapi karena ada auto-refresh, bisa juga dibiarkan
+                    window.location.reload(); 
                 });
             } else {
                 Swal.fire('Error', 'Gagal memanggil pasien', 'error');
@@ -1556,7 +1520,7 @@
                     position: 'top-end',
                     toast: true
                 }).then(() => {
-                    location.reload(); 
+                    window.location.reload(); 
                 });
             } else {
                 btnElement.innerHTML = originalContent;
@@ -1599,7 +1563,7 @@
                             icon: 'info',
                             timer: 1500,
                             showConfirmButton: false
-                        }).then(() => location.reload());
+                        }).then(() => window.location.reload());
                     }
                 });
             }
@@ -1620,6 +1584,7 @@
     const modalContent = document.getElementById('modalFormContent');
     const closeModalBtn = document.getElementById('closeModalBtn');
     
+    // Gunakan Delegation untuk Modal (karena tombol bisa di-refresh AJAX)
     document.addEventListener('click', async function(e) {
         const btn = e.target.closest('.open-periksa-modal');
         if (btn) {
@@ -1686,6 +1651,53 @@
         if (event.target == modal) {
             modal.style.display = 'none';
         }
+    });
+
+    // --- 5. INITIALIZE AUTO REFRESH (WITH TAB STATE HANDLING) ---
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // Panggil Global Auto Refresh untuk kontainer antrian
+        if (typeof window.initAutoRefresh === 'function') {
+            window.initAutoRefresh(['#queue-data-container']);
+        }
+
+        // Fungsi Rebind (Dipanggil otomatis setiap kali data di-refresh)
+        window.rebindEvents = function() {
+            // Restore Active Tab dari Session Storage
+            const activeTab = sessionStorage.getItem('activeQueueTab');
+            
+            // Sembunyikan semua tab dulu (karena HTML baru datang dengan default tab 1)
+            document.querySelectorAll('.tab-pane').forEach(el => {
+                el.style.display = 'none'; 
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            if (activeTab && document.getElementById(activeTab)) {
+                // Aktifkan Konten Tab
+                document.getElementById(activeTab).style.display = 'block';
+                setTimeout(() => document.getElementById(activeTab).classList.add('active'), 10);
+
+                // Aktifkan Tombol Tab
+                const btnId = 'btn-' + activeTab;
+                const btn = document.getElementById(btnId);
+                if (btn) btn.classList.add('active');
+            } else {
+                // Fallback: Jika tidak ada di storage (baru buka), aktifkan yang pertama
+                const firstTab = document.querySelector('.tab-pane');
+                const firstBtn = document.querySelector('.tab-btn');
+                if (firstTab) {
+                    firstTab.style.display = 'block';
+                    firstTab.classList.add('active');
+                }
+                if (firstBtn) firstBtn.classList.add('active');
+            }
+            
+            console.log('✅ Queue data updated & Tab restored:', activeTab);
+        };
+
+        // Jalankan rebindEvents sekali di awal untuk memastikan state benar saat load/reload manual
+        // window.rebindEvents(); // Opsional, karena server-side rendering sudah menangani load awal
     });
 
     // Auto Hide Alert

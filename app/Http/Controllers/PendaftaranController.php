@@ -241,4 +241,17 @@ class PendaftaranController extends Controller
             ->route('daftar.index')
             ->with('success', $pesanSukses);
     }
+    public function konfirmasiDatang($id)
+{
+    try {
+        $pendaftaran = \App\Models\Pendaftaran::findOrFail($id);
+        // Ubah status sesuai logika antrian Anda, contoh: 'Hadir' atau 'Diperiksa'
+        $pendaftaran->status = 'Hadir'; 
+        $pendaftaran->save();
+
+        return response()->json(['success' => true]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+}
 }

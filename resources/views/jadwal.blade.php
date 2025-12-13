@@ -65,9 +65,10 @@
         $hariIni = Carbon\Carbon::now()->translatedFormat('l');
     @endphp
 
-    <div class="jadwal-grid">
+    {{-- ID "jadwal-grid-container" ditambahkan untuk Auto Refresh --}}
+    <div class="jadwal-grid" id="jadwal-grid-container">
         @forelse ($jadwals as $index => $jadwal)
-            <div class="jadwal-card" style="animation-delay: {{ $index * 0.1 }}s">
+            <div class="jadwal-card"> {{-- Animasi dihapus --}}
                 <div class="card-gradient-bg"></div>
                 
                 <div class="card-header">
@@ -202,6 +203,12 @@
         --p3: #0C5B00;
         --grad: linear-gradient(135deg, #39A616, #1D8208, #0C5B00);
         --grad-reverse: linear-gradient(135deg, #0C5B00, #1D8208, #39A616);
+        --bg-primary: #ffffff;
+        --bg-secondary: #f9fafb;
+        --bg-tertiary: #f3f4f6;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --text-muted: #9ca3af;
     }
     
     body { 
@@ -214,15 +221,9 @@
         padding: 40px 20px; 
     }
 
-    /* ===== HEADER PREMIUM ===== */
+    /* ===== HEADER PREMIUM (NO ANIMATION) ===== */
     .jadwal-header-text { 
         margin-bottom: 40px; 
-        animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
     
     .header-content { 
@@ -232,7 +233,7 @@
         background: var(--grad);
         padding: 35px 40px; 
         border-radius: 24px; 
-        box-shadow: 0 15px 50px rgba(57, 166, 22, 0.25);
+        box-shadow: 0 15px 50px rgba(57, 166, 22, 0.25); 
         position: relative; 
         overflow: hidden;
     }
@@ -267,7 +268,7 @@
         color: #fff; 
         flex-shrink: 0; 
         position: relative; 
-        z-index: 1;
+        z-index: 1; 
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         animation: float 3s ease-in-out infinite;
     }
@@ -340,7 +341,7 @@
         100% { transform: scale(1.5); opacity: 0; }
     }
 
-    /* ===== ALERT PREMIUM ===== */
+    /* ===== ALERT PREMIUM (NO ANIMATION) ===== */
     .alert { 
         display: flex; 
         align-items: center; 
@@ -349,13 +350,7 @@
         margin-bottom: 28px; 
         border-radius: 16px; 
         font-weight: 600; 
-        animation: slideInDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         box-shadow: 0 8px 25px rgba(57, 166, 22, 0.2);
-    }
-    
-    @keyframes slideInDown {
-        from { transform: translateY(-30px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
     }
     
     .alert-success { 
@@ -364,22 +359,22 @@
         border: 2px solid rgba(57, 166, 22, 0.3);
     }
     
+    .alert-danger {
+        color: #721c24;
+        background: linear-gradient(135deg, rgba(231, 76, 60, 0.15), rgba(231, 76, 60, 0.25));
+        border: 2px solid rgba(231, 76, 60, 0.3);
+    }
+    
     .alert i { 
         font-size: 1.5rem;
         animation: pulse 2s ease-in-out infinite;
     }
 
-    /* ===== JADWAL GRID PREMIUM ===== */
+    /* ===== JADWAL GRID PREMIUM (NO ANIMATION) ===== */
     .jadwal-grid { 
         display: grid; 
         grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); 
         gap: 28px; 
-        animation: fadeInUp 0.6s ease-out 0.2s backwards;
-    }
-    
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
     
     .jadwal-card { 
@@ -392,12 +387,6 @@
         display: flex; 
         flex-direction: column; 
         position: relative;
-        animation: fadeInLeft 0.6s ease-out backwards;
-    }
-    
-    @keyframes fadeInLeft {
-        from { opacity: 0; transform: translateX(-30px); }
-        to { opacity: 1; transform: translateX(0); }
     }
     
     .card-gradient-bg { 
@@ -642,11 +631,11 @@
     .btn-daftar-langsung::before { 
         content: ''; 
         position: absolute; 
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        border-radius: 50%;
+        top: 50%; 
+        left: 50%; 
+        width: 0; 
+        height: 0; 
+        border-radius: 50%; 
         background: rgba(255, 255, 255, 0.3);
         transform: translate(-50%, -50%);
         transition: width 0.6s, height 0.6s;
@@ -720,7 +709,7 @@
         color: var(--text-secondary);
         margin: 0; 
     }
-    /* ===== MODAL PREMIUM ===== */
+    /* ===== MODAL PREMIUM (NO ANIMATION) ===== */
     .modal-overlay { 
         display: none; 
         position: fixed; 
@@ -735,13 +724,7 @@
         -webkit-backdrop-filter: blur(8px);
         justify-content: center; 
         align-items: center; 
-        animation: fadeIn 0.3s;
         padding: 20px; 
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
     }
     
     .modal-card { 
@@ -751,16 +734,10 @@
         width: 90%; 
         max-width: 750px; 
         box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
-        animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         max-height: 90vh; 
         display: flex; 
         flex-direction: column; 
         position: relative;
-    }
-    
-    @keyframes slideUp {
-        from { transform: translateY(50px) scale(0.9); opacity: 0; }
-        to { transform: translateY(0) scale(1); opacity: 1; }
     }
     
     .modal-card-confirm {
@@ -1085,23 +1062,14 @@
 
     /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
-        .jadwal-grid { 
-            grid-template-columns: 1fr; 
-            gap: 24px; 
-        }
-        
-        .form-grid { 
-            grid-template-columns: 1fr; 
-        }
-        
-        .page-title { 
-            font-size: 1.8rem; 
-        }
-        
         .header-content { 
             flex-direction: column; 
             text-align: center; 
             padding: 30px 24px; 
+        }
+        
+        .page-title { 
+            font-size: 1.8rem; 
         }
         
         .hero-decoration {
@@ -1113,18 +1081,55 @@
             font-size: 40px;
         }
         
+        .layanan-card-inner { 
+            flex-direction: column; 
+            align-items: flex-start; 
+            padding: 24px; 
+        }
+        
+        .card-left-section { 
+            width: 100%; 
+            flex-direction: column; 
+            align-items: center; 
+            text-align: center; 
+        }
+        
+        .layanan-info { 
+            align-items: center; 
+        }
+        
+        .nama-layanan { 
+            justify-content: center; 
+        }
+        
+        .schedule-info { 
+            flex-direction: column; 
+            gap: 10px; 
+            align-items: center; 
+        }
+        
+        .card-right-section { 
+            width: 100%; 
+        }
+        
+        .btn-daftar { 
+            width: 100%; 
+            justify-content: center; 
+        }
+        
+        .form-grid { 
+            grid-template-columns: 1fr; 
+        }
+        
         #modalFormContent { 
             padding: 30px 24px; 
         }
         
-        .card-footer { 
-            flex-direction: column; 
-            gap: 12px; 
-        }
-        
-        .btn-daftar-langsung { 
-            width: 100%; 
-            justify-content: center; 
+        .close-modal { 
+            top: -12px; 
+            right: -12px; 
+            width: 45px; 
+            height: 45px; 
         }
         
         .form-actions-confirm { 
@@ -1141,10 +1146,10 @@
             font-size: 1.5rem;
         }
         
-        .avatar {
-            width: 65px;
-            height: 65px;
-            font-size: 28px;
+        .layanan-avatar {
+            width: 80px;
+            height: 80px;
+            font-size: 36px;
         }
         
         .nama-dokter {
@@ -1161,183 +1166,197 @@ document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('formModal');
     const modalContent = document.getElementById('modalFormContent');
     const closeModalBtn = document.getElementById('closeModalBtn');
-    const links = document.querySelectorAll('.jadwal-grid .open-form-modal'); 
     let flatpickrInstance = null;
-    let closedDates = []; // ✅ Array untuk tanggal tertutup
-    
+    let closedDates = [];
+
     const confirmModal = document.getElementById('confirmModal');
     const closeConfirmBtn = document.getElementById('closeConfirmModalBtn');
     const cancelConfirmBtn = document.getElementById('btnCancelConfirm');
     const submitConfirmBtn = document.getElementById('btnConfirmSubmit');
     let formToSubmit = null;
 
-    // Auto-hide Alert
-    const alert = document.getElementById('autoHideAlert');
-    if (alert) {
-        setTimeout(() => {
-            alert.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-            alert.style.opacity = '0';
-            alert.style.transform = 'translateY(-30px)';
-            setTimeout(() => alert.remove(), 500);
-        }, 5000);
+    // --- AUTO REFRESH LOGIC ---
+    if (typeof window.initAutoRefresh === 'function') {
+        window.initAutoRefresh(['#jadwal-grid-container']);
     }
 
-    links.forEach(link => {
-        link.addEventListener('click', async function(event) {
-            event.preventDefault(); 
-            const jsonUrl = this.dataset.url;
-            const jadwalId = this.dataset.jadwalId; // ✅ Ambil jadwal ID
-            
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-            modalContent.innerHTML = '<div class="loading-spinner"></div>';
+    // --- REBIND EVENTS AFTER REFRESH ---
+    window.rebindEvents = function() {
+        bindModalEvents();
+        console.log('♻️ Schedule grid refreshed and events rebound!');
+    };
 
-            try {
-                // 1. Fetch form data
-                const response = await fetch(jsonUrl);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const data = await response.json();
-
-                // 2. ✅ Fetch closed dates (tanggal yang ditutup dokter)
-                const closedResponse = await fetch(`/jadwal-praktek/${jadwalId}/closed-dates`);
-                if (closedResponse.ok) {
-                    const closedData = await closedResponse.json();
-                    closedDates = closedData.closed_dates || [];
-                    console.log('Tanggal tertutup:', closedDates);
-                } else {
-                    closedDates = [];
-                    console.warn('Gagal mengambil tanggal tertutup');
-                }
-
-                const formHtml = `
-                    <div class="form-header">
-                        <h2 class="form-title">Form Pendaftaran</h2>
-                        <p class="form-subtitle">
-                            <strong>${data.dokter_name}</strong> - ${data.layanan_name}
-                        </p>
-                    </div>
-                    <form action="${data.form_action}" method="POST" id="pendaftaranForm">
-                        @csrf
-                        <input type="hidden" name="nama_layanan" value="${data.layanan_name}">
-                        <input type="hidden" name="jadwal_praktek_id" value="${data.jadwal_id}">
-                        
-                        <div class="form-group full-width">
-                            <label class="form-label">Layanan</label>
-                            <input type="text" class="form-control" value="${data.layanan_name} (${data.dokter_name})" readonly style="background-color: var(--bg-tertiary); color: var(--text-muted); cursor: not-allowed;">
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="modal_nama_lengkap" class="form-label">Nama Lengkap</label>
-                                <input type="text" name="nama_lengkap" id="modal_nama_lengkap" class="form-control" value="${data.user_name}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="modal_tanggal_lahir" class="form-label">Tanggal Lahir</label>
-                                <input type="date" name="tanggal_lahir" id="modal_tanggal_lahir" class="form-control" value="${data.user_tgl_lahir}" required>
-                            </div>
-                        </div>
-                        <div class="form-group full-width">
-                            <label for="modal_alamat" class="form-label">Alamat</label>
-                            <textarea name="alamat" id="modal_alamat" class="form-control" rows="3" required>${data.user_alamat}</textarea>
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="modal_no_telepon" class="form-label">No Telepon/Whatsapp</label>
-                                <input type="tel" name="no_telepon" id="modal_no_telepon" class="form-control" value="${data.user_no_hp}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="modal_jadwal_datepicker" class="form-label">Pilih Tanggal Kunjungan <span style="color:#ef4444;">*</span></label>
-                                <input type="text" name="jadwal_dipilih" id="modal_jadwal_datepicker" class="form-control" placeholder="Pilih tanggal..." required>
-                            </div>
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="modal_keluhan" class="form-label">Jenis Keluhan/Gejala <span style="color:#ef4444;">*</span></label>
-                                <input type="text" name="keluhan" id="modal_keluhan" class="form-control" placeholder="Jelaskan keluhan Anda" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="modal_lama_keluhan" class="form-label">Sejak Kapan? <span style="color:#ef4444;">*</span></label>
-                                <input type="text" name="lama_keluhan" id="modal_lama_keluhan" class="form-control" placeholder="cth: Sejak 2 hari lalu" required>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn-primary">
-                                <i class="fas fa-paper-plane"></i> Kirim Pendaftaran
-                            </button>
-                            <a href="#" class="btn-secondary" id="batalModalBtn">
-                                <i class="fas fa-times"></i> Batal
-                            </a>
-                        </div>
-                    </form>
-                `;
-                
-                modalContent.innerHTML = formHtml.replace('@csrf', '{{ csrf_field() }}');
-
-                // 3. ✅ Initialize Flatpickr dengan disable closed dates
-                if (flatpickrInstance) flatpickrInstance.destroy(); 
-                
-                flatpickrInstance = flatpickr("#modal_jadwal_datepicker", {
-                    locale: { firstDayOfWeek: 1 },
-                    minDate: "today", 
-                    dateFormat: "Y-m-d",
-                    disable: closedDates, // ✅ Disable tanggal tertutup
-                    enable: [
-                        function(date) {
-                            // Enable hanya hari praktek dokter
-                            const isEnabledDay = data.enabled_days.includes(date.getDay());
-                            
-                            // Disable jika tanggal ada di closedDates
-                            const dateString = date.toISOString().split('T')[0];
-                            const isClosed = closedDates.includes(dateString);
-                            
-                            return isEnabledDay && !isClosed;
-                        }
-                    ],
-                    onDayCreate: function(dObj, dStr, fp, dayElem) {
-                        // ✅ Custom styling untuk tanggal tertutup
-                        const dateString = dayElem.dateObj.toISOString().split('T')[0];
-                        if (closedDates.includes(dateString)) {
-                            dayElem.style.textDecoration = 'line-through';
-                            dayElem.style.color = '#ef4444';
-                            dayElem.title = 'Dokter tidak tersedia';
-                        }
-                    }
-                });
-
-                document.getElementById('batalModalBtn').addEventListener('click', (e) => {
-                    e.preventDefault();
-                    closeModal();
-                });
-
-                const dynamicForm = document.getElementById('pendaftaranForm');
-                if (dynamicForm) {
-                    dynamicForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        
-                        // ✅ Validasi tambahan di frontend
-                        const selectedDate = document.getElementById('modal_jadwal_datepicker').value;
-                        
-                        if (closedDates.includes(selectedDate)) {
-                            alert('❌ Dokter tidak tersedia pada tanggal yang Anda pilih. Silakan pilih tanggal lain.');
-                            return false;
-                        }
-                        
-                        formToSubmit = this;
-                        openConfirmModal();
-                    });
-                }
-
-            } catch (error) {
-                console.error('Gagal mengambil data form:', error);
-                modalContent.innerHTML = `
-                    <div style="text-align:center; padding: 60px 40px;">
-                        <i class="fas fa-exclamation-circle" style="font-size: 4rem; color: #ef4444; margin-bottom: 20px; display: block;"></i>
-                        <h3 style="color: var(--text-primary); margin-bottom: 10px;">Gagal Memuat Form</h3>
-                        <p style="color: var(--text-secondary);">Silakan coba lagi atau hubungi administrator</p>
-                    </div>
-                `;
-            }
+    function bindModalEvents() {
+        const links = document.querySelectorAll('.open-form-modal');
+        links.forEach(link => {
+            // remove old listener to avoid duplicates
+            link.removeEventListener('click', handleModalOpen);
+            // add new listener
+            link.addEventListener('click', handleModalOpen);
         });
-    });
+    }
+
+    async function handleModalOpen(event) {
+        event.preventDefault(); 
+        // use currentTarget because listener is on the link
+        const link = event.currentTarget;
+        const jsonUrl = link.dataset.url;
+        const jadwalId = link.dataset.jadwalId;
+        
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        modalContent.innerHTML = '<div class="loading-spinner"></div>';
+
+        try {
+            // 1. Fetch form data
+            const response = await fetch(jsonUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+
+            // 2. Fetch closed dates
+            const closedResponse = await fetch(`/jadwal-praktek/${jadwalId}/closed-dates`);
+            if (closedResponse.ok) {
+                const closedData = await closedResponse.json();
+                closedDates = closedData.closed_dates || [];
+                console.log('Tanggal tertutup:', closedDates);
+            } else {
+                closedDates = [];
+                console.warn('Gagal mengambil tanggal tertutup');
+            }
+
+            const formHtml = `
+                <div class="form-header">
+                    <h2 class="form-title">Form Pendaftaran</h2>
+                    <p class="form-subtitle">
+                        <strong>${data.dokter_name}</strong> - ${data.layanan_name}
+                    </p>
+                </div>
+                <form action="${data.form_action}" method="POST" id="pendaftaranForm">
+                    @csrf
+                    <input type="hidden" name="nama_layanan" value="${data.layanan_name}">
+                    <input type="hidden" name="jadwal_praktek_id" value="${data.jadwal_id}">
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Layanan</label>
+                        <input type="text" class="form-control" value="${data.layanan_name} (${data.dokter_name})" readonly style="background-color: var(--bg-tertiary); color: var(--text-muted); cursor: not-allowed;">
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="modal_nama_lengkap" class="form-label">Nama Lengkap</label>
+                            <input type="text" name="nama_lengkap" id="modal_nama_lengkap" class="form-control" value="${data.user_name}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="modal_tanggal_lahir" class="form-label">Tanggal Lahir</label>
+                            <input type="date" name="tanggal_lahir" id="modal_tanggal_lahir" class="form-control" value="${data.user_tgl_lahir}" required>
+                        </div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="modal_alamat" class="form-label">Alamat</label>
+                        <textarea name="alamat" id="modal_alamat" class="form-control" rows="3" required>${data.user_alamat}</textarea>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="modal_no_telepon" class="form-label">No Telepon/Whatsapp</label>
+                            <input type="tel" name="no_telepon" id="modal_no_telepon" class="form-control" value="${data.user_no_hp}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="modal_jadwal_datepicker" class="form-label">Pilih Tanggal Kunjungan <span style="color:#ef4444;">*</span></label>
+                            <input type="text" name="jadwal_dipilih" id="modal_jadwal_datepicker" class="form-control" placeholder="Pilih tanggal..." required>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="modal_keluhan" class="form-label">Jenis Keluhan/Gejala <span style="color:#ef4444;">*</span></label>
+                            <input type="text" name="keluhan" id="modal_keluhan" class="form-control" placeholder="Jelaskan keluhan Anda" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="modal_lama_keluhan" class="form-label">Sejak Kapan? <span style="color:#ef4444;">*</span></label>
+                            <input type="text" name="lama_keluhan" id="modal_lama_keluhan" class="form-control" placeholder="cth: Sejak 2 hari lalu" required>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-paper-plane"></i> Kirim Pendaftaran
+                        </button>
+                        <a href="#" class="btn-secondary" id="batalModalBtn">
+                            <i class="fas fa-times"></i> Batal
+                        </a>
+                    </div>
+                </form>
+            `;
+            
+            modalContent.innerHTML = formHtml.replace('@csrf', '{{ csrf_field() }}');
+
+            // 3. Initialize Flatpickr
+            if (flatpickrInstance) flatpickrInstance.destroy();
+            
+            flatpickrInstance = flatpickr("#modal_jadwal_datepicker", {
+                locale: { firstDayOfWeek: 1 },
+                minDate: "today",
+                dateFormat: "Y-m-d",
+                disable: [
+                    function(date) {
+                        return (!data.enabled_days.includes(date.getDay()));
+                    },
+                    function(date) {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const dateString = `${year}-${month}-${day}`;
+                        return closedDates.includes(dateString);
+                    }
+                ],
+                onDayCreate: function(dObj, dStr, fp, dayElem) {
+                    const date = dayElem.dateObj;
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const dateString = `${year}-${month}-${day}`;
+
+                    if (closedDates.includes(dateString)) {
+                        dayElem.style.textDecoration = 'line-through';
+                        dayElem.style.color = '#ef4444';
+                        dayElem.title = 'Jadwal Dibatalkan/Tutup';
+                    }
+                }
+            });
+
+            document.getElementById('batalModalBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                closeModal();
+            });
+
+            const dynamicForm = document.getElementById('pendaftaranForm');
+            if (dynamicForm) {
+                dynamicForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const selectedDate = document.getElementById('modal_jadwal_datepicker').value;
+                    
+                    if (closedDates.includes(selectedDate)) {
+                        alert('❌ Dokter tidak tersedia pada tanggal yang Anda pilih. Silakan pilih tanggal lain.');
+                        return false;
+                    }
+                    
+                    formToSubmit = this;
+                    openConfirmModal();
+                });
+            }
+
+        } catch (error) {
+            console.error('Gagal mengambil data form:', error);
+            modalContent.innerHTML = `
+                <div style="text-align:center; padding: 60px 40px;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 4rem; color: #ef4444; margin-bottom: 20px; display: block;"></i>
+                    <h3 style="color: var(--text-primary); margin-bottom: 10px;">Gagal Memuat Form</h3>
+                    <p style="color: var(--text-secondary);">Silakan coba lagi atau hubungi administrator</p>
+                </div>
+            `;
+        }
+    }
+
+    // Initial binding
+    bindModalEvents();
 
     function closeModal() {
         modal.style.display = 'none';
@@ -1378,9 +1397,22 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape' && modal.style.display === 'flex') closeModal();
-        if (event.key === 'Escape' && confirmModal.style.display === 'flex') closeConfirmModal();
+        if (event.key === 'Escape') {
+            if (modal.style.display === 'flex') closeModal();
+            if (confirmModal.style.display === 'flex') closeConfirmModal();
+        }
     });
+
+    // Auto-hide Alert
+    const alert = document.getElementById('autoHideAlert');
+    if (alert) {
+        setTimeout(() => {
+            alert.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-30px)';
+            setTimeout(() => alert.remove(), 500);
+        }, 5000);
+    }
 });
 </script>
 @endpush

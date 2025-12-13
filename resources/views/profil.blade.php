@@ -28,21 +28,22 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success">
+        <div class="alert alert-success" id="autoHideAlert">
             <i class="fas fa-check-circle"></i>
             <span>{{ session('success') }}</span>
         </div>
     @endif
     
     @error('profile_photo')
-        <div class="alert alert-danger">
+        <div class="alert alert-danger" id="autoHideAlert">
             <i class="fas fa-exclamation-circle"></i>
             <span>{{ $message }}</span>
         </div>
     @enderror
 
     {{-- Profile Card --}}
-    <div class="profile-card">
+    {{-- ID "live-profile-card" ditambahkan untuk Auto Refresh --}}
+    <div class="profile-card" id="live-profile-card">
         <div class="card-gradient-bg"></div>
         
         {{-- Bagian Foto Profil --}}
@@ -223,15 +224,9 @@
         padding: 40px 20px;
     }
 
-    /* ===== HEADER PREMIUM ===== */
+    /* ===== HEADER PREMIUM (NO ANIMATION) ===== */
     .profile-header-banner { 
         margin-bottom: 40px;
-        animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .header-content {
@@ -349,7 +344,7 @@
         100% { transform: scale(1.5); opacity: 0; }
     }
 
-    /* ===== ALERT STYLES ===== */
+    /* ===== ALERT STYLES (NO ANIMATION) ===== */
     .alert {
         display: flex;
         align-items: center;
@@ -358,7 +353,6 @@
         margin-bottom: 28px;
         border-radius: 16px;
         font-weight: 500;
-        animation: slideInDown 0.5s ease;
     }
 
     .alert i {
@@ -381,13 +375,8 @@
         margin: 0;
         padding-left: 20px;
     }
-    
-    @keyframes slideInDown {
-        from { transform: translateY(-20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
 
-    /* ===== PROFILE CARD PREMIUM ===== */
+    /* ===== PROFILE CARD PREMIUM (NO ANIMATION) ===== */
     .profile-card {
         background: var(--bg-primary);
         border-radius: 24px;
@@ -396,12 +385,6 @@
         overflow: hidden;
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
-        animation: fadeInUp 0.6s ease-out 0.2s backwards;
-    }
-    
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .card-gradient-bg {
@@ -589,6 +572,7 @@
         position: relative;
         z-index: 1;
     }
+    
     /* ===== PROFILE DETAILS PREMIUM ===== */
     .profile-details {
         padding: 32px 28px;
@@ -734,7 +718,7 @@
         transform: translateX(6px);
     }
 
-    /* ===== MODAL PREMIUM ===== */
+    /* ===== MODAL PREMIUM (NO ANIMATION) ===== */
     .modal-overlay {
         display: none;
         position: fixed;
@@ -749,12 +733,7 @@
         -webkit-backdrop-filter: blur(8px);
         justify-content: center;
         align-items: center;
-        animation: fadeIn 0.3s;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+        padding: 20px;
     }
 
     .modal-card {
@@ -764,16 +743,10 @@
         width: 90%;
         max-width: 750px;
         box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
-        animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         max-height: 90vh;
         display: flex;
         flex-direction: column;
         position: relative;
-    }
-    
-    @keyframes slideUp {
-        from { transform: translateY(50px) scale(0.9); opacity: 0; }
-        to { transform: translateY(0) scale(1); opacity: 1; }
     }
 
     .close-modal {
@@ -1113,6 +1086,12 @@
             locale: "id"
         });
 
+        // --- AUTO REFRESH SYSTEM ---
+        // (Optional for Profile, but keeps consistency)
+        if (typeof window.initAutoRefresh === 'function') {
+            window.initAutoRefresh(['#live-profile-card']);
+        }
+
         // Fungsi modal
         function openModal() {
             if (modal) {
@@ -1149,6 +1128,16 @@
                 closeModal();
             }
         });
+
+        // Auto-hide alert
+        const alert = document.getElementById('autoHideAlert');
+        if (alert) {
+            setTimeout(() => {
+                alert.style.transition = 'opacity 0.6s ease';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 600);
+            }, 5000);
+        }
 
         // Buka modal jika ada error validasi
         @if ($errors->any() && session('form_type') === 'biodata')

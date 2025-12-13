@@ -5,10 +5,13 @@
 @push('styles')
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* --------------------------------------------------------------------- */
-/* KODE CSS YANG SUDAH ADA DI ATAS */
-/* --------------------------------------------------------------------- */
-/* ===== DARK MODE SUPPORT ===== */
+    * { 
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* ===== DARK MODE SUPPORT ===== */
     :root {
         --p1: #39A616;
         --p2: #1D8208;
@@ -76,10 +79,9 @@
         padding: 40px 20px;
     }
 
-    /* ===== HEADER BANNER (SAMA DENGAN DASHBOARD) ===== */
+    /* ===== HEADER BANNER (NO ANIMATION) ===== */
     .page-header-banner {
         margin-bottom: 40px;
-        animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .header-content {
@@ -126,14 +128,8 @@
         position: relative;
         z-index: 1;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        animation: float 3s ease-in-out infinite;
     }
     
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-    }
-
     .header-text {
         flex: 1;
         position: relative;
@@ -153,7 +149,6 @@
         font-weight: 600;
         margin-bottom: 15px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        animation: fadeIn 0.8s ease-out 0.2s both;
     }
 
     .page-title {
@@ -162,7 +157,6 @@
         font-size: 2.2rem;
         margin: 0 0 10px 0;
         letter-spacing: -0.5px;
-        animation: fadeIn 0.8s ease-out 0.3s both;
     }
 
     .page-subtitle {
@@ -173,12 +167,6 @@
         font-size: 1.05rem;
         font-weight: 500;
         margin: 0;
-        animation: fadeIn 0.8s ease-out 0.4s both;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .hero-illustration {
@@ -223,7 +211,6 @@
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         position: relative;
         z-index: 1;
-        animation: float 3s ease-in-out infinite;
         overflow: hidden;
     }
 
@@ -277,7 +264,7 @@
         box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
     }
 
-    /* ===== ALERT ===== */
+    /* ===== ALERT (NO ANIMATION) ===== */
     .alert-success-modern {
         display: flex;
         align-items: center;
@@ -285,7 +272,6 @@
         padding: 20px 28px;
         border-radius: 20px;
         margin-bottom: 30px;
-        animation: slideInDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         box-shadow: 0 8px 25px rgba(0,0,0,0.12);
         background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
         border: 2px solid #28a745;
@@ -332,7 +318,7 @@
         transform: rotate(90deg);
     }
 
-    /* ===== TABLE (SAMA DENGAN DASHBOARD) ===== */
+    /* ===== TABLE (NO ANIMATION) ===== */
     .schedule-container-modern {
         background: var(--bg-primary);
         border-radius: 24px;
@@ -340,12 +326,6 @@
         border: 1px solid var(--border-color);
         overflow: hidden;
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        animation: fadeInUp 0.6s ease-out 0.2s backwards;
-    }
-    
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .schedule-container-modern:hover {
@@ -415,18 +395,12 @@
         text-align: center !important;
     }
 
+    /* NO ANIMATION FOR ROWS */
     .schedule-row {
         border-bottom: 1px solid var(--border-color);
         transition: all 0.3s ease;
-        animation: fadeInLeft 0.5s ease forwards;
-        opacity: 0;
     }
     
-    @keyframes fadeInLeft {
-        from { opacity: 0; transform: translateX(-20px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-
     .schedule-row:hover {
         background: var(--hover-bg);
     }
@@ -619,7 +593,7 @@
         color: var(--text-muted);
     }
 
-    /* ===== MODAL ===== */
+    /* ===== MODAL (NO ANIMATION) ===== */
     .modal-overlay {
         display: none;
         position: fixed;
@@ -633,7 +607,6 @@
         backdrop-filter: blur(8px);
         justify-content: center;
         align-items: center;
-        animation: fadeIn 0.3s;
     }
 
     .modal-card {
@@ -643,7 +616,6 @@
         width: 90%;
         max-width: 650px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         max-height: 90vh;
         display: flex;
         flex-direction: column;
@@ -1010,22 +982,6 @@
         box-shadow: 0 10px 30px rgba(231, 76, 60, 0.5);
     }
 
-    /* ===== ANIMATIONS ===== */
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes slideInDown {
-        from { transform: translateY(-20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-
-    @keyframes slideUp {
-        from { transform: translateY(50px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-
     /* ===== RESPONSIVE ===== */
     @media (max-width: 992px) {
         .hero-illustration {
@@ -1071,11 +1027,6 @@
             width: 45px;
             height: 45px;
             font-size: 18px;
-        }
-
-        .form-grid,
-        .checkbox-grid {
-            grid-template-columns: 1fr;
         }
 
         .modal-content {
@@ -1168,7 +1119,9 @@
                 <i class="fas fa-list"></i> 
                 Daftar Jadwal Praktek
             </h3>
-            <span class="schedule-count">
+            
+            {{-- ID "total-jadwal" ditambahkan untuk Auto Refresh --}}
+            <span class="schedule-count" id="total-jadwal">
                 <i class="fas fa-calendar-check"></i>
                 {{ $jadwals->count() }} Jadwal Aktif
             </span>
@@ -1184,7 +1137,9 @@
                     <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
                 </tr>
             </thead>
-            <tbody>
+
+            {{-- ID "table-body" ditambahkan untuk Auto Refresh --}}
+            <tbody id="table-body">
                 @php
                     if (!function_exists('formatHariFleksibel')) {
                         function formatHariFleksibel($hariArray) {
@@ -1211,7 +1166,7 @@
                 @endphp
 
                 @forelse ($jadwals as $index => $jadwal)
-                    <tr class="schedule-row" style="animation-delay: {{ $index * 0.05 }}s">
+                    <tr class="schedule-row"> {{-- Animation removed --}}
                         <td>
                             <span class="number-badge">{{ $index + 1 }}</span>
                         </td>
@@ -1500,6 +1455,55 @@
         const cancelModalCloseBtn = document.getElementById('btnCancelModalClose');
         const submitCancelBtn = document.getElementById('submitCancelSchedule');
 
+        // --- GLOBAL AUTO REFRESH ---
+        if (typeof window.initAutoRefresh === 'function') {
+            window.initAutoRefresh([
+                '#total-jadwal', // Jumlah jadwal
+                '#table-body'    // Isi tabel
+            ]);
+        }
+
+        // --- REBIND EVENTS (Penting agar tombol Edit/Hapus tetap jalan setelah refresh) ---
+        window.rebindEvents = function() {
+            bindTableEvents();
+            console.log('♻️ Table events rebound!');
+        };
+
+        function bindTableEvents() {
+            // Re-attach Edit Events
+            document.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.removeEventListener('click', handleEditClick); // Prevent duplicate
+                btn.addEventListener('click', handleEditClick);
+            });
+
+            // Re-attach Delete Events
+            document.querySelectorAll('.delete-form').forEach(form => {
+                form.removeEventListener('submit', handleDeleteSubmit);
+                form.addEventListener('submit', handleDeleteSubmit);
+            });
+        }
+
+        function handleEditClick(e) {
+            const btn = e.currentTarget;
+            const id = btn.dataset.id;
+            const tenagaMedisId = btn.dataset.tenagaMedisId;
+            const layanan = btn.dataset.layanan;
+            const hari = JSON.parse(btn.dataset.hari);
+            const jamMulai = btn.dataset.jamMulai;
+            const jamSelesai = btn.dataset.jamSelesai;
+
+            openModal('edit', {
+                id, tenagaMedisId, layanan, hari, jamMulai, jamSelesai
+            });
+        }
+
+        function handleDeleteSubmit(e) {
+            e.preventDefault(); 
+            formToDelete = this; 
+            openDeleteModal();
+        }
+
+        // --- MODAL FUNCTIONS ---
         function openCancelModal() {
             cancelModal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -1511,88 +1515,6 @@
             cancelModal.style.display = 'none';
             document.body.style.overflow = 'auto';
         }
-
-        const alert = document.getElementById('autoHideAlert');
-        if (alert) {
-            setTimeout(() => {
-                alert.style.opacity = '0';
-                alert.style.transition = 'opacity 0.6s ease';
-                setTimeout(() => alert.remove(), 600);
-            }, 5000);
-        }
-
-        btnTambah.addEventListener('click', function() {
-            openModal('create');
-        });
-        
-        if(btnCancelToggle) {
-            btnCancelToggle.addEventListener('click', openCancelModal);
-        }
-        if(closeCancelBtn) {
-            closeCancelBtn.addEventListener('click', closeCancelModal);
-        }
-        if(cancelModalCloseBtn) {
-            cancelModalCloseBtn.addEventListener('click', closeCancelModal);
-        }
-
-        document.querySelectorAll('.btn-edit').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const id = this.dataset.id;
-                const tenagaMedisId = this.dataset.tenagaMedisId;
-                const layanan = this.dataset.layanan;
-                const hari = JSON.parse(this.dataset.hari);
-                const jamMulai = this.dataset.jamMulai;
-                const jamSelesai = this.dataset.jamSelesai;
-
-                openModal('edit', {
-                    id, tenagaMedisId, layanan, hari, jamMulai, jamSelesai
-                });
-            });
-        });
-
-        closeBtn.addEventListener('click', closeModal);
-        cancelBtn.addEventListener('click', closeModal);
-
-        window.addEventListener('click', function(event) {
-            if (event.target == modal) {
-                closeModal();
-            }
-            if (event.target == deleteModal) {
-                closeDeleteModal();
-            }
-            if (event.target == cancelModal) {
-                closeCancelModal();
-            }
-        });
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && modal.style.display === 'flex') {
-                closeModal();
-            }
-            if (e.key === 'Escape' && deleteModal.style.display === 'flex') {
-                closeDeleteModal();
-            }
-            if (e.key === 'Escape' && cancelModal.style.display === 'flex') {
-                closeCancelModal();
-            }
-        });
-
-        document.querySelectorAll('.delete-form').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault(); 
-                formToDelete = this; 
-                openDeleteModal();
-            });
-        });
-
-        closeDeleteBtn.addEventListener('click', closeDeleteModal);
-        cancelDeleteBtn.addEventListener('click', closeDeleteModal);
-
-        confirmDeleteBtn.addEventListener('click', function() {
-            if (formToDelete) {
-                formToDelete.submit();
-            }
-        });
 
         function openDeleteModal() {
             deleteModal.style.display = 'flex';
@@ -1642,7 +1564,42 @@
             document.body.style.overflow = 'auto';
             form.reset();
         }
+
+        // --- EVENT LISTENERS ---
+        // Jalankan bind pertama kali
+        bindTableEvents();
+
+        // Alert auto-hide
+        const alert = document.getElementById('autoHideAlert');
+        if (alert) {
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.6s ease';
+                setTimeout(() => alert.remove(), 600);
+            }, 5000);
+        }
+
+        btnTambah.addEventListener('click', function() {
+            openModal('create');
+        });
         
+        if(btnCancelToggle) btnCancelToggle.addEventListener('click', openCancelModal);
+        if(closeCancelBtn) closeCancelBtn.addEventListener('click', closeCancelModal);
+        if(cancelModalCloseBtn) cancelModalCloseBtn.addEventListener('click', closeCancelModal);
+
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+
+        closeDeleteBtn.addEventListener('click', closeDeleteModal);
+        cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+
+        confirmDeleteBtn.addEventListener('click', function() {
+            if (formToDelete) {
+                formToDelete.submit();
+            }
+        });
+
+        // Cancel Schedule Submit Logic
         if(submitCancelBtn) {
             submitCancelBtn.addEventListener('click', function() {
                 const tenagaMedisId = document.getElementById('cancel_doctor').value;
@@ -1722,6 +1679,21 @@
                 });
             });
         }
+
+        // Close modal on click outside
+        window.addEventListener('click', function(event) {
+            if (event.target == modal) closeModal();
+            if (event.target == deleteModal) closeDeleteModal();
+            if (event.target == cancelModal) closeCancelModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if(modal.style.display === 'flex') closeModal();
+                if(deleteModal.style.display === 'flex') closeDeleteModal();
+                if(cancelModal.style.display === 'flex') closeCancelModal();
+            }
+        });
     });
 </script>
 @endpush

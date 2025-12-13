@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Riwayat Pasien - '. $pasien->name)
+@section('title', 'Riwayat Pasien - '. $user->name)
 
 @push('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -19,7 +19,7 @@
                     <i class="fas fa-user-injured"></i>
                     <span>Patient History</span>
                 </div>
-                <h1 class="page-title">Riwayat: {{ $pasien->name }} 📋</h1>
+                <h1 class="page-title">Riwayat: {{ $user->name}} 📋</h1>
                 <p class="page-subtitle">
                     <i class="far fa-folder-open"></i>
                     Arsip pemeriksaan lengkap pasien
@@ -50,7 +50,7 @@
         <div class="section-header">
             <h2><i class="fas fa-filter"></i> Filter Riwayat</h2>
         </div>
-        <form action="{{ route('admin.pasien.riwayat', $pasien->id) }}" method="GET" class="filter-form-grid">
+        <form action="{{ route('admin.pasien.riwayat', $user->name) }}" method="GET" class="filter-form-grid">
             
             {{-- Filter Tanggal --}}
             <div class="filter-input-group">
@@ -111,7 +111,7 @@
                     <i class="fas fa-search"></i>
                     <span>Cari</span>
                 </button>
-                <a href="{{ route('admin.pasien.riwayat', $pasien->id) }}" class="btn-filter-modern btn-secondary-filter">
+                <a href="{{ route('admin.pasien.riwayat', $user->name) }}" class="btn-filter-modern btn-secondary-filter">
                     <i class="fas fa-redo"></i>
                     <span>Reset</span>
                 </a>

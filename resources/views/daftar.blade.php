@@ -45,9 +45,11 @@
         </div>
     @endif
     
-    <div class="layanan-list">
+    {{-- ID "layanan-list-container" ditambahkan untuk Auto Refresh --}}
+    <div class="layanan-list" id="layanan-list-container">
         @forelse($jadwals as $index => $jadwal)
-            <div class="layanan-item" style="animation-delay: {{ $index * 0.1 }}s"
+            <div class="layanan-item" 
+                 {{-- Animasi dihapus --}}
                  data-url="{{ route('daftar.form.json', $jadwal->id) }}" 
                  data-jadwal-id="{{ $jadwal->id }}"
                  data-fallback="{{ route('daftar.form', $jadwal->id) }}">
@@ -184,15 +186,9 @@
         padding: 40px 20px; 
     }
 
-    /* ===== HEADER PREMIUM ===== */
+    /* ===== HEADER PREMIUM (NO ANIMATION) ===== */
     .daftar-header { 
         margin-bottom: 40px; 
-        animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
     
     .header-content { 
@@ -237,14 +233,8 @@
         color: #fff; 
         flex-shrink: 0; 
         position: relative; 
-        z-index: 1;
+        z-index: 1; 
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        animation: float 3s ease-in-out infinite;
-    }
-    
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
     }
     
     .header-text { 
@@ -312,7 +302,7 @@
         100% { transform: scale(1.5); opacity: 0; }
     }
 
-    /* ===== ALERT PREMIUM ===== */
+    /* ===== ALERT PREMIUM (NO ANIMATION) ===== */
     .alert { 
         display: flex; 
         align-items: center; 
@@ -321,13 +311,7 @@
         margin-bottom: 28px; 
         border-radius: 16px; 
         font-weight: 600; 
-        animation: slideInDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         box-shadow: 0 8px 25px rgba(57, 166, 22, 0.2);
-    }
-    
-    @keyframes slideInDown {
-        from { transform: translateY(-30px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
     }
     
     .alert-success { 
@@ -352,17 +336,11 @@
         50% { transform: scale(1.15); }
     }
 
-    /* ===== LAYANAN LIST PREMIUM ===== */
+    /* ===== LAYANAN LIST PREMIUM (NO ANIMATION) ===== */
     .layanan-list { 
         display: flex; 
         flex-direction: column; 
         gap: 24px; 
-        animation: fadeInUp 0.6s ease-out 0.2s backwards;
-    }
-    
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
     
     .layanan-item { 
@@ -374,12 +352,6 @@
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative; 
         overflow: hidden;
-        animation: fadeInLeft 0.6s ease-out backwards;
-    }
-    
-    @keyframes fadeInLeft {
-        from { opacity: 0; transform: translateX(-30px); }
-        to { opacity: 1; transform: translateX(0); }
     }
     
     .layanan-item::before { 
@@ -436,6 +408,11 @@
         position: relative; 
         transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         animation: float 4s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-5px); }
     }
     
     .layanan-item:hover .layanan-avatar { 
@@ -614,7 +591,8 @@
         color: var(--text-secondary);
         margin: 0; 
     }
-    /* ===== MODAL PREMIUM ===== */
+
+    /* ===== MODAL PREMIUM (NO ANIMATION) ===== */
     .modal-overlay { 
         display: none; 
         position: fixed; 
@@ -629,13 +607,7 @@
         -webkit-backdrop-filter: blur(8px);
         justify-content: center; 
         align-items: center; 
-        animation: fadeIn 0.3s;
         padding: 20px; 
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
     }
     
     .modal-card { 
@@ -645,16 +617,10 @@
         width: 90%; 
         max-width: 750px; 
         box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
-        animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         max-height: 90vh; 
         display: flex; 
         flex-direction: column; 
         position: relative;
-    }
-    
-    @keyframes slideUp {
-        from { transform: translateY(50px) scale(0.9); opacity: 0; }
-        to { transform: translateY(0) scale(1); opacity: 1; }
     }
     
     .modal-card-confirm {
@@ -1085,13 +1051,188 @@ document.addEventListener('DOMContentLoaded', function () {
     const closeModalBtn = document.getElementById('closeModalBtn');
     const items = document.querySelectorAll('.layanan-item');
     let flatpickrInstance = null;
-    let closedDates = []; // Array untuk menyimpan tanggal tertutup
+    let closedDates = [];
 
     const confirmModal = document.getElementById('confirmModal');
     const closeConfirmBtn = document.getElementById('closeConfirmModalBtn');
     const cancelConfirmBtn = document.getElementById('btnCancelConfirm');
     const submitConfirmBtn = document.getElementById('btnConfirmSubmit');
     let formToSubmit = null;
+
+    // --- AUTO REFRESH LOGIC ---
+    if (typeof window.initAutoRefresh === 'function') {
+        window.initAutoRefresh(['#layanan-list-container']);
+    }
+
+    window.rebindEvents = function() {
+        bindServiceEvents();
+        console.log('♻️ Service list refreshed and events rebound!');
+    };
+
+    function bindServiceEvents() {
+        const items = document.querySelectorAll('.layanan-item');
+        items.forEach(item => {
+            // Remove old listener to avoid duplicates
+            item.removeEventListener('click', handleServiceClick);
+            // Add new listener
+            item.addEventListener('click', handleServiceClick);
+        });
+    }
+
+    async function handleServiceClick(event) {
+        event.preventDefault();
+        
+        // Use currentTarget because the listener is on the item wrapper
+        const item = event.currentTarget;
+        const jsonUrl = item.dataset.url;
+        
+        modal.style.display = 'flex';
+        modalContent.innerHTML = '<div class="loading-spinner"></div>';
+        document.body.style.overflow = 'hidden';
+
+        try {
+            const response = await fetch(jsonUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+
+            closedDates = data.closed_dates || [];
+            console.log('Tanggal tertutup:', closedDates);
+
+            const formHtml = `
+                <div class="form-header">
+                    <h2 class="form-title">Form Pendaftaran</h2>
+                    <p class="form-subtitle">
+                        <strong>${data.dokter_name}</strong> - ${data.layanan_name}
+                    </p>
+                </div>
+                <form action="${data.form_action}" method="POST" id="pendaftaranForm">
+                    @csrf
+                    <input type="hidden" name="nama_layanan" value="${data.layanan_name}">
+                    <input type="hidden" name="jadwal_praktek_id" value="${data.jadwal_id}">
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Layanan</label>
+                        <input type="text" class="form-control" value="${data.layanan_name} (${data.dokter_name})" readonly style="background-color: var(--bg-tertiary); color: var(--text-muted); cursor: not-allowed;">
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="modal_nama_lengkap" class="form-label">Nama Lengkap</label>
+                            <input type="text" name="nama_lengkap" id="modal_nama_lengkap" class="form-control" value="${data.user_name}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="modal_tanggal_lahir" class="form-label">Tanggal Lahir</label>
+                            <input type="date" name="tanggal_lahir" id="modal_tanggal_lahir" class="form-control" value="${data.user_tgl_lahir}" required>
+                        </div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="modal_alamat" class="form-label">Alamat</label>
+                        <textarea name="alamat" id="modal_alamat" class="form-control" rows="3" required>${data.user_alamat}</textarea>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="modal_no_telepon" class="form-label">No Telepon/Whatsapp</label>
+                            <input type="tel" name="no_telepon" id="modal_no_telepon" class="form-control" value="${data.user_no_hp}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="modal_jadwal_datepicker" class="form-label">Pilih Tanggal Kunjungan <span style="color:#ef4444;">*</span></label>
+                            <input type="text" name="jadwal_dipilih" id="modal_jadwal_datepicker" class="form-control" placeholder="Pilih tanggal..." required>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="modal_keluhan" class="form-label">Jenis Keluhan/Gejala <span style="color:#ef4444;">*</span></label>
+                            <input type="text" name="keluhan" id="modal_keluhan" class="form-control" placeholder="Jelaskan keluhan Anda" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="modal_lama_keluhan" class="form-label">Sejak Kapan? <span style="color:#ef4444;">*</span></label>
+                            <input type="text" name="lama_keluhan" id="modal_lama_keluhan" class="form-control" placeholder="cth: Sejak 2 hari lalu" required>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-paper-plane"></i> Kirim Pendaftaran
+                        </button>
+                        <a href="#" class="btn-secondary" id="batalModalBtn">
+                            <i class="fas fa-times"></i> Batal
+                        </a>
+                    </div>
+                </form>
+            `;
+            
+            modalContent.innerHTML = formHtml.replace('@csrf', '{{ csrf_field() }}');
+
+            // Initialize Flatpickr
+            if (flatpickrInstance) flatpickrInstance.destroy();
+            
+            flatpickrInstance = flatpickr("#modal_jadwal_datepicker", {
+                locale: { firstDayOfWeek: 1 },
+                minDate: "today",
+                dateFormat: "Y-m-d",
+                disable: [
+                    function(date) {
+                        return (!data.enabled_days.includes(date.getDay()));
+                    },
+                    function(date) {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const dateString = `${year}-${month}-${day}`;
+                        return closedDates.includes(dateString);
+                    }
+                ],
+                onDayCreate: function(dObj, dStr, fp, dayElem) {
+                    const date = dayElem.dateObj;
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const dateString = `${year}-${month}-${day}`;
+
+                    if (closedDates.includes(dateString)) {
+                        dayElem.innerHTML += "<span class='dot'></span>";
+                        dayElem.style.backgroundColor = "#fee2e2";
+                        dayElem.style.color = "#ef4444";
+                        dayElem.style.textDecoration = "line-through";
+                        dayElem.title = "Jadwal Dibatalkan/Tutup";
+                    }
+                }
+            });
+
+            document.getElementById('batalModalBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                closeModal();
+            });
+
+            const dynamicForm = document.getElementById('pendaftaranForm');
+            if (dynamicForm) {
+                dynamicForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const selectedDate = document.getElementById('modal_jadwal_datepicker').value;
+                    
+                    if (closedDates.includes(selectedDate)) {
+                        alert('❌ Dokter tidak tersedia pada tanggal yang Anda pilih. Silakan pilih tanggal lain.');
+                        return false;
+                    }
+                    
+                    formToSubmit = this;
+                    openConfirmModal();
+                });
+            }
+
+        } catch (error) {
+            console.error('Gagal mengambil data form:', error);
+            modalContent.innerHTML = `
+                <div style="text-align:center; padding: 60px 40px;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 4rem; color: #ef4444; margin-bottom: 20px; display: block;"></i>
+                    <h3 style="color: var(--text-primary); margin-bottom: 10px;">Gagal Memuat Form</h3>
+                    <p style="color: var(--text-secondary);">Silakan coba lagi atau hubungi administrator</p>
+                </div>
+            `;
+        }
+    }
+
+    // Initialize events initially
+    bindServiceEvents();
 
     // Auto-hide Alert
     const alert = document.getElementById('autoHideAlert');
@@ -1103,171 +1244,6 @@ document.addEventListener('DOMContentLoaded', function () {
             setTimeout(() => alert.remove(), 500);
         }, 5000);
     }
-
-    items.forEach(item => {
-        item.addEventListener('click', async function(event) {
-            event.preventDefault();
-            
-            const jsonUrl = this.dataset.url;
-            const jadwalId = this.dataset.jadwalId;
-            
-            modal.style.display = 'flex';
-            modalContent.innerHTML = '<div class="loading-spinner"></div>';
-            document.body.style.overflow = 'hidden';
-
-            try {
-                // 1. Fetch form data
-                const response = await fetch(jsonUrl);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const data = await response.json();
-
-                // 2. ✅ Fetch closed dates (tanggal yang ditutup dokter)
-                // Pastikan data ini dikirim dari controller (getFormDataJson)
-                closedDates = data.closed_dates || [];
-                console.log('Tanggal tertutup:', closedDates);
-
-                const formHtml = `
-                    <div class="form-header">
-                        <h2 class="form-title">Form Pendaftaran</h2>
-                        <p class="form-subtitle">
-                            <strong>${data.dokter_name}</strong> - ${data.layanan_name}
-                        </p>
-                    </div>
-                    <form action="${data.form_action}" method="POST" id="pendaftaranForm">
-                        @csrf
-                        <input type="hidden" name="nama_layanan" value="${data.layanan_name}">
-                        <input type="hidden" name="jadwal_praktek_id" value="${data.jadwal_id}">
-                        
-                        <div class="form-group full-width">
-                            <label class="form-label">Layanan</label>
-                            <input type="text" class="form-control" value="${data.layanan_name} (${data.dokter_name})" readonly style="background-color: var(--bg-tertiary); color: var(--text-muted); cursor: not-allowed;">
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="modal_nama_lengkap" class="form-label">Nama Lengkap</label>
-                                <input type="text" name="nama_lengkap" id="modal_nama_lengkap" class="form-control" value="${data.user_name}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="modal_tanggal_lahir" class="form-label">Tanggal Lahir</label>
-                                <input type="date" name="tanggal_lahir" id="modal_tanggal_lahir" class="form-control" value="${data.user_tgl_lahir}" required>
-                            </div>
-                        </div>
-                        <div class="form-group full-width">
-                            <label for="modal_alamat" class="form-label">Alamat</label>
-                            <textarea name="alamat" id="modal_alamat" class="form-control" rows="3" required>${data.user_alamat}</textarea>
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="modal_no_telepon" class="form-label">No Telepon/Whatsapp</label>
-                                <input type="tel" name="no_telepon" id="modal_no_telepon" class="form-control" value="${data.user_no_hp}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="modal_jadwal_datepicker" class="form-label">Pilih Tanggal Kunjungan <span style="color:#ef4444;">*</span></label>
-                                <input type="text" name="jadwal_dipilih" id="modal_jadwal_datepicker" class="form-control" placeholder="Pilih tanggal..." required>
-                            </div>
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="modal_keluhan" class="form-label">Jenis Keluhan/Gejala <span style="color:#ef4444;">*</span></label>
-                                <input type="text" name="keluhan" id="modal_keluhan" class="form-control" placeholder="Jelaskan keluhan Anda" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="modal_lama_keluhan" class="form-label">Sejak Kapan? <span style="color:#ef4444;">*</span></label>
-                                <input type="text" name="lama_keluhan" id="modal_lama_keluhan" class="form-control" placeholder="cth: Sejak 2 hari lalu" required>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn-primary">
-                                <i class="fas fa-paper-plane"></i> Kirim Pendaftaran
-                            </button>
-                            <a href="#" class="btn-secondary" id="batalModalBtn">
-                                <i class="fas fa-times"></i> Batal
-                            </a>
-                        </div>
-                    </form>
-                `;
-                
-                modalContent.innerHTML = formHtml.replace('@csrf', '{{ csrf_field() }}');
-
-                // 3. ✅ Initialize Flatpickr dengan disable closed dates & Fix Timezone
-                if (flatpickrInstance) flatpickrInstance.destroy();
-                
-                flatpickrInstance = flatpickr("#modal_jadwal_datepicker", {
-                    locale: { firstDayOfWeek: 1 },
-                    minDate: "today",
-                    dateFormat: "Y-m-d",
-                    // ✅ Menonaktifkan tanggal yang ditutup dengan KONVERSI LOKAL YANG BENAR
-                    disable: [
-                        function(date) {
-                            // 1. Disable hari yang tidak praktek
-                            // flatpickr date.getDay(): 0=Minggu, 1=Senin
-                            return (!data.enabled_days.includes(date.getDay()));
-                        },
-                        function(date) {
-                            // 2. Disable tanggal Closed (dari Admin)
-                            // 🔥 FIX: Gunakan waktu lokal, bukan UTC (toISOString)
-                            const year = date.getFullYear();
-                            const month = String(date.getMonth() + 1).padStart(2, '0');
-                            const day = String(date.getDate()).padStart(2, '0');
-                            const dateString = `${year}-${month}-${day}`;
-                            
-                            return closedDates.includes(dateString);
-                        }
-                    ],
-                    onDayCreate: function(dObj, dStr, fp, dayElem) {
-                        // Custom styling untuk tanggal yang ditutup (Visual Feedback)
-                        // 🔥 FIX: Gunakan waktu lokal yang sama untuk pengecekan
-                        const date = dayElem.dateObj;
-                        const year = date.getFullYear();
-                        const month = String(date.getMonth() + 1).padStart(2, '0');
-                        const day = String(date.getDate()).padStart(2, '0');
-                        const dateString = `${year}-${month}-${day}`;
-
-                        if (closedDates.includes(dateString)) {
-                            dayElem.innerHTML += "<span class='dot'></span>";
-                            dayElem.style.backgroundColor = "#fee2e2"; // Merah muda
-                            dayElem.style.color = "#ef4444"; // Merah teks
-                            dayElem.style.textDecoration = "line-through";
-                            dayElem.title = "Jadwal Dibatalkan/Tutup";
-                        }
-                    }
-                });
-
-                document.getElementById('batalModalBtn').addEventListener('click', (e) => {
-                    e.preventDefault();
-                    closeModal();
-                });
-
-                const dynamicForm = document.getElementById('pendaftaranForm');
-                if (dynamicForm) {
-                    dynamicForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        
-                        // ✅ Validasi tambahan di frontend (Double Check)
-                        const selectedDate = document.getElementById('modal_jadwal_datepicker').value;
-                        
-                        if (closedDates.includes(selectedDate)) {
-                            alert('❌ Dokter tidak tersedia pada tanggal yang Anda pilih. Silakan pilih tanggal lain.');
-                            return false;
-                        }
-                        
-                        formToSubmit = this;
-                        openConfirmModal();
-                    });
-                }
-
-            } catch (error) {
-                console.error('Gagal mengambil data form:', error);
-                modalContent.innerHTML = `
-                    <div style="text-align:center; padding: 60px 40px;">
-                        <i class="fas fa-exclamation-circle" style="font-size: 4rem; color: #ef4444; margin-bottom: 20px; display: block;"></i>
-                        <h3 style="color: var(--text-primary); margin-bottom: 10px;">Gagal Memuat Form</h3>
-                        <p style="color: var(--text-secondary);">Silakan coba lagi atau hubungi administrator</p>
-                    </div>
-                `;
-            }
-        });
-    });
 
     function closeModal() {
         modal.style.display = 'none';
@@ -1308,8 +1284,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape' && modal.style.display === 'flex') closeModal();
-        if (event.key === 'Escape' && confirmModal.style.display === 'flex') closeConfirmModal();
+        if (event.key === 'Escape') {
+            if (modal.style.display === 'flex') closeModal();
+            if (confirmModal.style.display === 'flex') closeConfirmModal();
+        }
     });
 });
 </script>

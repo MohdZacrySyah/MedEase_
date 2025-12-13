@@ -38,11 +38,21 @@
     </div>
 
     {{-- STATS SECTION (KPI CARDS) --}}
+    {{-- ID "live-kpi" ditambahkan untuk Auto Refresh --}}
     <div class="stats-section-modern">
         <div class="section-header">
             <h2><i class="fas fa-chart-bar"></i> Statistik Kunjungan</h2>
         </div>
-        <div class="kpi-grid-modern">
+        <div class="kpi-grid-modern" id="live-kpi">
+            
+            {{-- DATA TERSEMBUNYI UNTUK UPDATE GRAFIK --}}
+            {{-- Ini trik agar data chart ikut ter-update saat auto-refresh berjalan --}}
+            <div id="chart-data-source" 
+                 data-labels="{{ json_encode($chartLabels) }}" 
+                 data-values="{{ json_encode($chartData) }}" 
+                 style="display:none;">
+            </div>
+
             <div class="kpi-card-modern card-info">
                 <div class="card-gradient-overlay card-info-overlay"></div>
                 <div class="kpi-icon-wrapper kpi-info">
@@ -180,9 +190,11 @@
                             <th><i class="far fa-clock"></i> Tanggal Kunjungan</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    
+                    {{-- ID "live-table-body" ditambahkan untuk Auto Refresh --}}
+                    <tbody id="live-table-body">
                         @forelse ($kunjunganData as $index => $data)
-                            <tr class="schedule-row" style="animation-delay: {{ $index * 0.05 }}s">
+                            <tr class="schedule-row"> {{-- Animasi dihapus --}}
                                 <td>
                                     <span class="number-badge">{{ $data->pasien_id }}</span>
                                 </td>
@@ -318,10 +330,9 @@
         padding: 40px 20px;
     }
 
-    /* ===== HEADER BANNER ===== */
+    /* ===== HEADER BANNER (NO ANIMATION) ===== */
     .page-header-banner {
         margin-bottom: 40px;
-        animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .header-content {
@@ -368,14 +379,8 @@
         position: relative;
         z-index: 1;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        animation: float 3s ease-in-out infinite;
     }
     
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-    }
-
     .header-text {
         flex: 1;
         position: relative;
@@ -395,7 +400,6 @@
         font-weight: 600;
         margin-bottom: 15px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        animation: fadeIn 0.8s ease-out 0.2s both;
     }
 
     .page-title {
@@ -404,7 +408,6 @@
         font-size: 2.2rem;
         margin: 0 0 10px 0;
         letter-spacing: -0.5px;
-        animation: fadeIn 0.8s ease-out 0.3s both;
     }
 
     .page-subtitle {
@@ -415,14 +418,8 @@
         font-size: 1.05rem;
         font-weight: 500;
         margin: 0;
-        animation: fadeIn 0.8s ease-out 0.4s both;
     }
     
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
     .hero-illustration {
         position: relative;
         flex-shrink: 0;
@@ -485,17 +482,11 @@
         font-size: 1.4rem;
     }
 
-    /* ===== STATS SECTION (KPI CARDS) ===== */
+    /* ===== STATS SECTION (NO ANIMATION) ===== */
     .stats-section-modern {
         margin-bottom: 40px;
-        animation: fadeInUp 0.6s ease-out 0.1s backwards;
     }
     
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
     .kpi-grid-modern {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -600,10 +591,9 @@
         z-index: 0;
     }
 
-    /* ===== FILTER SECTION ===== */
+    /* ===== FILTER SECTION (NO ANIMATION) ===== */
     .filter-section-modern {
         margin-bottom: 40px;
-        animation: fadeInUp 0.6s ease-out 0.2s backwards;
     }
 
     .filter-card-modern {
@@ -780,10 +770,9 @@
         box-shadow: 0 10px 30px rgba(57, 166, 22, 0.5);
     }
 
-    /* ===== DATA SECTION ===== */
+    /* ===== DATA SECTION (NO ANIMATION) ===== */
     .data-section-modern {
         margin-bottom: 40px;
-        animation: fadeInUp 0.6s ease-out 0.3s backwards;
     }
 
     .view-content-modern {
@@ -883,18 +872,12 @@
         opacity: 0.95;
     }
 
+    /* ROW ANIMATIONS REMOVED FOR AUTO-REFRESH STABILITY */
     .schedule-row {
         border-bottom: 1px solid var(--border-color);
         transition: all 0.3s ease;
-        animation: fadeInLeft 0.5s ease forwards;
-        opacity: 0;
     }
     
-    @keyframes fadeInLeft {
-        from { opacity: 0; transform: translateX(-20px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-
     .schedule-row:hover {
         background: var(--hover-bg);
     }
@@ -1026,12 +1009,6 @@
         padding: 40px;
     }
 
-    /* ===== ANIMATIONS ===== */
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
     /* ===== RESPONSIVE ===== */
     @media (max-width: 992px) {
         .hero-illustration {
@@ -1127,6 +1104,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // --- 1. INISIALISASI CHART AWAL ---
         const chartLabels = {!! json_encode($chartLabels) !!};
         const chartData = {!! json_encode($chartData) !!};
         
@@ -1134,10 +1112,13 @@
         const isDarkMode = document.documentElement.classList.contains('dark-mode') || 
                           (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
         
+        // Simpan instance chart ke global variable agar bisa di-update nanti
+        window.myChartInstance = null;
+
         if (chartData.length > 0) {
             const ctx = document.getElementById('kunjunganChart').getContext('2d');
             
-            new Chart(ctx, {
+            window.myChartInstance = new Chart(ctx, {
                 type: 'line', 
                 data: {
                     labels: chartLabels,
@@ -1162,42 +1143,26 @@
                     scales: { 
                         y: { 
                             beginAtZero: true,
-                            ticks: {
-                                color: isDarkMode ? '#d1d5db' : '#6b7280'
-                            },
-                            grid: {
-                                color: isDarkMode ? 'rgba(57, 166, 22, 0.15)' : 'rgba(57, 166, 22, 0.1)'
-                            }
+                            ticks: { color: isDarkMode ? '#d1d5db' : '#6b7280' },
+                            grid: { color: isDarkMode ? 'rgba(57, 166, 22, 0.15)' : 'rgba(57, 166, 22, 0.1)' }
                         },
                         x: {
-                            ticks: {
-                                color: isDarkMode ? '#d1d5db' : '#6b7280'
-                            },
-                            grid: {
-                                display: false
-                            }
+                            ticks: { color: isDarkMode ? '#d1d5db' : '#6b7280' },
+                            grid: { display: false }
                         }
                     },
                     plugins: { 
                         tooltip: { 
                             backgroundColor: isDarkMode ? '#1f2937' : '#0C5B00',
                             padding: 14,
-                            titleFont: {
-                                size: 14,
-                                weight: 'bold'
-                            },
-                            bodyFont: {
-                                size: 13
-                            }
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 }
                         },
                         legend: {
                             display: true,
                             position: 'top',
                             labels: {
-                                font: {
-                                    size: 13,
-                                    weight: '600'
-                                },
+                                font: { size: 13, weight: '600' },
                                 color: isDarkMode ? '#f9fafb' : '#556E85'
                             }
                         }
@@ -1205,6 +1170,39 @@
                 }
             });
         }
+
+        // --- 2. AUTO LOAD SYSTEM ---
+        if (typeof window.initAutoRefresh === 'function') {
+            window.initAutoRefresh([
+                '#live-kpi',        // KPI Cards + Hidden Chart Data
+                '#live-table-body'  // Isi Tabel
+            ]);
+        }
+
+        // --- 3. REBIND & UPDATE CHART (SANGAT PENTING) ---
+        // Fungsi ini dipanggil otomatis setelah data HTML diganti oleh initAutoRefresh
+        window.rebindEvents = function() {
+            console.log('📊 Laporan updated!');
+
+            // Update Chart Data jika ada
+            const hiddenData = document.getElementById('chart-data-source');
+            if (hiddenData && window.myChartInstance) {
+                try {
+                    // Ambil data baru dari atribut data
+                    const newLabels = JSON.parse(hiddenData.dataset.labels);
+                    const newValues = JSON.parse(hiddenData.dataset.values);
+
+                    // Update instance chart
+                    window.myChartInstance.data.labels = newLabels;
+                    window.myChartInstance.data.datasets[0].data = newValues;
+                    window.myChartInstance.update(); // Render ulang grafik halus
+                    
+                    console.log('📈 Grafik updated real-time!');
+                } catch (e) {
+                    console.error('Gagal parse data chart:', e);
+                }
+            }
+        };
 
         // Toggle Tabel/Grafik
         const showTableBtn = document.getElementById('showTableBtn');

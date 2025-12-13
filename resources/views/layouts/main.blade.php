@@ -17,7 +17,7 @@
             box-sizing: border-box; 
         }
         
-        /* ===== CSS VARIABLES (WARNA BARU) ===== */
+        /* ===== CSS VARIABLES ===== */
         :root {
             --p1: #39A616;
             --p2: #1D8208;
@@ -36,6 +36,8 @@
             --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.08);
             --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.12);
             --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.15);
+            
+            --sidebar-width: 280px; /* Variabel lebar sidebar */
         }
         
         [data-theme="dark"] {
@@ -54,7 +56,7 @@
         html, body {
             height: 100%;
             overflow-x: hidden;
-            transition: background-color 0.5s ease, color 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         body {
@@ -88,7 +90,7 @@
 
         /* ===== SIDEBAR PREMIUM ===== */
         .sidebar {
-            width: 280px;
+            width: var(--sidebar-width);
             background: var(--grad);
             color: white;
             display: flex;
@@ -99,7 +101,7 @@
             height: 100vh;
             padding: 0;
             overflow-y: auto;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1000;
             box-shadow: 4px 0 30px rgba(0, 0, 0, 0.2);
         }
@@ -112,10 +114,8 @@
             transition: background 0.3s;
         }
         .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
-        .sidebar.hidden { transform: translateX(-100%); }
-        .sidebar.show { transform: translateX(0); }
 
-        /* Brand Section with Animation */
+        /* Brand Section */
         .sidebar-brand {
             text-align: center;
             padding: 30px 20px;
@@ -123,12 +123,6 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
             overflow: hidden;
-            animation: fadeInDown 0.6s ease-out;
-        }
-        
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
         }
         
         .sidebar-brand::before {
@@ -154,6 +148,31 @@
             display: block;
             position: relative;
             z-index: 1;
+        }
+
+        /* SIDEBAR CLOSE BUTTON (PERBAIKAN POSISI) */
+        .sidebar-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+        
+        .sidebar-close-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: rotate(90deg);
         }
         
         .brand-logo {
@@ -181,22 +200,15 @@
             font-size: 18px; 
             line-height: 1.3; 
             margin-bottom: 5px;
-            animation: fadeIn 0.8s ease-out 0.2s both;
         }
         
         .brand-subtitle { 
             font-size: 12px; 
             opacity: 0.9; 
             font-weight: 400;
-            animation: fadeIn 0.8s ease-out 0.4s both;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* User Profile Section with Glassmorphism */
+        /* User Profile Section */
         .user-profile {
             display: flex;
             align-items: center;
@@ -208,16 +220,10 @@
             border-radius: 18px;
             text-decoration: none;
             color: white;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid rgba(255, 255, 255, 0.15);
             position: relative;
             overflow: hidden;
-            animation: fadeInUp 0.6s ease-out 0.3s both;
-        }
-        
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
         }
         
         .user-profile::before {
@@ -298,7 +304,7 @@
             50% { opacity: 0.3; }
         }
 
-        /* Navigation Menu with Stagger Animation */
+        /* Navigation Menu */
         .sidebar-nav {
             padding: 10px 20px;
             flex-grow: 1;
@@ -312,12 +318,6 @@
             font-weight: 600;
             margin: 25px 0 12px 0;
             padding-left: 10px;
-            animation: fadeInLeft 0.5s ease-out;
-        }
-        
-        @keyframes fadeInLeft {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
         }
         
         .sidebar-menu { 
@@ -328,14 +328,7 @@
         
         .sidebar-menu li { 
             margin-bottom: 6px;
-            animation: fadeInLeft 0.5s ease-out both;
         }
-        
-        .sidebar-menu li:nth-child(1) { animation-delay: 0.1s; }
-        .sidebar-menu li:nth-child(2) { animation-delay: 0.2s; }
-        .sidebar-menu li:nth-child(3) { animation-delay: 0.3s; }
-        .sidebar-menu li:nth-child(4) { animation-delay: 0.4s; }
-        .sidebar-menu li:nth-child(5) { animation-delay: 0.5s; }
         
         .sidebar-menu a {
             display: flex;
@@ -344,7 +337,7 @@
             text-decoration: none;
             padding: 15px 18px;
             border-radius: 14px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 14px;
             font-weight: 500;
             position: relative;
@@ -360,7 +353,7 @@
             width: 5px;
             background: white;
             transform: scaleY(0);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
         
@@ -385,7 +378,7 @@
             width: 22px;
             text-align: center;
             font-size: 17px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .sidebar-menu a:hover {
@@ -436,13 +429,12 @@
             50% { box-shadow: 0 4px 20px rgba(231, 76, 60, 0.8); }
         }
 
-        /* Sidebar Footer with Premium Design */
+        /* Sidebar Footer */
         .sidebar-footer {
             margin-top: auto;
             padding: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.12);
             background: rgba(0, 0, 0, 0.18);
-            animation: fadeInUp 0.6s ease-out 0.5s both;
         }
         
         .logout-link {
@@ -455,7 +447,7 @@
             justify-content: center;
             padding: 15px;
             border-radius: 14px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             background: linear-gradient(135deg, rgba(198, 40, 40, 0.9), rgba(183, 28, 28, 0.9));
             position: relative;
@@ -509,12 +501,12 @@
 
         /* ===== MAIN CONTENT ===== */
         .main-content {
-            margin-left: 280px;
+            margin-left: var(--sidebar-width);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            width: calc(100% - 280px);
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: calc(100% - var(--sidebar-width));
             position: relative;
             z-index: 1;
         }
@@ -531,10 +523,10 @@
             height: 75px;
             position: fixed;
             top: 0;
-            left: 280px;
+            left: var(--sidebar-width);
             right: 0;
             z-index: 900;
-            transition: all 0.4s ease;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: var(--shadow-sm);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -544,17 +536,21 @@
             display: flex;
             align-items: center;
             gap: 20px;
-            animation: fadeInLeft 0.6s ease-out;
         }
         
+        /* Updated Menu Toggle */
         .menu-toggle {
-            display: none;
-            font-size: 24px;
+            display: inline-flex; 
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
             background: var(--bg-secondary);
             border: none;
             color: var(--p1);
             cursor: pointer;
-            padding: 12px;
+            padding: 10px;
+            width: 45px;
+            height: 45px;
             border-radius: 12px;
             transition: all 0.3s ease;
             box-shadow: var(--shadow-sm);
@@ -563,8 +559,17 @@
         .menu-toggle:hover { 
             background: var(--p1);
             color: white;
-            transform: scale(1.15) rotate(90deg);
+            transform: scale(1.1);
             box-shadow: 0 4px 15px rgba(57, 166, 22, 0.3);
+        }
+        
+        /* Rotasi icon saat toggle aktif */
+        .menu-toggle i {
+            transition: transform 0.3s ease;
+        }
+        
+        body.sidebar-closed .menu-toggle i {
+            transform: rotate(180deg);
         }
         
         #greeting {
@@ -585,15 +590,9 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            animation: fadeInRight 0.6s ease-out;
         }
         
-        @keyframes fadeInRight {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        
-        /* Dark Mode Toggle Premium */
+        /* Dark Mode Toggle */
         .theme-toggle {
             width: 52px;
             height: 52px;
@@ -604,7 +603,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             color: var(--text-primary);
             font-size: 19px;
             box-shadow: var(--shadow-sm);
@@ -671,7 +670,6 @@
             padding-bottom: 40px;
             flex-grow: 1;
             overflow-y: auto;
-            animation: fadeIn 0.8s ease-out;
         }
         
         .page-content::-webkit-scrollbar { width: 10px; }
@@ -688,7 +686,7 @@
             background: var(--grad-reverse);
         }
 
-        /* ===== OVERLAY ===== */
+        /* ===== OVERLAY (MOBILE) ===== */
         .sidebar-overlay {
             display: none;
             position: fixed;
@@ -701,7 +699,7 @@
             -webkit-backdrop-filter: blur(8px);
             z-index: 999;
             opacity: 0;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.3s ease;
         }
         
         .sidebar-overlay.active { 
@@ -709,15 +707,45 @@
             opacity: 1;
         }
 
+        /* ===== LOGIC: SIDEBAR COLLAPSED (DESKTOP) ===== */
+        /* Ketika class 'sidebar-closed' ditambahkan ke body */
+        body.sidebar-closed .sidebar {
+            transform: translateX(-100%);
+        }
+
+        body.sidebar-closed .main-content {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        body.sidebar-closed .topbar {
+            left: 0;
+        }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 992px) {
+            /* Default Mobile State: Sidebar Hidden */
             .sidebar { transform: translateX(-100%); }
-            .sidebar.show { transform: translateX(0); }
+            
+            /* Mobile Open State */
+            .sidebar.mobile-show { transform: translateX(0); }
+            
+            /* Reset Desktop Logic on Mobile */
             .main-content { margin-left: 0; width: 100%; }
             .topbar { left: 0; }
-            .menu-toggle { display: inline-block; }
+            
+            /* PERBAIKAN PENTING: TAMPILKAN TOMBOL CLOSE DI MOBILE */
+            .sidebar-close-btn { 
+                display: flex; 
+                top: 10px;
+                right: 10px;
+            } 
+            
             .page-content { padding: 95px 20px 30px; }
             #datetime { display: none; }
+            
+            /* Logic Override */
+            body.sidebar-closed .sidebar { transform: translateX(-100%); } /* Ensure hidden */
         }
         
         @media (max-width: 576px) {
@@ -757,6 +785,10 @@
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <aside class="sidebar" id="sidebar">
+        <button class="sidebar-close-btn" id="sidebarCloseBtn" title="Tutup Sidebar">
+            <i class="fas fa-times"></i>
+        </button>
+
         <div class="sidebar-brand">
             <a href="{{ route('dashboard') }}" data-turbo-scroll="false">
                 <div class="brand-logo">
@@ -788,9 +820,9 @@
                 $notifikasiCount = 0;
                 if(Auth::check()) {
                     $notifikasiCount = \App\Models\Pendaftaran::where('user_id', Auth::id())
-                                                           ->where('status', '!=', 'Selesai')
-                                                           ->whereDate('jadwal_dipilih', '>=', \Carbon\Carbon::today())
-                                                           ->count();
+                                                               ->where('status', '!=', 'Selesai')
+                                                               ->whereDate('jadwal_dipilih', '>=', \Carbon\Carbon::today())
+                                                               ->count();
                 }
             @endphp
 
@@ -861,7 +893,7 @@
     <main class="main-content">
         <div class="topbar">
             <div class="topbar-left">
-                <button class="menu-toggle" id="menuToggle">
+                <button class="menu-toggle" id="menuToggle" title="Buka/Tutup Menu">
                     <i class="fas fa-bars"></i>
                 </button>
                 <div id="greeting">
@@ -889,7 +921,78 @@
     
     <script>
         // =========================
-        // DARK MODE FUNCTIONALITY WITH SMOOTH TRANSITION
+        // SIDEBAR LOGIC (NEW)
+        // =========================
+        
+        function initSidebarLogic() {
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const body = document.body;
+
+            // Load saved state from localStorage
+            const savedState = localStorage.getItem('sidebarState');
+            if (window.innerWidth > 992 && savedState === 'closed') {
+                body.classList.add('sidebar-closed');
+            }
+
+            // Function to handle toggling based on screen size
+            function handleSidebarToggle() {
+                const isMobile = window.innerWidth <= 992;
+                
+                if (isMobile) {
+                    // Mobile logic: Toggle class 'mobile-show' and overlay
+                    sidebar.classList.toggle('mobile-show');
+                    sidebarOverlay.classList.toggle('active');
+                } else {
+                    // Desktop logic: Toggle class 'sidebar-closed' on body
+                    body.classList.toggle('sidebar-closed');
+                    
+                    // Save state
+                    if (body.classList.contains('sidebar-closed')) {
+                        localStorage.setItem('sidebarState', 'closed');
+                    } else {
+                        localStorage.setItem('sidebarState', 'open');
+                    }
+                }
+                
+                if (navigator.vibrate) navigator.vibrate(10);
+            }
+
+            // Event Listeners
+            if (menuToggle) {
+                // Remove existing listeners first to prevent duplicates (important for Turbo)
+                const newMenuToggle = menuToggle.cloneNode(true);
+                menuToggle.parentNode.replaceChild(newMenuToggle, menuToggle);
+                
+                newMenuToggle.addEventListener('click', handleSidebarToggle);
+            }
+
+            if (sidebarCloseBtn) {
+                sidebarCloseBtn.addEventListener('click', () => {
+                    // Logika khusus tombol X
+                    const isMobile = window.innerWidth <= 992;
+                    if(isMobile) {
+                        sidebar.classList.remove('mobile-show');
+                        sidebarOverlay.classList.remove('active');
+                    } else {
+                        body.classList.add('sidebar-closed');
+                        localStorage.setItem('sidebarState', 'closed');
+                    }
+                });
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', () => {
+                    sidebar.classList.remove('mobile-show');
+                    sidebarOverlay.classList.remove('active');
+                });
+            }
+        }
+
+        // =========================
+        // DARK MODE FUNCTIONALITY
         // =========================
         
         function initTheme() {
@@ -897,24 +1000,23 @@
             const html = document.documentElement;
             const icon = themeToggle.querySelector('i');
             
-            // Load saved theme
             const savedTheme = localStorage.getItem('theme') || 'light';
             html.setAttribute('data-theme', savedTheme);
             updateThemeIcon(icon, savedTheme);
             
-            // Toggle theme with animation
-            themeToggle.addEventListener('click', () => {
+            const newThemeToggle = themeToggle.cloneNode(true);
+            themeToggle.parentNode.replaceChild(newThemeToggle, themeToggle);
+
+            newThemeToggle.addEventListener('click', () => {
                 const currentTheme = html.getAttribute('data-theme');
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
                 
-                // Add transition class
-                document.body.style.transition = 'background-color 0.5s ease, color 0.3s ease';
+                document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
                 
                 html.setAttribute('data-theme', newTheme);
                 localStorage.setItem('theme', newTheme);
-                updateThemeIcon(icon, newTheme);
+                updateThemeIcon(newThemeToggle.querySelector('i'), newTheme);
                 
-                // Show theme change notification
                 showThemeNotification(newTheme);
             });
         }
@@ -930,10 +1032,12 @@
         }
         
         function showThemeNotification(theme) {
+            document.querySelectorAll('.theme-notification').forEach(n => n.remove());
+
             const message = theme === 'dark' ? '🌙 Mode Gelap Aktif' : '☀️ Mode Terang Aktif';
             
-            // Create notification element
             const notification = document.createElement('div');
+            notification.classList.add('theme-notification');
             notification.textContent = message;
             notification.style.cssText = `
                 position: fixed;
@@ -957,7 +1061,6 @@
             }, 2500);
         }
         
-        // Add animation keyframes
         const style = document.createElement('style');
         style.textContent = `
             @keyframes slideInRight {
@@ -976,143 +1079,79 @@
         // =========================
         
         function initPageScripts() {
-            // Menu Toggle & Overlay with smooth animation
-            const menuToggle = document.getElementById('menuToggle');
-            const sidebar = document.getElementById('sidebar');
-            const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-            // Remove old listeners to prevent duplicates
-            if (window.menuToggleClickListener) {
-                menuToggle.removeEventListener('click', window.menuToggleClickListener);
-            }
-            if (window.sidebarOverlayClickListener) {
-                sidebarOverlay.removeEventListener('click', window.sidebarOverlayClickListener);
-            }
-
-            window.menuToggleClickListener = () => {
-                sidebar.classList.toggle('show');
-                sidebarOverlay.classList.toggle('active');
-                
-                // Add haptic feedback (if supported)
-                if (navigator.vibrate) {
-                    navigator.vibrate(10);
-                }
-            };
-            
-            window.sidebarOverlayClickListener = () => {
-                sidebar.classList.remove('show');
-                sidebarOverlay.classList.remove('active');
-            };
-
-            if (menuToggle && sidebar) {
-                menuToggle.addEventListener('click', window.menuToggleClickListener);
-                sidebarOverlay.addEventListener('click', window.sidebarOverlayClickListener);
-            }
-
-            // Dynamic Greeting with smooth transition
-            function setGreeting() {
-                const now = new Date();
-                const hour = now.getHours();
-                let greeting = "";
-                let iconClass = "fas fa-smile";
-                let iconColor = "#39A616";
-                
-                if (hour >= 5 && hour < 11) {
-                    greeting = "Selamat Pagi!";
-                    iconClass = "fas fa-sun";
-                    iconColor = "#ffb300";
-                } else if (hour >= 11 && hour < 15) {
-                    greeting = "Selamat Siang!";
-                    iconClass = "fas fa-cloud-sun";
-                    iconColor = "#f7c948";
-                } else if (hour >= 15 && hour < 18) {
-                    greeting = "Selamat Sore!";
-                    iconClass = "fas fa-cloud-sun-rain";
-                    iconColor = "#f57c00";
-                } else {
-                    greeting = "Selamat Malam!";
-                    iconClass = "fas fa-moon";
-                    iconColor = "#5c6bc0";
-                }
-                
-                const greetingEl = document.getElementById("greeting");
-                if (greetingEl) {
-                    greetingEl.innerHTML = `<i class="${iconClass}" style="color:${iconColor};"></i> ${greeting}`;
-                }
-            }
-
-            // Update DateTime with smooth animation
-            function updateDateTime() {
-                const now = new Date();
-                const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-                const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-                
-                const hari = days[now.getDay()];
-                const tanggal = now.getDate();
-                const bulan = months[now.getMonth()];
-                const tahun = now.getFullYear();
-                const jam = String(now.getHours()).padStart(2, '0');
-                const menit = String(now.getMinutes()).padStart(2, '0');
-                const detik = String(now.getSeconds()).padStart(2, '0');
-                
-                const datetimeEl = document.getElementById("datetime-text");
-                if (datetimeEl) {
-                    datetimeEl.textContent = `${hari}, ${tanggal} ${bulan} ${tahun} • ${jam}:${menit}:${detik}`;
-                }
-            }
-
-            // Initialize
+            initSidebarLogic(); // Initialize new sidebar logic
+            initTheme();
             setGreeting();
             updateDateTime();
             
-            if (window.dateTimeInterval) {
-                clearInterval(window.dateTimeInterval);
-            }
+            if (window.dateTimeInterval) clearInterval(window.dateTimeInterval);
             window.dateTimeInterval = setInterval(updateDateTime, 1000);
+        }
 
-            // Close sidebar when clicking menu item on mobile
-            if (window.innerWidth <= 992) {
-                const menuLinks = document.querySelectorAll('.sidebar-menu a');
-                menuLinks.forEach(link => {
-                    link.addEventListener('click', () => {
-                        sidebar.classList.remove('show');
-                        sidebarOverlay.classList.remove('active');
-                    });
-                });
+        // Dynamic Greeting
+        function setGreeting() {
+            const now = new Date();
+            const hour = now.getHours();
+            let greeting = "";
+            let iconClass = "fas fa-smile";
+            let iconColor = "#39A616";
+            
+            if (hour >= 5 && hour < 11) {
+                greeting = "Selamat Pagi!";
+                iconClass = "fas fa-sun";
+                iconColor = "#ffb300";
+            } else if (hour >= 11 && hour < 15) {
+                greeting = "Selamat Siang!";
+                iconClass = "fas fa-cloud-sun";
+                iconColor = "#f7c948";
+            } else if (hour >= 15 && hour < 18) {
+                greeting = "Selamat Sore!";
+                iconClass = "fas fa-cloud-sun-rain";
+                iconColor = "#f57c00";
+            } else {
+                greeting = "Selamat Malam!";
+                iconClass = "fas fa-moon";
+                iconColor = "#5c6bc0";
             }
             
-            // Initialize theme
-            initTheme();
+            const greetingEl = document.getElementById("greeting");
+            if (greetingEl) {
+                greetingEl.innerHTML = `<i class="${iconClass}" style="color:${iconColor};"></i> ${greeting}`;
+            }
+        }
+
+        // Update DateTime
+        function updateDateTime() {
+            const now = new Date();
+            const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             
-            // Add page load animation
-            document.body.style.opacity = '0';
-            setTimeout(() => {
-                document.body.style.transition = 'opacity 0.5s ease';
-                document.body.style.opacity = '1';
-            }, 100);
+            const hari = days[now.getDay()];
+            const tanggal = now.getDate();
+            const bulan = months[now.getMonth()];
+            const tahun = now.getFullYear();
+            const jam = String(now.getHours()).padStart(2, '0');
+            const menit = String(now.getMinutes()).padStart(2, '0');
+            const detik = String(now.getSeconds()).padStart(2, '0');
+            
+            const datetimeEl = document.getElementById("datetime-text");
+            if (datetimeEl) {
+                datetimeEl.textContent = `${hari}, ${tanggal} ${bulan} ${tahun} • ${jam}:${menit}:${detik}`;
+            }
         }
 
         // =========================
         // EVENT LISTENERS
         // =========================
         
-        // Run on first load (non-Turbo)
         document.addEventListener('DOMContentLoaded', initPageScripts);
-        
-        // Run every time Turbo loads a new page
         document.addEventListener('turbo:load', initPageScripts);
         
-        // Stop clock interval when page is unloaded by Turbo
         document.addEventListener('turbo:before-cache', () => {
-            if (window.dateTimeInterval) {
-                clearInterval(window.dateTimeInterval);
-            }
+            if (window.dateTimeInterval) clearInterval(window.dateTimeInterval);
+            if (window.autoRefreshInterval) clearInterval(window.autoRefreshInterval);
         });
 
-        // =========================
-        // LOGOUT CONFIRMATION WITH PREMIUM SWAL
-        // =========================
-        
         function confirmLogout(event) {
             event.preventDefault();
             
@@ -1126,35 +1165,20 @@
                 confirmButtonText: '<i class="fas fa-sign-out-alt"></i> Ya, Keluar',
                 cancelButtonText: '<i class="fas fa-times"></i> Batal',
                 reverseButtons: true,
-                backdrop: `
-                    rgba(0,0,0,0.6)
-                    left top
-                    no-repeat
-                `,
+                backdrop: `rgba(0,0,0,0.6) left top no-repeat`,
                 customClass: {
                     confirmButton: 'swal-btn-confirm',
                     cancelButton: 'swal-btn-cancel',
-                    popup: 'swal-popup-animated'
-                },
-                showClass: {
-                    popup: 'animate__animated animate__fadeInDown animate__faster'
-                },
-                hideClass: {
-                    popup: 'animate__animated animate__fadeOutUp animate__faster'
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Show loading
                     Swal.fire({
                         title: 'Logging out...',
                         html: 'Mohon tunggu sebentar',
                         allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
+                        didOpen: () => { Swal.showLoading(); }
                     });
                     
-                    // Submit logout form
                     setTimeout(() => {
                         const form = document.getElementById('logout-form-main');
                         form.setAttribute('data-turbo', 'false');
@@ -1164,44 +1188,65 @@
             });
         }
         
-        // =========================
-        // SMOOTH SCROLL FOR ANCHOR LINKS
-        // =========================
-        
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
         });
+
+        // =========================
+        // GLOBAL AUTO REFRESH SYSTEM
+        // =========================
+        window.initAutoRefresh = function(selectors, interval = 5000) {
+            if (window.autoRefreshInterval) clearInterval(window.autoRefreshInterval);
+
+            let isUpdating = false;
+            window.autoRefreshInterval = setInterval(() => {
+                if (isUpdating) return;
+                isUpdating = true;
+
+                const url = new URL(window.location.href);
+                url.searchParams.set('auto_reload_time', new Date().getTime());
+
+                fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    selectors.forEach(selector => {
+                        const oldEl = document.querySelector(selector);
+                        const newEl = doc.querySelector(selector);
+
+                        if (oldEl && newEl && oldEl.innerHTML.trim() !== newEl.innerHTML.trim()) {
+                            oldEl.innerHTML = newEl.innerHTML;
+                            if (typeof window.rebindEvents === 'function') window.rebindEvents();
+                        }
+                    });
+                })
+                .catch(err => console.error('Auto refresh error:', err))
+                .finally(() => { isUpdating = false; });
+            }, interval);
+        };
         
     </script>
 
-   {{-- 🔥 SCRIPT PEMANGGILAN PASIEN OTOMATIS (POLLING) & KONFIRMASI 🔥 --}}
     @auth
     <script>
-        // Cek status panggilan setiap 5 detik
         setInterval(() => {
-            // Cek apakah SweetAlert sedang terbuka agar tidak menumpuk popup
-            if (Swal.isVisible()) {
-                return; 
-            }
+            if (Swal.isVisible()) return; 
 
             fetch('{{ route("check.panggilan") }}')
                 .then(response => response.json())
                 .then(data => {
                     if (data.dipanggil) {
-                        // Mainkan suara notifikasi
                         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); 
                         audio.play().catch(e => console.log('Audio autoplay blocked'));
 
-                        // Tampilkan Pop-up Besar
                         Swal.fire({
                             title: '📢 GILIRAN ANDA!',
                             html: `
@@ -1209,12 +1254,8 @@
                                     Halo <b>{{ Auth::user()->name }}</b>,<br>
                                     Silakan menuju ke staff admin.<br><br>
                                     <div style="background: #e8f5e9; padding: 15px; border-radius: 10px; border: 2px solid #39A616;">
-                                        <span style="font-size: 2.5rem; font-weight: 800; color: #39A616; display: block;">
-                                            NO. ${data.data.no_antrian}
-                                        </span>
-                                        <span style="color: #1D8208; font-weight: 600;">
-                                            ${data.data.nama_layanan}
-                                        </span>
+                                        <span style="font-size: 2.5rem; font-weight: 800; color: #39A616; display: block;">NO. ${data.data.no_antrian}</span>
+                                        <span style="color: #1D8208; font-weight: 600;">${data.data.nama_layanan}</span>
                                     </div>
                                 </div>
                             `,
@@ -1224,7 +1265,6 @@
                             allowOutsideClick: false,
                             backdrop: `rgba(0,0,0,0.8) left top no-repeat`,
                             
-                            // 🔥 AKSI SAAT TOMBOL DIKLIK
                             preConfirm: () => {
                                 return fetch(`/konfirmasi-datang/${data.data.id}`, {
                                     method: 'POST',
@@ -1234,15 +1274,11 @@
                                     }
                                 })
                                 .then(response => {
-                                    if (!response.ok) {
-                                        throw new Error(response.statusText)
-                                    }
+                                    if (!response.ok) throw new Error(response.statusText)
                                     return response.json()
                                 })
                                 .catch(error => {
-                                    Swal.showValidationMessage(
-                                        `Request failed: ${error}`
-                                    )
+                                    Swal.showValidationMessage(`Request failed: ${error}`)
                                 })
                             }
                         }).then((result) => {
@@ -1259,7 +1295,7 @@
                     }
                 })
                 .catch(err => console.error('Error polling:', err));
-        }, 5000); // 5000ms = 5 detik
+        }, 5000); 
     </script>
     @endauth
 

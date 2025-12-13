@@ -48,9 +48,11 @@
     </div>
 
     {{-- Daftar Riwayat --}}
-    <div class="riwayat-list-ringkas">
+    {{-- ID "riwayat-container" ditambahkan untuk Auto Refresh --}}
+    <div class="riwayat-list-ringkas" id="riwayat-container">
         @forelse ($riwayats as $index => $riwayat)
-            <div class="riwayat-item-ringkas" style="animation-delay: {{ $index * 0.1 }}s"
+            <div class="riwayat-item-ringkas" 
+                 {{-- Animasi dihapus --}}
                  data-tanggal="{{ $riwayat->created_at->isoFormat('dddd, D MMMM YYYY - HH:mm') }}" 
                  data-dokter="{{ $riwayat->tenagaMedis->name ?? 'N/A' }}"
                  data-layanan="{{ $riwayat->pendaftaran->nama_layanan ?? 'Pemeriksaan' }}"
@@ -193,7 +195,7 @@
                     </div>
                 </div>
             </div>
-
+            
             {{-- Keluhan Awal --}}
             <div class="detail-section">
                 <div class="section-header">
@@ -293,15 +295,9 @@
         padding: 40px 20px; 
     }
 
-    /* ===== HEADER PREMIUM ===== */
+    /* ===== HEADER PREMIUM (NO ANIMATION) ===== */
     .page-header-container { 
         margin-bottom: 35px;
-        animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .header-content {
@@ -419,7 +415,7 @@
         100% { transform: scale(1.5); opacity: 0; }
     }
 
-    /* ===== FILTER BAR PREMIUM ===== */
+    /* ===== FILTER BAR PREMIUM (NO ANIMATION) ===== */
     .filter-bar { 
         background: var(--bg-primary);
         padding: 24px 28px;
@@ -427,12 +423,6 @@
         border: 1px solid rgba(57, 166, 22, 0.15);
         box-shadow: 0 8px 30px rgba(57, 166, 22, 0.1);
         margin-bottom: 35px;
-        animation: fadeInUp 0.6s ease-out 0.1s backwards;
-    }
-    
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .date-filter-form { 
@@ -547,12 +537,11 @@
         transform: translateY(-2px);
     }
 
-    /* ===== RIWAYAT LIST PREMIUM ===== */
+    /* ===== RIWAYAT LIST PREMIUM (NO ANIMATION) ===== */
     .riwayat-list-ringkas {
         display: flex;
         flex-direction: column;
         gap: 24px;
-        animation: fadeInUp 0.6s ease-out 0.2s backwards;
     }
 
     .riwayat-item-ringkas {
@@ -566,12 +555,6 @@
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
-        animation: fadeInLeft 0.6s ease-out backwards;
-    }
-    
-    @keyframes fadeInLeft {
-        from { opacity: 0; transform: translateX(-30px); }
-        to { opacity: 1; transform: translateX(0); }
     }
 
     .riwayat-item-ringkas::before {
@@ -781,7 +764,7 @@
         color: var(--text-secondary);
         margin: 0;
     }
-    /* ===== MODAL PREMIUM ===== */
+    /* ===== MODAL PREMIUM (NO ANIMATION) ===== */
     .modal {
         display: none;
         position: fixed;
@@ -794,13 +777,7 @@
         background-color: rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
-        animation: fadeIn 0.3s;
         padding: 20px;
-    }
-    
-    @keyframes fadeIn { 
-        from { opacity: 0; } 
-        to { opacity: 1; } 
     }
 
     .modal-content {
@@ -810,15 +787,9 @@
         width: 90%;
         max-width: 920px;
         box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
-        animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         max-height: calc(100vh - 60px);
         display: flex;
         flex-direction: column;
-    }
-    
-    @keyframes slideUp {
-        from { transform: translateY(50px) scale(0.9); opacity: 0; }
-        to { transform: translateY(0) scale(1); opacity: 1; }
     }
 
     .modal-header {
@@ -1216,86 +1187,103 @@ document.addEventListener('DOMContentLoaded', function () {
         placeholder: "Pilih Tanggal..."
     });
 
-    // Logika Modal
     const modal = document.getElementById('detailModal');
-    const items = document.querySelectorAll('.riwayat-item-ringkas');
     const closeModalBtn = document.getElementById('closeModalBtn');
 
-    items.forEach(item => {
-        item.addEventListener('click', function() {
-            const data = this.dataset;
-            
-            // Isi konten modal
-            document.getElementById('modalTanggal').textContent = data.tanggal;
-            document.getElementById('modalDokter').textContent = data.dokter;
-            document.getElementById('modalDiagnosa').textContent = data.diagnosa;
-            document.getElementById('modalPlan').textContent = data.plan;
-            document.getElementById('modalKeluhan').textContent = data.keluhan;
-            document.getElementById('modalLamaKeluhan').textContent = data.lama_keluhan;
+    // --- AUTO REFRESH SYSTEM ---
+    if (typeof window.initAutoRefresh === 'function') {
+        window.initAutoRefresh(['#riwayat-container']);
+    }
 
-            // Cek data vitals
-            const hasVitals = data.tekanan_darah !== '-' || data.berat_badan !== '-' || data.suhu_tubuh !== '-';
-            
-            if(!hasVitals) {
-                document.getElementById('modalVitalsSection').style.display = 'none';
-            } else {
-                document.getElementById('modalVitalsSection').style.display = 'block';
-                document.getElementById('modalTekananDarah').textContent = data.tekanan_darah;
-                document.getElementById('modalBeratBadan').textContent = data.berat_badan;
-                document.getElementById('modalSuhuTubuh').textContent = data.suhu_tubuh;
-            }
+    // --- REBIND EVENTS ---
+    window.rebindEvents = function() {
+        bindCardEvents();
+        console.log('♻️ Riwayat list refreshed & events rebound!');
+    };
 
-            // Cek data resep obat
-            const resepObatSection = document.getElementById('modalResepObatSection');
-            if(data.resep_obat === '-') {
-                resepObatSection.style.display = 'none';
-            } else {
-                resepObatSection.style.display = 'block';
-                document.getElementById('modalResepObat').textContent = data.resep_obat;
-            }
-
-            // Logika Catatan Apoteker
-            const catatanApotekerSection = document.getElementById('modalCatatanApotekerSection');
-            const catatanApotekerValue = document.getElementById('modalCatatanApoteker');
-
-            if (data.catatan_apoteker && data.catatan_apoteker !== '-') {
-                catatanApotekerValue.textContent = data.catatan_apoteker;
-                catatanApotekerSection.style.display = 'block';
-            } else {
-                catatanApotekerValue.textContent = '';
-                catatanApotekerSection.style.display = 'none';
-            }
-
-            // Cek data harga
-            if(data.harga === '-') {
-                document.getElementById('modalHargaSection').style.display = 'none';
-            } else {
-                document.getElementById('modalHargaSection').style.display = 'block';
-                document.getElementById('modalHarga').textContent = data.harga;
-            }
-            
-            // Tampilkan modal
-            modal.style.display = 'block';
-            document.body.style.overflow = 'hidden';
+    function bindCardEvents() {
+        const items = document.querySelectorAll('.riwayat-item-ringkas');
+        items.forEach(item => {
+            // cleanup old
+            item.removeEventListener('click', handleCardClick);
+            // bind new
+            item.addEventListener('click', handleCardClick);
         });
-    });
+    }
 
-    // Fungsi tutup modal
+    // Extracted handler
+    function handleCardClick() {
+        const data = this.dataset;
+        
+        document.getElementById('modalTanggal').textContent = data.tanggal;
+        document.getElementById('modalDokter').textContent = data.dokter;
+        document.getElementById('modalDiagnosa').textContent = data.diagnosa;
+        document.getElementById('modalPlan').textContent = data.plan;
+        document.getElementById('modalKeluhan').textContent = data.keluhan;
+        document.getElementById('modalLamaKeluhan').textContent = data.lama_keluhan;
+
+        // Vitals check
+        const hasVitals = data.tekanan_darah !== '-' || data.berat_badan !== '-' || data.suhu_tubuh !== '-';
+        if(!hasVitals) {
+            document.getElementById('modalVitalsSection').style.display = 'none';
+        } else {
+            document.getElementById('modalVitalsSection').style.display = 'block';
+            document.getElementById('modalTekananDarah').textContent = data.tekanan_darah;
+            document.getElementById('modalBeratBadan').textContent = data.berat_badan;
+            document.getElementById('modalSuhuTubuh').textContent = data.suhu_tubuh;
+        }
+
+        // Resep check
+        const resepObatSection = document.getElementById('modalResepObatSection');
+        if(data.resep_obat === '-') {
+            resepObatSection.style.display = 'none';
+        } else {
+            resepObatSection.style.display = 'block';
+            document.getElementById('modalResepObat').textContent = data.resep_obat;
+        }
+
+        // Apoteker check
+        const catatanApotekerSection = document.getElementById('modalCatatanApotekerSection');
+        const catatanApotekerValue = document.getElementById('modalCatatanApoteker');
+
+        if (data.catatan_apoteker && data.catatan_apoteker !== '-') {
+            catatanApotekerValue.textContent = data.catatan_apoteker;
+            catatanApotekerSection.style.display = 'block';
+        } else {
+            catatanApotekerValue.textContent = '';
+            catatanApotekerSection.style.display = 'none';
+        }
+
+        // Harga check
+        if(data.harga === '-') {
+            document.getElementById('modalHargaSection').style.display = 'none';
+        } else {
+            document.getElementById('modalHargaSection').style.display = 'block';
+            document.getElementById('modalHarga').textContent = data.harga;
+        }
+        
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Initial bind
+    bindCardEvents();
+
     function closeModal() {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
     }
 
-    closeModalBtn.addEventListener('click', closeModal);
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeModal);
+    }
 
-    // Tutup modal jika klik di luar area konten
     window.addEventListener('click', function(event) {
         if (event.target == modal) {
             closeModal();
         }
     });
 
-    // Tutup dengan tombol ESC
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape' && modal.style.display === 'block') {
             closeModal();

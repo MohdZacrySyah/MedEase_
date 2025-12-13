@@ -39,14 +39,16 @@
         <div class="section-header">
             <h2><i class="fas fa-chart-line"></i> Statistik Kesehatan Anda</h2>
         </div>
-        <div class="stats-grid-modern">
+        
+        {{-- ID "live-stats" untuk Auto Load --}}
+        <div class="stats-grid-modern" id="live-stats">
             <div class="stat-card-modern">
                 <div class="card-gradient-bg"></div>
                 <div class="stat-icon-wrapper">
                     <i class="fas fa-stethoscope"></i>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-value-modern" data-count="{{ $pemeriksaanTahunIni }}">0</div>
+                    <div class="stat-value-modern" data-count="{{ $pemeriksaanTahunIni }}">{{ $pemeriksaanTahunIni }}</div>
                     <div class="stat-label-modern">Pemeriksaan Selesai</div>
                     <div class="stat-period">Tahun {{ date('Y') }}</div>
                 </div>
@@ -61,7 +63,7 @@
                     <i class="fas fa-user-md"></i>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-value-modern" data-count="{{ $jumlahDokterDikunjungi }}">0</div>
+                    <div class="stat-value-modern" data-count="{{ $jumlahDokterDikunjungi }}">{{ $jumlahDokterDikunjungi }}</div>
                     <div class="stat-label-modern">Dokter Dikunjungi</div>
                     <div class="stat-period">Sepanjang Waktu</div>
                 </div>
@@ -77,7 +79,9 @@
         <div class="section-header">
             <h2><i class="fas fa-info-circle"></i> Informasi Penting</h2>
         </div>
-        <div class="info-grid-modern">
+        
+        {{-- ID "live-info" untuk Auto Load Notifikasi --}}
+        <div class="info-grid-modern" id="live-info">
             {{-- Kartu Notifikasi (Jadwal & Antrian) --}}
             <div class="info-card">
                 <div class="card-gradient-bg card-notification-bg"></div>
@@ -96,7 +100,6 @@
                                     <span class="label">Jadwal Konsultasi</span>
                                     <span class="value">{{ $notifikasiHariIni->nama_layanan }}</span>
                                     
-                                    {{-- BAGIAN MODIFIKASI: Menampilkan Antrian & Estimasi --}}
                                     @if ($notifikasiHariIni->no_antrian)
                                         <div class="queue-container">
                                             <span class="queue-badge">
@@ -104,7 +107,6 @@
                                                 No. {{ $notifikasiHariIni->no_antrian }}
                                             </span>
 
-                                            {{-- Menampilkan Estimasi Waktu jika ada --}}
                                             @if(isset($notifikasiHariIni->estimasi_dilayani))
                                                 <span class="queue-badge estimation-badge">
                                                     <i class="fas fa-clock"></i> 
@@ -200,64 +202,70 @@
     <div class="schedule-section">
         <div class="section-header">
             <h2><i class="fas fa-calendar-alt"></i> Jadwal Tenaga Medis Hari Ini</h2>
-            <span class="schedule-count">
+            {{-- ID "total-jadwal" --}}
+            <span class="schedule-count" id="total-jadwal">
                 <i class="fas fa-check-circle"></i>
                 {{ $jadwalHariIni->count() }} Jadwal Aktif
             </span>
         </div>
-        <div class="schedule-container-modern">
-            <table class="schedule-table">
-                <thead>
-                    <tr>
-                        <th><i class="fas fa-user-md"></i> Nama Tenaga Medis</th>
-                        <th><i class="fas fa-stethoscope"></i> Layanan</th>
-                        <th><i class="far fa-clock"></i> Waktu Praktek</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($jadwalHariIni as $index => $jadwal)
-                        <tr class="schedule-row" style="animation-delay: {{ $index * 0.1 }}s">
-                            <td>
-                                <div class="doctor-info">
-                                    <div class="doctor-avatar">
-                                        @if($jadwal->tenagaMedis?->profile_photo_path)
-                                            <img src="{{ asset('storage/' . $jadwal->tenagaMedis->profile_photo_path) }}" alt="Foto">                                        
-                                        @else
-                                            <i class="fas fa-user-md"></i>
-                                        @endif
-                                    </div>
-                                    <span class="doctor-name">{{ $jadwal->tenagaMedis?->name ?? 'N/A' }}</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="service-badge">
-                                    <i class="fas fa-briefcase-medical"></i>
-                                    {{ $jadwal->layanan }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="time-badge-modern">
-                                    <i class="far fa-clock"></i>
-                                    <span>
-                                        {{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }} - 
-                                        {{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }} WIB
-                                    </span>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
+        
+        {{-- ID "live-schedule" untuk Auto Load Tabel --}}
+        <div class="schedule-container-modern" id="live-schedule">
+            {{-- Wrapper Responsif untuk Scroll --}}
+            <div class="table-responsive">
+                <table class="schedule-table">
+                    <thead>
                         <tr>
-                            <td colspan="3">
-                                <div class="empty-schedule">
-                                    <i class="fas fa-calendar-times"></i>
-                                    <p>Tidak ada jadwal praktek hari ini</p>
-                                    <small>Silakan cek kembali di hari berikutnya</small>
-                                </div>
-                            </td>
+                            <th style="min-width: 250px;"><i class="fas fa-user-md"></i> Nama Tenaga Medis</th>
+                            <th style="min-width: 200px;"><i class="fas fa-stethoscope"></i> Layanan</th>
+                            <th style="min-width: 180px;"><i class="far fa-clock"></i> Waktu Praktek</th>
                         </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @forelse ($jadwalHariIni as $index => $jadwal)
+                            <tr class="schedule-row"> {{-- Animasi dihapus --}}
+                                <td>
+                                    <div class="doctor-info">
+                                        <div class="doctor-avatar">
+                                            @if($jadwal->tenagaMedis?->profile_photo_path)
+                                                <img src="{{ asset('storage/' . $jadwal->tenagaMedis->profile_photo_path) }}" alt="Foto">                             
+                                            @else
+                                                <i class="fas fa-user-md"></i>
+                                            @endif
+                                        </div>
+                                        <span class="doctor-name">{{ $jadwal->tenagaMedis?->name ?? 'N/A' }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="service-badge">
+                                        <i class="fas fa-briefcase-medical"></i>
+                                        {{ $jadwal->layanan }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="time-badge-modern">
+                                        <i class="far fa-clock"></i>
+                                        <span>
+                                            {{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }} - 
+                                            {{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }} WIB
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3">
+                                    <div class="empty-schedule">
+                                        <i class="fas fa-calendar-times"></i>
+                                        <p>Tidak ada jadwal praktek hari ini</p>
+                                        <small>Silakan cek kembali di hari berikutnya</small>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div> {{-- End Table Responsive --}}
         </div>
     </div>
 
@@ -290,10 +298,42 @@
         padding: 40px 20px;
     }
 
-    /* ===== HEADER BANNER PREMIUM ===== */
+    /* ===== TABLE RESPONSIVE WRAPPER ===== */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling di iOS */
+        padding-bottom: 10px; /* Memberi ruang untuk scrollbar */
+    }
+
+    /* Custom Scrollbar untuk Tabel */
+    .table-responsive::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+        border-radius: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background-color: rgba(57, 166, 22, 0.3);
+        border-radius: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(57, 166, 22, 0.6);
+    }
+    
+    /* Mencegah teks wrap (turun baris) agar kolom tetap rapi */
+    .schedule-table th, 
+    .schedule-table td {
+        white-space: nowrap;
+    }
+
+    /* ===== HEADER BANNER (NO ANIMATION) ===== */
     .dashboard-header-banner {
         margin-bottom: 40px;
-        animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .header-content {
@@ -341,7 +381,7 @@
         z-index: 1;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     }
-
+    
     .header-text {
         flex: 1;
         position: relative;
@@ -361,7 +401,6 @@
         font-weight: 600;
         margin-bottom: 15px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        animation: fadeIn 0.8s ease-out 0.2s both;
     }
 
     .greeting-badge i {
@@ -379,7 +418,6 @@
         font-size: 2.2rem;
         margin: 0 0 10px 0;
         letter-spacing: -0.5px;
-        animation: fadeIn 0.8s ease-out 0.3s both;
     }
 
     .page-subtitle {
@@ -390,12 +428,6 @@
         font-size: 1.05rem;
         font-weight: 500;
         margin: 0;
-        animation: fadeIn 0.8s ease-out 0.4s both;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     .hero-illustration {
@@ -479,25 +511,13 @@
         font-size: 0.95rem;
         font-weight: 600;
         box-shadow: 0 6px 20px rgba(57, 166, 22, 0.3);
-        animation: fadeInRight 0.6s ease-out;
     }
     
-    @keyframes fadeInRight {
-        from { opacity: 0; transform: translateX(20px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-
-    /* ===== STATS SECTION PREMIUM ===== */
+    /* ===== STATS SECTION (NO ANIMATION) ===== */
     .stats-section {
         margin-bottom: 40px;
-        animation: fadeInUp 0.6s ease-out 0.1s backwards;
     }
     
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
     .stats-grid-modern {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -595,10 +615,9 @@
         z-index: 0;
     }
 
-    /* ===== INFO SECTION PREMIUM ===== */
+    /* ===== INFO SECTION (NO ANIMATION) ===== */
     .info-section {
         margin-bottom: 40px;
-        animation: fadeInUp 0.6s ease-out 0.2s backwards;
     }
 
     .info-grid-modern {
@@ -815,10 +834,9 @@
         font-weight: 500;
     }
 
-    /* ===== SCHEDULE SECTION PREMIUM ===== */
+    /* ===== SCHEDULE SECTION (NO ANIMATION) ===== */
     .schedule-section {
         margin-bottom: 30px;
-        animation: fadeInUp 0.6s ease-out 0.3s backwards;
     }
 
     .schedule-container-modern {
@@ -859,18 +877,12 @@
         opacity: 0.95;
     }
 
+    /* ROW ANIMATIONS REMOVED FOR STABILITY */
     .schedule-row {
         border-bottom: 1px solid rgba(57, 166, 22, 0.08);
         transition: all 0.3s ease;
-        animation: fadeInLeft 0.5s ease forwards;
-        opacity: 0;
     }
     
-    @keyframes fadeInLeft {
-        from { opacity: 0; transform: translateX(-20px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-
     .schedule-row:hover {
         background: rgba(57, 166, 22, 0.04);
     }
@@ -963,12 +975,6 @@
     .empty-schedule small {
         font-size: 0.95rem;
         color: var(--text-muted);
-    }
-
-    /* ===== ANIMATIONS ===== */
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-30px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     /* ===== RESPONSIVE ===== */
@@ -1113,13 +1119,16 @@
         }
         
         if (greetingElement) {
-            greetingElement.style.transition = 'opacity 0.3s ease';
-            greetingElement.style.opacity = '0';
-            
-            setTimeout(() => {
-                greetingElement.textContent = greetingText;
-                greetingElement.style.opacity = '1';
-            }, 300);
+            // Cek text sebelum ganti agar tidak flicker
+            if (greetingElement.textContent !== greetingText) {
+                greetingElement.style.transition = 'opacity 0.3s ease';
+                greetingElement.style.opacity = '0';
+                
+                setTimeout(() => {
+                    greetingElement.textContent = greetingText;
+                    greetingElement.style.opacity = '1';
+                }, 300);
+            }
         }
     }
     
@@ -1155,7 +1164,25 @@
             animateCounter(element);
         });
         
-        // Add entrance animation observer
+        // --- AUTO REFRESH SYSTEM ---
+        if (typeof window.initAutoRefresh === 'function') {
+            window.initAutoRefresh([
+                '#live-stats',    // Statistik
+                '#live-info',     // Notifikasi & Info
+                '#live-schedule', // Jadwal Dokter
+                '#total-jadwal'   // Jumlah Jadwal
+            ]);
+        }
+
+        // --- REBIND EVENTS ---
+        // Dipanggil otomatis saat data di-refresh
+        window.rebindEvents = function() {
+            // Update greeting jika perlu (misal berubah jam)
+            updateGreeting();
+            console.log('✅ Patient Dashboard updated!');
+        };
+        
+        // --- SCROLL ANIMATION OBSERVER ---
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
