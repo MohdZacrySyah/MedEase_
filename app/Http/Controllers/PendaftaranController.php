@@ -61,11 +61,10 @@ class PendaftaranController extends Controller
         $jadwal->load('tenagaMedis');
         
         // 🔥 TAMBAHAN: Ambil tanggal yang ditutup (Closed Dates)
-        // Agar Frontend bisa mematikan tanggal ini di kalender
         $closedDates = [];
         if ($jadwal->tenaga_medis_id) {
             $closedDates = DoctorAvailability::where('tenaga_medis_id', $jadwal->tenaga_medis_id)
-                ->where('is_available', false) // Cari yang TIDAK tersedia
+                ->where('is_available', false)
                 ->whereDate('date', '>=', Carbon::today())
                 ->pluck('date')
                 ->map(function($date) {
@@ -86,7 +85,7 @@ class PendaftaranController extends Controller
             'user_alamat'    => $user?->alamat ?? '',
             'user_tgl_lahir' => $user?->tanggal_lahir ?? '',
             'enabled_days'   => $hariDiizinkan,
-            'closed_dates'   => $closedDates // ✅ Dikirim ke view agar JS bisa men-disable tanggal
+            'closed_dates'   => $closedDates
         ]);
     }
 
@@ -163,7 +162,7 @@ class PendaftaranController extends Controller
         // ==========================================
         $availability = DoctorAvailability::where('tenaga_medis_id', $tenagaMedisId)
             ->whereDate('date', $jadwalDipilih)
-            ->where('is_available', false) // Cek jika is_available = 0 (False)
+            ->where('is_available', false)
             ->first();
 
         if ($availability) {
@@ -203,26 +202,20 @@ class PendaftaranController extends Controller
         $tanggalDipilihString = Carbon::parse($pendaftaran->jadwal_dipilih)->toDateString();
         $namaLayanan = $pendaftaran->nama_layanan;
 
-        // Hitung jumlah pasien (KECUALI yang statusnya Dibatalkan agar antrian tidak bolong/kacau)
         $jumlahSebelumnya = Pendaftaran::where('nama_layanan', $namaLayanan)
             ->whereDate('jadwal_dipilih', $tanggalDipilihString)
-            ->where('status', '!=', 'Dibatalkan') // 🔥 Tambahan penting
+            ->where('status', '!=', 'Dibatalkan')
             ->count();
 
         $pendaftaran->no_antrian = $jumlahSebelumnya + 1;
 
         // 3. Hitung Estimasi Waktu (Setiap Pasien 20 Menit)
         if ($jadwalPraktek->jam_mulai) {
-            // Ambil jam mulai dokter
             $jamMulai = Carbon::parse($jadwalPraktek->jam_mulai);
-            
-            // Estimasi: Jam Mulai + ((No Antrian - 1) * 20 menit)
             $durasiPerPasien = 20; 
             $menitTambahan = ($pendaftaran->no_antrian - 1) * $durasiPerPasien;
             
             $estimasiWaktu = $jamMulai->copy()->addMinutes($menitTambahan);
-            
-            // Simpan ke kolom database
             $pendaftaran->estimasi_dilayani = $estimasiWaktu->format('H:i:s');
         }
 
@@ -241,17 +234,38 @@ class PendaftaranController extends Controller
             ->route('daftar.index')
             ->with('success', $pesanSukses);
     }
-    public function konfirmasiDatang($id)
-{
-    try {
-        $pendaftaran = \App\Models\Pendaftaran::findOrFail($id);
-        // Ubah status sesuai logika antrian Anda, contoh: 'Hadir' atau 'Diperiksa'
-        $pendaftaran->status = 'Hadir'; 
-        $pendaftaran->save();
 
-        return response()->json(['success' => true]);
-    } catch (\Exception $e) {
-        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    /**
+     * Menghentikan suara alarm di sisi pasien.
+     * Mengubah status_panggilan menjadi 'menunggu' agar pop-up tertutup.
+     */
+    public function stopAlarmPasien($id)
+    {
+        try {
+            $pendaftaran = Pendaftaran::findOrFail($id);
+            
+            // Cek otorisasi (hanya pemilik pendaftaran yang bisa stop alarm)
+            if ($pendaftaran->user_id != Auth::id()) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+
+            // Reset status agar notifikasi berhenti berbunyi
+            // Status utama tetap 'Menunggu' sampai Admin klik 'Hadir'
+            $pendaftaran->status_panggilan = 'menunggu'; 
+            $pendaftaran->save();
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
-}
+
+    /**
+     * Backup fungsi untuk kompatibilitas jika route lama masih dipakai.
+     * Logikanya disamakan dengan stopAlarmPasien.
+     */
+    public function konfirmasiDatang($id)
+    {
+        return $this->stopAlarmPasien($id);
+    }
 }

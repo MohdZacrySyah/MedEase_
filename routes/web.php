@@ -16,7 +16,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Admin\PemeriksaanAwalController;
 use App\Http\Controllers\Admin\JadwalPraktekController;
 use App\Http\Controllers\Admin\TenagaMedisController as AdminTenagaMedisController;
-use App\Http\Controllers\Admin\JadwalController as AdminJadwalController; // Alias untuk menghindari bentrok nama
+use App\Http\Controllers\Admin\JadwalController as AdminJadwalController;
 
 // --- Import Controller Tenaga Medis ---
 use App\Http\Controllers\TenagaMedisController;
@@ -112,8 +112,10 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('check.panggilan');
 
-    // 2. Konfirmasi Datang (Tombol "Saya Menuju Kesana")
-    // Pastikan fungsi 'konfirmasiDatang' ada di PendaftaranController
+    // 2. Stop Alarm (Hanya mematikan suara, tidak ubah status hadir)
+    Route::post('/stop-alarm/{id}', [PendaftaranController::class, 'stopAlarmPasien'])->name('stop.alarm');
+    
+    // 3. Konfirmasi Datang (Backup jika masih dipakai)
     Route::post('/konfirmasi-datang/{id}', [PendaftaranController::class, 'konfirmasiDatang'])->name('konfirmasi.datang');
 });
 
@@ -151,8 +153,12 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
         Route::get('/pasien/{user}/riwayat', 'riwayatPasien')->name('pasien.riwayat');
         Route::delete('/pasien/{user}', 'hapusPasien')->name('pasien.hapus');
         
-        // Pemanggilan Pasien
+        // --- SISTEM PEMANGGILAN ---
         Route::post('/panggil-pasien/{id}', 'panggilPasien')->name('panggil.pasien');
+        
+        // INI YANG SEBELUMNYA KURANG (Penyebab Error Tombol Hadir):
+        Route::post('/tandai-hadir/{id}', 'tandaiHadir')->name('tandai.hadir');
+        
         Route::post('/stop-panggil/{id}', 'stopPanggil')->name('stop.panggil');
         Route::post('/alihkan-pasien/{id}', 'alihkanPasien')->name('alihkan.pasien');
     });
