@@ -4,13 +4,49 @@
 @push('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/plugins/monthSelect/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Loading Overlay Style */
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            border-radius: 24px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(2px);
+        }
+        .loading-active .loading-overlay {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #39A616;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Smooth Fade Animation */
+        .fade-enter { opacity: 0; transform: translateY(10px); }
+        .fade-enter-active { opacity: 1; transform: translateY(0); transition: all 0.4s ease-out; }
+
+        /* Cursor pointer for buttons */
+        .filter-btn { cursor: pointer; }
+    </style>
 @endpush
 
 @section('content')
-
-    {{-- Header Banner (DESIGN MODERN) --}}
-    <div class="dashboard-header-banner">
+    {{-- HEADER BANNER --}}
+    <div class="page-header-banner">
         <div class="header-content">
             <div class="header-icon">
                 <i class="fas fa-chart-line"></i>
@@ -18,11 +54,11 @@
             <div class="header-text">
                 <div class="greeting-badge">
                     <i class="fas fa-chart-bar"></i>
-                    <span id="greeting-time">Selamat Pagi</span>
+                    <span>Analytics Report</span>
                 </div>
                 <h1 class="page-title">Laporan Kunjungan Saya 📊</h1>
                 <p class="page-subtitle">
-                    <i class="fas fa-info-circle"></i>
+                    <i class="far fa-chart-bar"></i>
                     Analisis dan statistik pasien yang telah Anda periksa
                 </p>
             </div>
@@ -30,129 +66,165 @@
                 <div class="pulse-circle pulse-1"></div>
                 <div class="pulse-circle pulse-2"></div>
                 <div class="pulse-circle pulse-3"></div>
-                <i class="fas fa-chart-pie"></i>
-            </div>
-        </div>
-    </div>
-
-    {{-- Stats Section (DESIGN MODERN) --}}
-    <div class="stats-section">
-        <div class="section-header">
-            <h2><i class="fas fa-chart-line"></i> Statistik Pemeriksaan</h2>
-        </div>
-        <div class="stats-grid-modern">
-            <div class="stat-card-modern">
-                <div class="card-gradient-bg"></div>
-                <div class="stat-icon-wrapper stat-info-icon">
-                    <i class="fas fa-calendar-day"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value-modern" data-count="{{ $kunjunganHariIni }}">0</div>
-                    <div class="stat-label-modern">Pasien Diperiksa Hari Ini</div>
-                    <div class="stat-period">Aktif Sekarang</div>
-                </div>
-                <div class="stat-decoration">
-                    <i class="fas fa-calendar-day"></i>
-                </div>
-            </div>
-
-            <div class="stat-card-modern">
-                <div class="card-gradient-bg"></div>
-                <div class="stat-icon-wrapper">
-                    <i class="fas fa-calendar-alt"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value-modern" data-count="{{ $kunjunganBulanIni }}">0</div>
-                    <div class="stat-label-modern">Pasien Diperiksa Bulan Ini</div>
-                    <div class="stat-period">Periode Bulanan</div>
-                </div>
-                <div class="stat-decoration">
-                    <i class="fas fa-calendar-alt"></i>
-                </div>
-            </div>
-
-            <div class="stat-card-modern">
-                <div class="card-gradient-bg"></div>
-                <div class="stat-icon-wrapper stat-warning-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-value-modern" data-count="{{ $semuaKunjungan }}">0</div>
-                    <div class="stat-label-modern">Total Pasien Diperiksa</div>
-                    <div class="stat-period">Keseluruhan</div>
-                </div>
-                <div class="stat-decoration">
-                    <i class="fas fa-users"></i>
+                <div class="time-widget">
+                    <i class="fas fa-file-medical-alt"></i>
+                    <span>Report</span>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Filter Section (DESIGN MODERN) --}}
-    <div class="filter-section">
+    {{-- STATS SECTION (KPI CARDS) --}}
+    <div class="stats-section-modern">
         <div class="section-header">
-            <h2><i class="fas fa-filter"></i> Filter & Tampilan Data</h2>
+            <h2><i class="fas fa-chart-bar"></i> Statistik Pemeriksaan</h2>
         </div>
-        <div class="filter-bar">
-            <div class="filter-controls-modern">
+        <div class="kpi-grid-modern" id="live-kpi">
+            
+            <div class="kpi-card-modern card-info">
+                <div class="card-gradient-overlay card-info-overlay"></div>
+                <div class="kpi-icon-wrapper kpi-info">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-value" id="kpi-hari-ini">{{ $kunjunganHariIni ?? 0 }}</div>
+                    <div class="kpi-label">Pasien Diperiksa Hari Ini</div>
+                    <div class="kpi-trend">
+                        <i class="fas fa-arrow-up"></i> Aktif
+                    </div>
+                </div>
+                <div class="kpi-decoration">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+            </div>
+
+            <div class="kpi-card-modern card-warning">
+                <div class="card-gradient-overlay card-warning-overlay"></div>
+                <div class="kpi-icon-wrapper kpi-warning">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-value" id="kpi-bulan-ini">{{ $kunjunganBulanIni ?? 0 }}</div>
+                    <div class="kpi-label">Pasien Diperiksa Bulan Ini</div>
+                    <div class="kpi-trend">
+                        <i class="fas fa-chart-line"></i> Bulanan
+                    </div>
+                </div>
+                <div class="kpi-decoration">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+            </div>
+
+            <div class="kpi-card-modern card-success">
+                <div class="card-gradient-overlay card-success-overlay"></div>
+                <div class="kpi-icon-wrapper kpi-success">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-value" id="kpi-total">{{ $semuaKunjungan ?? 0 }}</div>
+                    <div class="kpi-label">Total Pasien Diperiksa</div>
+                    <div class="kpi-trend">
+                        <i class="fas fa-database"></i> Total
+                    </div>
+                </div>
+                <div class="kpi-decoration">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- FILTER SECTION --}}
+    <div class="filter-section-modern">
+        <div class="section-header">
+            <h2><i class="fas fa-filter"></i> Filter Data</h2>
+        </div>
+        <div class="filter-card-modern">
+            <div class="filter-controls-grid">
                 <div class="filter-buttons-group">
-                    <a href="{{ route('tenaga-medis.laporan', ['filter' => 'hari_ini']) }}" 
-                       class="btn-filter-modern {{ $filter == 'hari_ini' ? 'btn-active' : '' }}">
+                    <button type="button" onclick="loadData('hari_ini')" 
+                        class="btn-filter-modern filter-btn btn-filter-active"
+                        data-filter="hari_ini">
                         <i class="fas fa-calendar-day"></i>
                         <span>Hari Ini</span>
-                    </a>
-                    <a href="{{ route('tenaga-medis.laporan', ['filter' => 'bulan_ini']) }}" 
-                       class="btn-filter-modern {{ $filter == 'bulan_ini' ? 'btn-active' : '' }}">
+                    </button>
+
+                    <button type="button" onclick="loadData('bulan_ini')" 
+                        class="btn-filter-modern filter-btn"
+                        data-filter="bulan_ini">
                         <i class="fas fa-calendar-alt"></i>
                         <span>Bulan Ini</span>
-                    </a>
-                    <a href="{{ route('tenaga-medis.laporan', ['filter' => 'semua_data']) }}" 
-                       class="btn-filter-modern {{ $filter == 'semua_data' ? 'btn-active' : '' }}">
+                    </button>
+
+                    <button type="button" onclick="loadData('semua_data')" 
+                        class="btn-filter-modern filter-btn"
+                        data-filter="semua_data">
                         <i class="fas fa-database"></i>
                         <span>Semua Data</span>
-                    </a>
+                    </button>
                     
                     <div class="input-picker-wrapper">
+                        <i class="fas fa-calendar-week input-icon"></i>
                         <input type="text" id="bulanFilter" 
-                               class="btn-filter-modern input-picker {{ $filter == 'bulan_terpilih' ? 'btn-active' : '' }}" 
-                               placeholder="📅 Pilih Bulan" 
-                               value="{{ $filter == 'bulan_terpilih' ? \Carbon\Carbon::parse($bulanDipilih)->isoFormat('MMMM YYYY') : '' }}">
+                               class="btn-filter-modern input-picker filter-input" 
+                               placeholder="Pilih Bulan">
                     </div>
                     
                     <div class="input-picker-wrapper">
+                        <i class="fas fa-calendar-day input-icon"></i>
                         <input type="text" id="tanggalFilter" 
-                               class="btn-filter-modern input-picker {{ $filter == 'tanggal' ? 'btn-active' : '' }}" 
-                               placeholder="📅 Pilih Tanggal"
-                               value="{{ $filter == 'tanggal' ? \Carbon\Carbon::parse($tanggalDipilih)->isoFormat('D MMM YYYY') : '' }}">
+                               class="btn-filter-modern input-picker filter-input" 
+                               placeholder="Pilih Tanggal">
+                    </div>
+
+                    <div class="input-picker-wrapper search-wrapper">
+                        <i class="fas fa-search input-icon"></i>
+                        <input type="text" id="searchInput" 
+                               class="btn-filter-modern input-picker" 
+                               placeholder="Cari Pasien/Layanan..."
+                               style="min-width: 220px;">
                     </div>
                 </div>
+                
                 <div class="view-toggle-group">
-                    <button id="showTableBtn" class="btn-filter-modern btn-toggle-active">
+                    <button id="showTableBtn" class="btn-toggle-modern btn-toggle-active">
                         <i class="fas fa-table"></i> 
-                        <span>Data</span>
+                        <span>Lihat Data</span>
                     </button>
-                    <button id="showChartBtn" class="btn-filter-modern btn-filter-style">
+                    <button id="showChartBtn" class="btn-toggle-modern">
                         <i class="fas fa-chart-line"></i> 
-                        <span>Grafik</span>
+                        <span>Lihat Grafik</span>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Data Section (DESIGN MODERN) --}}
-    <div class="schedule-section">
+    {{-- DATA SECTION --}}
+    <div class="data-section-modern" id="dataContainer" style="position: relative; min-height: 400px;">
+        
+        {{-- Loading Spinner --}}
+        <div class="loading-overlay">
+            <div class="spinner"></div>
+        </div>
+
         <div class="section-header">
-            <h2><i class="fas fa-clipboard-list"></i> Data Pemeriksaan Pasien</h2>
-            <span class="schedule-count">
-                <i class="fas fa-check-circle"></i>
-                {{ $kunjunganData->count() }} Data
-            </span>
+            <h2><i class="fas fa-list-alt"></i> Data Pemeriksaan Pasien</h2>
         </div>
 
         {{-- TAMPILAN TABEL --}}
-        <div id="tableView" class="view-content active">
+        <div id="tableView" class="view-content-modern view-active">
             <div class="schedule-container-modern">
+                <div class="table-card-header">
+                    <h3 class="table-title">
+                        <i class="fas fa-clipboard-list"></i> 
+                        Daftar Pemeriksaan
+                    </h3>
+                    <button class="schedule-count btn-export-modern">
+                        <i class="fas fa-download"></i>
+                        Export
+                    </button>
+                </div>
                 <table class="schedule-table">
                     <thead>
                         <tr>
@@ -162,62 +234,21 @@
                             <th><i class="far fa-clock"></i> Tanggal Pemeriksaan</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @forelse ($kunjunganData as $index => $data)
-                            <tr class="schedule-row" style="animation-delay: {{ $index * 0.1 }}s">
-                                <td>
-                                    <div class="no-antrian-badge">
-                                        {{ $data->pasien_id }}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="doctor-info">
-                                        <div class="doctor-avatar">
-                                            @if($data->profile_photo_path)
-                                                <img src="{{ asset('storage/' . $data->profile_photo_path) }}" alt="Foto">
-                                            @else
-                                                {{ substr($data->nama_pasien ?? 'P', 0, 1) }}
-                                            @endif
-                                        </div>
-                                        <span class="doctor-name">{{ $data->nama_pasien }}</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="status-badge status-diperiksa-awal">
-                                        <i class="fas fa-briefcase-medical"></i>
-                                        {{ $data->layanan }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="status-badge status-selesai">
-                                        <i class="far fa-clock"></i>
-                                        {{ \Carbon\Carbon::parse($data->tanggal_kunjungan)->isoFormat('DD MMM YYYY, HH:mm') }}
-                                    </span>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4">
-                                    <div class="empty-schedule">
-                                        <i class="fas fa-inbox"></i>
-                                        <p>Tidak ada data pemeriksaan</p>
-                                        <small>Untuk periode yang dipilih</small>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
+                    
+                    <tbody id="live-table-body">
+                        {{-- Data akan di-load via AJAX --}}
                     </tbody>
                 </table>
             </div>
         </div>
 
         {{-- TAMPILAN GRAFIK --}}
-        <div id="chartView" class="view-content" style="display: none;">
+        <div id="chartView" class="view-content-modern">
             <div class="schedule-container-modern">
                 <div class="table-card-header">
                     <h3 class="table-title">
                         <i class="fas fa-chart-area"></i> 
-                        Grafik Pemeriksaan ({{ ucfirst(str_replace('_', ' ', $filter)) }})
+                        <span id="chart-title">Grafik Pemeriksaan</span>
                     </h3>
                 </div>
                 <div class="chart-container-wrapper">
@@ -226,6 +257,7 @@
             </div>
         </div>
     </div>
+
 @endsection
 
 @push('styles')
@@ -235,7 +267,7 @@
         margin: 0;
         padding: 0;
     }
-    
+
     /* ===== DARK MODE SUPPORT ===== */
     :root {
         --p1: #39A616;
@@ -244,6 +276,7 @@
         --grad: linear-gradient(135deg, #39A616, #1D8208, #0C5B00);
         --grad-reverse: linear-gradient(135deg, #0C5B00, #1D8208, #39A616);
         
+        /* Light Mode Colors */
         --text-primary: #1f2937;
         --text-secondary: #6b7280;
         --text-muted: #9ca3af;
@@ -255,7 +288,9 @@
         --hover-bg: rgba(57, 166, 22, 0.04);
     }
 
-    [data-theme="dark"] {
+    /* Dark Mode Colors */
+    [data-theme="dark"],
+    .dark-mode {
         --text-primary: #f9fafb;
         --text-secondary: #d1d5db;
         --text-muted: #9ca3af;
@@ -267,6 +302,7 @@
         --hover-bg: rgba(57, 166, 22, 0.15);
     }
 
+    /* Auto Dark Mode */
     @media (prefers-color-scheme: dark) {
         :root:not([data-theme="light"]) {
             --text-primary: #f9fafb;
@@ -282,22 +318,21 @@
     }
 
     body {
-        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         background: var(--bg-secondary);
         color: var(--text-primary);
         transition: background 0.3s ease, color 0.3s ease;
     }
 
     /* ===== HEADER BANNER ===== */
-    .dashboard-header-banner {
+    .page-header-banner {
         margin-bottom: 40px;
-        animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .header-content {
         display: flex;
         align-items: center;
-        gap: 20px; 
+        gap: 20px;
         background: var(--grad);
         padding: 35px 40px;
         border-radius: 24px;
@@ -338,14 +373,8 @@
         position: relative;
         z-index: 1;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        animation: float 3s ease-in-out infinite;
     }
     
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-    }
-
     .header-text {
         flex: 1;
         position: relative;
@@ -365,16 +394,6 @@
         font-weight: 600;
         margin-bottom: 15px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        animation: fadeIn 0.8s ease-out 0.2s both;
-    }
-
-    .greeting-badge i {
-        animation: pulse 2s ease-in-out infinite;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.2); opacity: 0.8; }
     }
 
     .page-title {
@@ -383,7 +402,6 @@
         font-size: 2.2rem;
         margin: 0 0 10px 0;
         letter-spacing: -0.5px;
-        animation: fadeIn 0.8s ease-out 0.3s both;
     }
 
     .page-subtitle {
@@ -394,41 +412,12 @@
         font-size: 1.05rem;
         font-weight: 500;
         margin: 0;
-        animation: fadeIn 0.8s ease-out 0.4s both;
     }
     
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
     .hero-illustration {
-        width: 130px;
-        height: 130px;
-        background: rgba(255, 255, 255, 0.18);
-        backdrop-filter: blur(15px);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         position: relative;
         flex-shrink: 0;
         z-index: 1;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    }
-
-    .hero-illustration > i {
-        font-size: 55px;
-        color: white;
-        z-index: 2;
-        animation: heartbeat 1.5s ease-in-out infinite;
-    }
-    
-    @keyframes heartbeat {
-        0%, 100% { transform: scale(1); }
-        25% { transform: scale(1.1); }
-        50% { transform: scale(1); }
-        75% { transform: scale(1.05); }
     }
 
     .pulse-circle {
@@ -436,25 +425,45 @@
         border: 2px solid rgba(255, 255, 255, 0.4);
         border-radius: 50%;
         animation: pulse-ring 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
     }
 
-    .pulse-1 { width: 100%; height: 100%; animation-delay: 0s; }
-    .pulse-2 { width: 120%; height: 120%; animation-delay: 0.8s; }
-    .pulse-3 { width: 140%; height: 140%; animation-delay: 1.6s; }
+    .pulse-1 { width: 140px; height: 140px; animation-delay: 0s; }
+    .pulse-2 { width: 170px; height: 170px; animation-delay: 0.8s; }
+    .pulse-3 { width: 200px; height: 200px; animation-delay: 1.6s; }
     
     @keyframes pulse-ring {
-        0% { transform: scale(0.9); opacity: 1; }
-        100% { transform: scale(1.5); opacity: 0; }
+        0% { transform: translate(-50%, -50%) scale(0.9); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+    }
+
+    .time-widget {
+        background: rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(15px);
+        padding: 18px 28px;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        animation: float 3s ease-in-out infinite;
+        min-width: 160px;
+        justify-content: center;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
     }
 
     /* ===== SECTION HEADER ===== */
     .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 28px;
-        flex-wrap: wrap;
-        gap: 15px;
+        margin-bottom: 25px;
     }
 
     .section-header h2 {
@@ -472,49 +481,24 @@
         font-size: 1.4rem;
     }
 
-    .schedule-count {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        background: var(--grad);
-        color: white;
-        padding: 12px 24px;
-        border-radius: 25px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        box-shadow: 0 6px 20px rgba(57, 166, 22, 0.3);
-        animation: fadeInRight 0.6s ease-out;
-    }
-    
-    @keyframes fadeInRight {
-        from { opacity: 0; transform: translateX(20px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-
     /* ===== STATS SECTION ===== */
-    .stats-section {
+    .stats-section-modern {
         margin-bottom: 40px;
-        animation: fadeInUp 0.6s ease-out 0.1s backwards;
     }
     
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .stats-grid-modern {
+    .kpi-grid-modern {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        gap: 28px;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
     }
 
-    .stat-card-modern {
+    .kpi-card-modern {
         background: var(--bg-primary);
-        border-radius: 24px;
-        padding: 32px;
+        border-radius: 20px;
+        padding: 28px;
         display: flex;
         align-items: center;
-        gap: 24px;
+        gap: 20px;
         box-shadow: 0 8px 30px var(--shadow-color);
         border: 1px solid var(--border-color);
         position: relative;
@@ -522,115 +506,116 @@
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .stat-card-modern:hover {
-        transform: translateY(-12px) scale(1.02);
+    .kpi-card-modern:hover {
+        transform: translateY(-8px);
         box-shadow: 0 20px 60px rgba(57, 166, 22, 0.25);
         border-color: rgba(57, 166, 22, 0.4);
     }
 
-    .card-gradient-bg {
+    .card-gradient-overlay {
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         height: 100%;
         background: var(--grad);
-        opacity: 0.06;
-        transition: opacity 0.5s ease;
+        opacity: 0.05;
+        transition: opacity 0.4s ease;
     }
 
-    .stat-card-modern:hover .card-gradient-bg {
-        opacity: 0.12;
+    .card-warning-overlay { background: linear-gradient(135deg, #f39c12, #e67e22); }
+    .card-info-overlay { background: linear-gradient(135deg, #3498db, #2980b9); }
+    .card-success-overlay { background: var(--grad); }
+
+    .kpi-card-modern:hover .card-gradient-overlay {
+        opacity: 0.08;
     }
 
-    .stat-icon-wrapper {
-        width: 80px;
-        height: 80px;
-        border-radius: 20px;
+    .kpi-icon-wrapper {
+        width: 70px;
+        height: 70px;
+        border-radius: 16px;
         background: var(--grad);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 36px;
+        font-size: 32px;
         color: white;
         position: relative;
         flex-shrink: 0;
         z-index: 1;
-        box-shadow: 0 8px 25px rgba(57, 166, 22, 0.35);
-        animation: float 3s ease-in-out infinite;
+        box-shadow: 0 6px 20px rgba(57, 166, 22, 0.3);
     }
 
-    .stat-info-icon {
-        background: linear-gradient(135deg, #3498db, #2980b9);
-        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.35);
-    }
+    .kpi-warning { background: linear-gradient(135deg, #f39c12, #e67e22); box-shadow: 0 6px 20px rgba(243, 156, 18, 0.3); }
+    .kpi-info { background: linear-gradient(135deg, #3498db, #2980b9); box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3); }
+    .kpi-success { background: var(--grad); box-shadow: 0 6px 20px rgba(57, 166, 22, 0.3); }
 
-    .stat-warning-icon {
-        background: linear-gradient(135deg, #f39c12, #e67e22);
-        box-shadow: 0 8px 25px rgba(243, 156, 18, 0.35);
-    }
-
-    .stat-content {
+    .kpi-content {
         flex: 1;
         z-index: 1;
     }
 
-    .stat-value-modern {
-        font-size: 2.8rem;
+    .kpi-value {
+        font-size: 2.5rem;
         font-weight: 800;
         color: var(--text-primary);
         line-height: 1;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
+        transition: all 0.3s ease;
     }
 
-    .stat-label-modern {
-        font-size: 1.05rem;
+    .kpi-value.updated {
+        color: var(--p1);
+        transform: scale(1.1);
+    }
+
+    .kpi-label {
+        font-size: 1rem;
         font-weight: 600;
         color: var(--text-secondary);
-        margin-bottom: 5px;
+        margin-bottom: 6px;
     }
 
-    .stat-period {
-        font-size: 0.9rem;
+    .kpi-trend {
+        font-size: 0.85rem;
         color: var(--text-muted);
-        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
     }
 
-    .stat-decoration {
+    .kpi-decoration {
         position: absolute;
-        bottom: 15px;
-        right: 15px;
-        font-size: 80px;
-        color: rgba(57, 166, 22, 0.08);
+        bottom: 10px;
+        right: 10px;
+        font-size: 70px;
+        color: var(--bg-tertiary);
+        opacity: 0.5;
         z-index: 0;
-        animation: float 4s ease-in-out infinite;
-    }
-
-    [data-theme="dark"] .stat-decoration {
-        color: rgba(57, 166, 22, 0.15);
     }
 
     /* ===== FILTER SECTION ===== */
-    .filter-section {
+    .filter-section-modern {
         margin-bottom: 40px;
-        animation: fadeInUp 0.6s ease-out 0.2s backwards;
     }
 
-    .filter-bar {
+    .filter-card-modern {
         background: var(--bg-primary);
-        padding: 24px 28px;
-        border-radius: 20px;
-        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 32px;
         box-shadow: 0 8px 30px var(--shadow-color);
+        border: 1px solid var(--border-color);
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .filter-bar:hover {
+    .filter-card-modern:hover {
         box-shadow: 0 20px 60px rgba(57, 166, 22, 0.25);
         border-color: rgba(57, 166, 22, 0.4);
     }
 
-    .filter-controls-modern {
+    .filter-controls-grid {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -655,29 +640,133 @@
         display: inline-flex;
         align-items: center;
         gap: 10px;
-        padding: 12px 22px;
+        padding: 12px 24px;
         border-radius: 14px;
         text-decoration: none;
         font-size: 0.9rem;
-        font-weight: 600;
+        font-weight: 700;
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
         border: 2px solid var(--border-color);
         background: var(--bg-secondary);
-        color: var(--text-secondary);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        color: var(--text-primary);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         white-space: nowrap;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-filter-modern::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(57, 166, 22, 0.1), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .btn-filter-modern:hover::before {
+        left: 100%;
     }
 
     .btn-filter-modern:hover {
         background: var(--hover-bg);
         border-color: var(--p1);
-        color: var(--text-primary);
         transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(57, 166, 22, 0.15);
+        box-shadow: 0 8px 25px rgba(57, 166, 22, 0.2);
     }
 
-    .btn-filter-modern.btn-active,
+    .btn-filter-active {
+        background: var(--grad);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 6px 20px rgba(57, 166, 22, 0.3);
+    }
+
+    .btn-filter-active:hover {
+        background: var(--grad-reverse);
+        box-shadow: 0 10px 30px rgba(57, 166, 22, 0.5);
+    }
+
+    .input-picker-wrapper {
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        font-size: 1rem;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .btn-filter-active .input-icon {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .input-picker {
+        min-width: 200px;
+        padding-left: 48px;
+        cursor: pointer;
+    }
+
+    .search-wrapper .input-picker {
+        cursor: text;
+    }
+
+    .input-picker::placeholder {
+        color: var(--text-muted);
+    }
+
+    .input-picker.btn-filter-active::placeholder {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .btn-toggle-modern {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 24px;
+        border-radius: 14px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        white-space: nowrap;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-toggle-modern::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(57, 166, 22, 0.1), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .btn-toggle-modern:hover::before {
+        left: 100%;
+    }
+
+    .btn-toggle-modern:hover {
+        background: var(--hover-bg);
+        border-color: var(--p1);
+        transform: translateY(-2px);
+    }
+
     .btn-toggle-active {
         background: var(--grad);
         color: white;
@@ -685,33 +774,28 @@
         box-shadow: 0 6px 20px rgba(57, 166, 22, 0.3);
     }
 
-    .btn-filter-style {
-        background: var(--bg-secondary);
-        color: var(--text-secondary);
+    .btn-toggle-active:hover {
+        background: var(--grad-reverse);
+        box-shadow: 0 10px 30px rgba(57, 166, 22, 0.5);
     }
 
-    .input-picker {
-        min-width: 180px;
-        cursor: pointer;
-        background: var(--bg-secondary);
+    /* ===== DATA SECTION ===== */
+    .data-section-modern {
+        margin-bottom: 40px;
     }
 
-    .input-picker::placeholder {
-        color: var(--text-muted);
+    .view-content-modern {
+        display: none;
     }
 
-    .input-picker.btn-active {
-        background: var(--grad);
+    .view-active {
+        display: block;
+        animation: fadeIn 0.5s ease;
     }
-
-    .input-picker.btn-active::placeholder {
-        color: rgba(255, 255, 255, 0.9);
-    }
-
-    /* ===== SCHEDULE SECTION ===== */
-    .schedule-section {
-        margin-bottom: 30px;
-        animation: fadeInUp 0.6s ease-out 0.3s backwards;
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
 
     .schedule-container-modern {
@@ -726,6 +810,51 @@
     .schedule-container-modern:hover {
         box-shadow: 0 20px 60px rgba(57, 166, 22, 0.25);
         border-color: rgba(57, 166, 22, 0.4);
+    }
+
+    .table-card-header {
+        background: var(--grad);
+        padding: 20px 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .table-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .schedule-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(10px);
+    }
+
+    .btn-export-modern {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .btn-export-modern:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
     }
 
     .schedule-table {
@@ -755,15 +884,8 @@
     .schedule-row {
         border-bottom: 1px solid var(--border-color);
         transition: all 0.3s ease;
-        animation: fadeInLeft 0.5s ease forwards;
-        opacity: 0;
     }
     
-    @keyframes fadeInLeft {
-        from { opacity: 0; transform: translateX(-20px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-
     .schedule-row:hover {
         background: var(--hover-bg);
     }
@@ -773,18 +895,23 @@
         color: var(--text-secondary);
     }
 
-    .no-antrian-badge {
+    .text-secondary-color {
+        color: var(--text-secondary);
+    }
+
+    .number-badge {
         display: inline-flex;
-        width: 50px;
-        height: 50px;
-        background: var(--grad);
-        color: white;
-        border-radius: 12px;
         align-items: center;
         justify-content: center;
-        font-weight: 800;
-        font-size: 1.2rem;
-        box-shadow: 0 4px 12px rgba(57, 166, 22, 0.25);
+        min-width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #6c757d, #5a6268);
+        color: white;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        padding: 0 10px;
+        box-shadow: 0 2px 8px rgba(108, 117, 125, 0.25);
     }
 
     .doctor-info {
@@ -821,39 +948,44 @@
         color: var(--text-primary);
     }
 
-    .status-badge {
+    .service-badge {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 10px 20px;
-        border-radius: 25px;
+        padding: 10px 18px;
+        background: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(41, 128, 185, 0.15));
+        color: #1976d2;
+        border-radius: 20px;
         font-weight: 600;
-        font-size: 0.9rem;
-        border: 1px solid;
+        font-size: 0.85rem;
+        border: 1px solid rgba(52, 152, 219, 0.2);
     }
 
-    .status-diperiksa-awal {
-        background: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(41, 128, 185, 0.2));
-        color: #0c5460;
-        border-color: rgba(52, 152, 219, 0.2);
-    }
-
-    .status-selesai {
-        background: linear-gradient(135deg, rgba(46, 204, 113, 0.1), rgba(39, 174, 96, 0.2));
-        color: #155724;
-        border-color: rgba(46, 204, 113, 0.2);
-    }
-
-    [data-theme="dark"] .status-diperiksa-awal {
-        background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(41, 128, 185, 0.3));
+    [data-theme="dark"] .service-badge,
+    .dark-mode .service-badge {
+        background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(41, 128, 185, 0.25));
         color: #60a5fa;
-        border-color: rgba(52, 152, 219, 0.4);
+        border-color: rgba(52, 152, 219, 0.3);
     }
 
-    [data-theme="dark"] .status-selesai {
-        background: linear-gradient(135deg, rgba(46, 204, 113, 0.2), rgba(39, 174, 96, 0.3));
-        color: #4ade80;
-        border-color: rgba(46, 204, 113, 0.4);
+    .time-badge-modern {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.15));
+        color: #856404;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    [data-theme="dark"] .time-badge-modern,
+    .dark-mode .time-badge-modern {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.25));
+        color: #fbbf24;
+        border-color: rgba(245, 158, 11, 0.3);
     }
 
     .empty-schedule {
@@ -881,44 +1013,8 @@
         color: var(--text-muted);
     }
 
-    /* ===== CHART CONTAINER ===== */
-    .table-card-header {
-        background: var(--grad);
-        padding: 20px 28px;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .table-title {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: white;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin: 0;
-    }
-
-    .table-title i {
-        font-size: 1.3rem;
-    }
-
     .chart-container-wrapper {
         padding: 40px;
-        background: var(--bg-primary);
-    }
-
-    .view-content {
-        display: none;
-    }
-
-    .view-content.active {
-        display: block;
-        animation: fadeIn 0.5s ease;
-    }
-
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-20px); }
-        to { opacity: 1; transform: translateY(0); }
     }
 
     /* ===== RESPONSIVE ===== */
@@ -927,7 +1023,7 @@
             display: none;
         }
 
-        .filter-controls-modern {
+        .filter-controls-grid {
             flex-direction: column;
             align-items: stretch;
         }
@@ -937,7 +1033,8 @@
             width: 100%;
         }
 
-        .btn-filter-modern {
+        .btn-filter-modern,
+        .btn-toggle-modern {
             flex: 1;
             justify-content: center;
         }
@@ -954,17 +1051,17 @@
             font-size: 1.8rem;
         }
 
-        .section-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .stats-grid-modern {
+        .kpi-grid-modern {
             grid-template-columns: 1fr;
         }
 
         .filter-buttons-group {
             flex-direction: column;
+        }
+
+        .table-card-header {
+            flex-direction: column;
+            align-items: flex-start;
         }
 
         .schedule-table {
@@ -982,8 +1079,8 @@
             font-size: 18px;
         }
 
-        .chart-container-wrapper {
-            padding: 20px;
+        .view-toggle-group {
+            flex-direction: column;
         }
     }
 
@@ -997,9 +1094,8 @@
             padding: 8px 16px;
         }
 
-        .stat-card-modern {
-            flex-direction: column;
-            text-align: center;
+        .section-header h2 {
+            font-size: 1.3rem;
         }
     }
 </style>
@@ -1009,75 +1105,201 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://npmcdn.com/flatpickr/dist/plugins/monthSelect/index.js"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    
-    // Update Greeting
-    function updateGreeting() {
-        const hour = new Date().getHours();
-        const greetingElement = document.getElementById('greeting-time');
-        
-        let greetingText = '';
-        if (hour >= 5 && hour < 11) {
-            greetingText = 'Selamat Pagi';
-        } else if (hour >= 11 && hour < 15) {
-            greetingText = 'Selamat Siang';
-        } else if (hour >= 15 && hour < 18) {
-            greetingText = 'Selamat Sore';
-        } else {
-            greetingText = 'Selamat Malam';
-        }
-        
-        if (greetingElement) {
-            greetingElement.style.transition = 'opacity 0.3s ease';
-            greetingElement.style.opacity = '0';
-            
-            setTimeout(() => {
-                greetingElement.textContent = greetingText;
-                greetingElement.style.opacity = '1';
-            }, 300);
-        }
-    }
-    
-    updateGreeting();
+    // --- GLOBAL VARIABLES ---
+    let myChartInstance = null;
+    let currentFilter = 'hari_ini';
 
-    // Counter Animation
-    function animateCounter(element) {
-        const target = parseInt(element.getAttribute('data-count'));
-        const duration = 2000;
-        const step = target / (duration / 16);
-        let current = 0;
-        
-        const timer = setInterval(() => {
-            current += step;
-            if (current >= target) {
-                element.textContent = target;
-                clearInterval(timer);
-            } else {
-                element.textContent = Math.floor(current);
-            }
-        }, 16);
-    }
-    
-    document.querySelectorAll('.stat-value-modern[data-count]').forEach(element => {
-        animateCounter(element);
-    });
-    
-    // Chart.js - JAVASCRIPT DARI KODE LAMA YANG BERHASIL
-    const chartLabels = {!! json_encode($chartLabels) !!};
-    const chartData = {!! json_encode($chartData) !!};
-    
-    if (chartData.length > 0) {
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- 1. INISIALISASI CHART AWAL ---
         const ctx = document.getElementById('kunjunganChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
+        
+        // Simpan instance chart
+        initChart(ctx, [], []);
+
+        // Load data pertama kali
+        loadData('hari_ini');
+
+        // --- 2. FLATPICKR SETTINGS ---
+        flatpickr.localize(flatpickr.l10ns.id);
+
+        // Filter Tanggal
+        flatpickr("#tanggalFilter", {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "j F Y",
+            allowInput: true,
+            onChange: function(selectedDates, dateStr, instance) {
+                if (dateStr) {
+                    loadData('tanggal', { tanggal: dateStr });
+                }
+            }
+        });
+
+        // Filter Bulan
+        flatpickr("#bulanFilter", {
+            plugins: [
+                new monthSelectPlugin({
+                    shorthand: true,
+                    dateFormat: "Y-m",
+                    altFormat: "F Y",
+                    theme: "light"
+                })
+            ],
+            altInput: true,
+            onChange: function(selectedDates, dateStr, instance) {
+                 if (dateStr) {
+                    loadData('bulan_terpilih', { bulan: dateStr });
+                }
+            }
+        });
+
+        // --- 3. TOGGLE TABEL/GRAFIK ---
+        const showTableBtn = document.getElementById('showTableBtn');
+        const showChartBtn = document.getElementById('showChartBtn');
+
+        if(showTableBtn) {
+            showTableBtn.addEventListener('click', function() {
+                switchView('table');
+            });
+        }
+        if(showChartBtn) {
+            showChartBtn.addEventListener('click', function() {
+                switchView('chart');
+            });
+        }
+
+        // --- 4. SEARCH FILTER FUNCTION (Client Side) ---
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                const filter = this.value.toLowerCase();
+                const rows = document.querySelectorAll('#live-table-body tr.schedule-row');
+                const noDataRow = document.getElementById('no-data-row');
+                let hasVisibleRow = false;
+
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    if (text.includes(filter)) {
+                        row.style.display = '';
+                        hasVisibleRow = true;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                if (noDataRow) {
+                    noDataRow.style.display = hasVisibleRow ? 'none' : '';
+                }
+            });
+        }
+    });
+
+    // --- MAIN FUNCTION: LOAD DATA VIA AJAX (AUTO LOAD) ---
+    function loadData(filterType, params = {}) {
+        // 1. Tampilkan Loading Spinner
+        document.getElementById('dataContainer').classList.add('loading-active');
+        
+        // 2. Update status tombol aktif secara visual
+        updateActiveButton(filterType);
+
+        // 3. Build URL
+        let url = `{{ route('tenaga-medis.laporan.data') }}?filter=${filterType}`;
+        if(params.tanggal) url += `&tanggal=${params.tanggal}`;
+        if(params.bulan) url += `&bulan=${params.bulan}`;
+
+        // 4. Fetch Data ke Server
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // A. Update KPI (Angka Statistik)
+            animateValue("kpi-hari-ini", data.stats.hari_ini);
+            animateValue("kpi-bulan-ini", data.stats.bulan_ini);
+            animateValue("kpi-total", data.stats.total);
+
+            // B. Update Chart
+            updateChart(data.chart.labels, data.chart.data);
+            
+            // C. Update Judul Grafik
+            const chartTitle = document.getElementById('chart-title');
+            if(chartTitle) chartTitle.innerText = `Grafik Pemeriksaan - ${data.chart.title}`;
+
+            // D. Update Tabel
+            updateTable(data.table_data);
+
+            // E. Hilangkan Loading Spinner dengan delay sedikit agar smooth
+            setTimeout(() => {
+                document.getElementById('dataContainer').classList.remove('loading-active');
+            }, 300);
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+            document.getElementById('dataContainer').classList.remove('loading-active');
+        });
+    }
+
+    // --- HELPER FUNCTIONS ---
+
+    function switchView(view) {
+        const tableView = document.getElementById('tableView');
+        const chartView = document.getElementById('chartView');
+        const showTableBtn = document.getElementById('showTableBtn');
+        const showChartBtn = document.getElementById('showChartBtn');
+
+        if(view === 'table') {
+            tableView.classList.add('view-active');
+            chartView.classList.remove('view-active');
+            showTableBtn.classList.add('btn-toggle-active');
+            showChartBtn.classList.remove('btn-toggle-active');
+        } else {
+            tableView.classList.remove('view-active');
+            chartView.classList.add('view-active');
+            showChartBtn.classList.add('btn-toggle-active');
+            showTableBtn.classList.remove('btn-toggle-active');
+        }
+    }
+
+    function updateActiveButton(filterType) {
+        // Reset semua tombol/input active
+        document.querySelectorAll('.filter-btn, .filter-input').forEach(el => el.classList.remove('btn-filter-active'));
+        
+        // Set tombol yang diklik jadi active
+        if(filterType === 'hari_ini' || filterType === 'bulan_ini' || filterType === 'semua_data') {
+            const btn = document.querySelector(`button[data-filter="${filterType}"]`);
+            if(btn) btn.classList.add('btn-filter-active');
+        } else if (filterType === 'tanggal') {
+            const picker = document.getElementById('tanggalFilter');
+            if(picker) picker.classList.add('btn-filter-active');
+        } else if (filterType === 'bulan_terpilih') {
+            const picker = document.getElementById('bulanFilter');
+            if(picker) picker.classList.add('btn-filter-active');
+        }
+    }
+
+    function initChart(ctx, labels, data) {
+        // Detect dark mode
+        const isDarkMode = document.documentElement.classList.contains('dark-mode') || 
+                          (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        const bgColor = isDarkMode ? 'rgba(57, 166, 22, 0.2)' : 'rgba(57, 166, 22, 0.1)';
+        const gridColor = isDarkMode ? 'rgba(57, 166, 22, 0.15)' : 'rgba(57, 166, 22, 0.1)';
+        const textColor = isDarkMode ? '#d1d5db' : '#6b7280';
+        const tooltipBg = isDarkMode ? '#1f2937' : '#0C5B00';
+
+        myChartInstance = new Chart(ctx, {
+            type: 'line', 
             data: {
-                labels: chartLabels,
+                labels: labels,
                 datasets: [{
-                    label: 'Jumlah Pemeriksaan',
-                    data: chartData,
-                    backgroundColor: 'rgba(57, 166, 22, 0.1)',
+                    label: 'Jumlah Pasien Diperiksa',
+                    data: data,
+                    backgroundColor: bgColor,
                     borderColor: '#39A616',
                     borderWidth: 3,
                     fill: true,
@@ -1092,26 +1314,21 @@ document.addEventListener('DOMContentLoaded', function () {
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
-                scales: {
-                    y: {
+                scales: { 
+                    y: { 
                         beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        },
-                        grid: {
-                            color: 'rgba(57, 166, 22, 0.1)'
-                        }
+                        ticks: { color: textColor, stepSize: 1 },
+                        grid: { color: gridColor }
                     },
                     x: {
-                        grid: {
-                            display: false
-                        }
+                        ticks: { color: textColor },
+                        grid: { display: false }
                     }
                 },
-                plugins: {
-                    tooltip: {
-                        backgroundColor: '#0C5B00',
-                        padding: 12,
+                plugins: { 
+                    tooltip: { 
+                        backgroundColor: tooltipBg,
+                        padding: 14,
                         titleFont: { size: 14, weight: 'bold' },
                         bodyFont: { size: 13 }
                     },
@@ -1120,7 +1337,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         position: 'top',
                         labels: {
                             font: { size: 13, weight: '600' },
-                            color: '#556E85'
+                            color: isDarkMode ? '#f9fafb' : '#556E85'
                         }
                     }
                 }
@@ -1128,60 +1345,105 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Toggle Tabel/Grafik - SCRIPT DARI KODE LAMA
-    const showTableBtn = document.getElementById('showTableBtn');
-    const showChartBtn = document.getElementById('showChartBtn');
-    const tableView = document.getElementById('tableView');
-    const chartView = document.getElementById('chartView');
-
-    if(showTableBtn) {
-        showTableBtn.addEventListener('click', function() {
-            tableView.style.display = 'block';
-            chartView.style.display = 'none';
-            showTableBtn.classList.add('btn-toggle-active');
-            showTableBtn.classList.remove('btn-filter-style');
-            showChartBtn.classList.add('btn-filter-style');
-            showChartBtn.classList.remove('btn-toggle-active');
-        });
-    }
-    if(showChartBtn) {
-        showChartBtn.addEventListener('click', function() {
-            tableView.style.display = 'none';
-            chartView.style.display = 'block';
-            showTableBtn.classList.add('btn-filter-style');
-            showTableBtn.classList.remove('btn-toggle-active');
-            showChartBtn.classList.add('btn-toggle-active');
-            showChartBtn.classList.remove('btn-filter-style');
-        });
+    function updateChart(labels, data) {
+        if(myChartInstance) {
+            myChartInstance.data.labels = labels;
+            myChartInstance.data.datasets[0].data = data;
+            myChartInstance.update();
+        }
     }
 
-    // Filter Tanggal
-    flatpickr("#tanggalFilter", {
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "d M Y",
-        onChange: function(selectedDates, dateStr, instance) {
-            if (dateStr) {
-                window.location.href = `{{ route('tenaga-medis.laporan') }}?filter=tanggal&tanggal=${dateStr}`;
-            }
-        }
-    });
+    function updateTable(data) {
+        const tbody = document.getElementById('live-table-body');
+        tbody.innerHTML = '';
 
-    // Filter Bulan
-    flatpickr("#bulanFilter", {
-        plugins: [
-            new monthSelectPlugin({
-                shorthand: true,
-                dateFormat: "Y-m",
-                altFormat: "F Y",
-            })
-        ],
-        onChange: function(selectedDates, dateStr, instance) {
-            if (dateStr) {
-                window.location.href = `{{ route('tenaga-medis.laporan') }}?filter=bulan_terpilih&bulan=${dateStr}`;
-            }
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `
+                <tr id="no-data-row">
+                    <td colspan="4">
+                        <div class="empty-schedule">
+                            <i class="fas fa-inbox"></i>
+                            <p>Tidak ada data pemeriksaan untuk periode ini</p>
+                            <small>Silakan pilih filter lain untuk melihat data</small>
+                        </div>
+                    </td>
+                </tr>`;
+            return;
         }
-    });
-});
+
+        let html = '';
+        data.forEach(item => {
+            // Logic Avatar
+            let avatarContent = '';
+            if (item.profile_photo_url) {
+                avatarContent = `<img src="${item.profile_photo_url}" alt="Foto">`;
+            } else {
+                avatarContent = item.nama_pasien.charAt(0).toUpperCase();
+            }
+
+            // Generate Row HTML
+            html += `
+                <tr class="schedule-row fade-enter">
+                    <td>
+                        <span class="number-badge">${item.pasien_id}</span>
+                    </td>
+                    <td>
+                        <div class="doctor-info">
+                            <div class="doctor-avatar">
+                                ${avatarContent}
+                            </div>
+                            <span class="doctor-name">${item.nama_pasien}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="service-badge">
+                            <i class="fas fa-briefcase-medical"></i>
+                            ${item.layanan}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="time-badge-modern">
+                            <i class="far fa-clock"></i>
+                            <span>${item.tanggal_formatted}</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
+        
+        // Trigger animation fade-in
+        setTimeout(() => {
+            document.querySelectorAll('.fade-enter').forEach(el => el.classList.add('fade-enter-active'));
+        }, 50);
+    }
+
+    // Fungsi animasi angka naik (Counter Animation)
+    function animateValue(id, end) {
+        const obj = document.getElementById(id);
+        if(!obj) return;
+        
+        const start = parseInt(obj.innerHTML.replace(/\D/g,'')) || 0;
+        if(start === end) return;
+        
+        let current = start;
+        const range = end - start;
+        const increment = end > start ? 1 : -1;
+        const step = Math.abs(Math.floor(1000 / range));
+        
+        const timer = setInterval(() => {
+            current += increment;
+            obj.innerHTML = current;
+            if (current == end) {
+                clearInterval(timer);
+                // Add pulse effect
+                obj.classList.add('updated');
+                setTimeout(() => obj.classList.remove('updated'), 300);
+            }
+        }, Math.max(step, 10));
+        
+        obj.innerHTML = end;
+    }
 </script>
 @endpush

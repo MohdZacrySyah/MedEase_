@@ -30,17 +30,6 @@ use App\Http\Controllers\Apoteker\RiwayatController;
 use App\Http\Controllers\Apoteker\LaporanController;
 use App\Http\Controllers\Auth\GoogleController;
 
-// --- Import Model (Untuk Logic Closure) ---
-use App\Models\Pendaftaran;
-
-/*
-|--------------------------------------------------------------------------
-| Google OAuth Routes
-|--------------------------------------------------------------------------
-*/
-Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
-Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('auth.google.callback');
-
 /*
 |--------------------------------------------------------------------------
 | Rute Publik & Auth Pasien
@@ -65,11 +54,13 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('reset-password', 'updatePassword')->name('password.update');
 });
 
-// Halaman Publik Lainnya
+Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+
 Route::get('/jadwal', [JadwalController::class, 'index'])->name('jadwal');
 Route::view('/notifikasi', 'notifikasi')->name('notifikasi');
 
-// Pendaftaran (Public Access for Form)
+// Pendaftaran
 Route::controller(PendaftaranController::class)->group(function () {
     Route::get('/daftar', 'index')->name('daftar.index');
     Route::get('/daftar-data/{jadwal}', 'getFormDataJson')->name('daftar.form.json');
@@ -84,9 +75,8 @@ Route::controller(PendaftaranController::class)->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
-    // 🔥 API CHECK NOTIFIKASI PASIEN (REALTIME)
     Route::get('/api/patient/check-notif', [AuthController::class, 'checkNotif'])->name('api.patient.check_notif');
-    // Dashboard & Profil
+    
     Route::controller(AuthController::class)->group(function () {
         Route::get('/dashboard', 'dashboard')->name('dashboard');
         Route::get('/profil', 'showProfile')->name('profil');
@@ -95,32 +85,25 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/profil/photo', 'updatePhoto')->name('profil.photo.update');
         Route::get('/riwayat-pemeriksaan', 'riwayatPemeriksaan')->name('riwayat.index');
         
-        // Notifikasi
         Route::get('/notifikasi-jadwal', 'notifikasiList')->name('notifikasi.list');
         Route::get('/notifikasi-jadwal/{pendaftaran}', 'notifikasiDetail')->name('notifikasi.detail');
         Route::post('/notifikasi-jadwal/mark-as-read/{id}', 'markNotificationAsRead')->name('notifikasi.read');
         
-        // 🔥 Route API Status Antrian
         Route::get('/api/queue-status-today/{jadwal}', 'getQueueStatus')->name('api.queue.status');
     });
 
-    // 1. Cek Panggilan (Polling)
+    // API Polling Panggilan
     Route::get('/check-panggilan', function () {
         $user = Auth::user();
-        $panggilan = Pendaftaran::where('user_id', $user->id)
+        $panggilan = \App\Models\Pendaftaran::where('user_id', $user->id)
             ->whereDate('jadwal_dipilih', Carbon::today())
             ->where('status_panggilan', 'dipanggil')
             ->first();
-            
-        return response()->json([
-            'dipanggil' => $panggilan ? true : false,
-            'data' => $panggilan
-        ]);
+        return response()->json(['dipanggil' => $panggilan ? true : false, 'data' => $panggilan]);
     })->name('check.panggilan');
 
-    // 2. Stop Alarm
     Route::post('/stop-alarm/{id}', function($id) {
-        $pendaftaran = Pendaftaran::findOrFail($id);
+        $pendaftaran = \App\Models\Pendaftaran::findOrFail($id);
         if($pendaftaran->user_id == Auth::id()) {
             $pendaftaran->status_panggilan = 'menunggu'; 
             $pendaftaran->save();
@@ -129,14 +112,22 @@ Route::middleware(['auth'])->group(function () {
     })->name('stop.alarm');
 });
 
-// Chat System
+/*
+|--------------------------------------------------------------------------
+| SYSTEM CHAT (Shared Route)
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth:web,tenaga_medis'])->group(function () {
-    Route::get('/chat/{partnerId?}', [ChatController::class, 'index'])->name('chat.index');
+    Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
+    
+    // API Endpoints Chat
+    Route::get('/chat/contacts', [ChatController::class, 'getContacts'])->name('chat.contacts');
+    Route::get('/chat/messages/{partnerId}', [ChatController::class, 'getMessages'])->name('chat.messages');
     Route::post('/chat/send', [ChatController::class, 'sendMessage'])->name('chat.send');
-    Route::post('/chat/mark-read/{partnerId}', [ChatController::class, 'markRead'])->name('chat.markRead');
-
-    // 🔥 TAMBAHKAN BARIS INI (WAJIB UNTUK AUTO LOAD):
-    Route::get('/chat/get-messages/{partnerId}', [ChatController::class, 'getMessages'])->name('chat.getMessages');
+    Route::post('/chat/read/{partnerId}', [ChatController::class, 'markRead'])->name('chat.read');
+    
+    // Search (Khusus Dokter)
+    Route::get('/chat/search-patient', [ChatController::class, 'searchPatient'])->name('chat.search');
 });
 
 /*
@@ -148,7 +139,6 @@ Route::get('/admin/login', [AdminController::class, 'showLoginForm'])->name('adm
 Route::post('/admin/login', [AdminController::class, 'login'])->name('admin.login.post');
 Route::get('/admin/logout', [AdminController::class, 'logout'])->name('admin.logout'); 
 
-// Password Reset Admin
 Route::prefix('admin')->name('admin.')->controller(AdminController::class)->group(function () {
     Route::get('forgot-password', 'showLinkRequestForm')->name('password.request');
     Route::post('forgot-password', 'sendResetLinkEmail')->name('password.email');
@@ -156,9 +146,7 @@ Route::prefix('admin')->name('admin.')->controller(AdminController::class)->grou
     Route::post('reset-password', 'reset')->name('password.update');
 });
 
-// Panel Admin
 Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
-    
     Route::controller(AdminController::class)->group(function () {
         Route::get('/dashboard', 'dashboard')->name('dashboard');
         Route::get('/keloladatapasien', 'keloladatapasien')->name('keloladatapasien');
@@ -166,15 +154,12 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
         Route::get('/laporan', 'laporan')->name('laporan');
         Route::get('/pasien/{user}/riwayat', 'riwayatPasien')->name('pasien.riwayat');
         Route::delete('/pasien/{user}', 'hapusPasien')->name('pasien.hapus');
-        
-        // --- Sistem Pemanggilan ---
         Route::post('/panggil-pasien/{id}', 'panggilPasien')->name('panggil.pasien');
         Route::post('/tandai-hadir/{id}', 'tandaiHadir')->name('tandai.hadir');
         Route::post('/stop-panggil/{id}', 'stopPanggil')->name('stop.panggil');
         Route::post('/alihkan-pasien/{id}', 'alihkanPasien')->name('alihkan.pasien');
-        
     });
-Route::get('/api/check-notif', [AdminController::class, 'checkNotif'])->name('api.check_notif');
+    Route::get('/api/check-notif', [AdminController::class, 'checkNotif'])->name('api.check_notif');
     Route::resource('tenaga-medis', AdminTenagaMedisController::class); 
     Route::resource('kelolajadwalpraktek', JadwalPraktekController::class);
 
@@ -200,12 +185,16 @@ Route::controller(TenagaMedisController::class)->prefix('tenaga-medis')->name('t
     Route::get('reset-password/{token}', 'showResetForm')->name('password.reset');
     Route::post('reset-password', 'reset')->name('password.update');
     Route::post('logout', 'logout')->name('logout');
-    Route::post('/pemeriksaan/{pendaftaran}/mulai', [PemeriksaanController::class, 'mulaiPemeriksaan'])
-    ->name('tenaga-medis.pemeriksaan.mulai');
+    Route::post('/pemeriksaan/{pendaftaran}/mulai', [PemeriksaanController::class, 'mulaiPemeriksaan'])->name('tenaga-medis.pemeriksaan.mulai');
 });
 
 Route::middleware(['auth:tenaga_medis'])->prefix('tenaga-medis')->name('tenaga-medis.')->group(function () {
     Route::post('/jadwal/cancel', [AdminJadwalController::class, 'cancelJadwal'])->name('jadwal.cancel'); 
+    Route::get('/dashboard/data', [TenagaMedisController::class, 'getDashboardData'])->name('dashboard.data');
+    Route::get('/api/check-notif', [TenagaMedisController::class, 'checkNotif'])->name('api.check_notif');
+    
+    Route::get('/pasien/data', [TenagaMedisController::class, 'getPasienData'])->name('pasien.data');
+    Route::get('/laporan/data', [TenagaMedisController::class, 'getLaporanDataJson'])->name('laporan.data');
     
     Route::controller(TenagaMedisController::class)->group(function () {
         Route::get('/dashboard', 'dashboard')->name('dashboard');
