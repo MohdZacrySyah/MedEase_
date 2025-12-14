@@ -37,6 +37,9 @@
             --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.08);
             --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.12);
             --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.15);
+            
+            /* Notification Color */
+            --danger: #ef4444;
         }
         
         [data-theme="dark"] {
@@ -79,7 +82,6 @@
                 radial-gradient(circle at 50% 50%, rgba(12, 91, 0, 0.03) 0%, transparent 50%);
             pointer-events: none;
             z-index: 0;
-            /* Animation kept as it is subtle background */
             animation: backgroundPulse 15s ease-in-out infinite;
         }
         
@@ -125,7 +127,6 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
             overflow: hidden;
-            /* Animation Removed */
         }
         
         .sidebar-brand::before {
@@ -178,17 +179,15 @@
             font-size: 18px; 
             line-height: 1.3; 
             margin-bottom: 5px;
-            /* Animation Removed */
         }
         
         .brand-subtitle { 
             font-size: 12px; 
             opacity: 0.9; 
             font-weight: 400;
-            /* Animation Removed */
         }
 
-        /* User Profile Section with Glassmorphism */
+        /* User Profile Section */
         .user-profile {
             display: flex;
             align-items: center;
@@ -205,7 +204,6 @@
             position: relative;
             overflow: hidden;
             pointer-events: none;
-            /* Animation Removed */
         }
         
         .user-profile::before {
@@ -246,7 +244,6 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
             position: relative;
             z-index: 1;
-            /* Animation kept (pulse) as it is status indicator */
             animation: pulse 2s ease-in-out infinite;
         }
         
@@ -307,7 +304,6 @@
             font-weight: 600;
             margin: 25px 0 12px 0;
             padding-left: 10px;
-            /* Animation Removed */
         }
         
         .sidebar-menu { 
@@ -318,7 +314,6 @@
         
         .sidebar-menu li { 
             margin-bottom: 6px;
-            /* Animation Removed */
         }
         
         .sidebar-menu a {
@@ -328,7 +323,7 @@
             text-decoration: none;
             padding: 15px 18px;
             border-radius: 14px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Speed up */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 14px;
             font-weight: 500;
             position: relative;
@@ -397,6 +392,31 @@
         .sidebar-menu .active > a::before {
             transform: scaleY(1);
         }
+
+        /* ===== NOTIFICATION BADGE STYLE (NEW) ===== */
+        .badge-notification {
+            background-color: var(--danger);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            min-width: 22px;
+            height: 22px;
+            border-radius: 50%; /* Bulat sempurna */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto; /* Otomatis geser ke kanan */
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            animation: pulse-red 2s infinite;
+        }
+        
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); transform: scale(1); }
+            50% { transform: scale(1.1); }
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(1); }
+        }
         
         /* Sidebar Footer */
         .sidebar-footer {
@@ -404,7 +424,6 @@
             padding: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.12);
             background: rgba(0, 0, 0, 0.18);
-            /* Animation Removed */
         }
         
         .logout-link {
@@ -506,7 +525,6 @@
             display: flex;
             align-items: center;
             gap: 20px;
-            /* Animation Removed */
         }
         
         .menu-toggle {
@@ -547,10 +565,9 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            /* Animation Removed */
         }
         
-        /* Dark Mode Toggle Premium */
+        /* Dark Mode Toggle */
         .theme-toggle {
             width: 52px;
             height: 52px;
@@ -628,7 +645,6 @@
             padding-bottom: 40px;
             flex-grow: 1;
             overflow-y: auto;
-            /* Animation Removed */
         }
         
         .page-content::-webkit-scrollbar { width: 10px; }
@@ -711,108 +727,87 @@
 </head>
 <body>
 
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-            <a href="{{ route('admin.dashboard') }}" data-turbo-scroll="false">
-                <div class="brand-logo">
-                    <img src="{{ asset('images/logo.png') }}" alt="Logo Praktek Bersama">
-                </div>
+            <a href="{{ route('admin.dashboard') }}">
+                <div class="brand-logo"><img src="{{ asset('images/logo.png') }}" alt="Logo"></div>
                 <div class="brand-text">Praktek Bersama</div>
                 <div class="brand-subtitle">Panel Admin</div>
             </a>
         </div>
 
-        <a href="#" class="user-profile"> {{-- Dibuat tidak bisa diklik via CSS --}}
-            <div class="avatar-wrapper">
-                <i class="fas fa-user-shield"></i>
-            </div>
+        <div class="user-profile"> 
+            <div class="avatar-wrapper"><i class="fas fa-user-shield"></i></div>
             <div class="user-info">
-                <h4 class="text-truncate">{{ Auth::guard('admin')->user()?->name ?? 'Admin' }}</h4>
+                <h4>{{ Auth::guard('admin')->user()?->name ?? 'Admin' }}</h4>
                 <p><i class="fas fa-circle"></i> Kelola Sistem</p>
             </div>
-        </a>
+        </div>
 
         <div class="sidebar-nav">
-            
             <div class="nav-section-title">Menu Utama</div>
             <ul class="sidebar-menu">
                 <li class="{{ request()->is('admin/dashboard*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.dashboard') }}" data-turbo-scroll="false">
-                        <i class="fas fa-home"></i>Dashboard
-                    </a>
+                    <a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i>Dashboard</a>
                 </li>
+                
+                {{-- MENU DENGAN NOTIFIKASI --}}
                 <li class="{{ request()->is('admin/catatanpemeriksaan*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.catatanpemeriksaan') }}" data-turbo-scroll="false">
-                        <i class="fas fa-clipboard-list"></i>Daftar Pasien
+                    <a href="{{ route('admin.catatanpemeriksaan') }}">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span style="flex-grow: 1;">Daftar Pasien</span>
+                            
+                            {{-- Container ID ini PENTING untuk Auto Refresh --}}
+                            <span id="notif-container-daftar">
+                                @if(isset($notifPasienBaru) && $notifPasienBaru > 0)
+                                    <span class="badge-notification">
+                                        {{ $notifPasienBaru }}
+                                    </span>
+                                @endif
+                            </span>
+                        </div>
                     </a>
                 </li>
+                
                 <li class="{{ request()->is('admin/keloladatapasien*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.keloladatapasien') }}" data-turbo-scroll="false">
-                        <i class="fas fa-users-cog"></i>Data Pasien
-                    </a>
+                    <a href="{{ route('admin.keloladatapasien') }}"><i class="fas fa-users-cog"></i>Data Pasien</a>
                 </li>
             </ul>
 
             <div class="nav-section-title">Manajemen Klinik</div>
             <ul class="sidebar-menu">
                 <li class="{{ request()->is('admin/kelolajadwalpraktek*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.kelolajadwalpraktek.index') }}" data-turbo-scroll="false">
-                        <i class="fas fa-calendar-alt"></i>Kelola Jadwal
-                    </a>
+                    <a href="{{ route('admin.kelolajadwalpraktek.index') }}"><i class="fas fa-calendar-alt"></i>Kelola Jadwal</a>
                 </li>
                 <li class="{{ request()->is('admin/tenaga-medis*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.tenaga-medis.index') }}" data-turbo-scroll="false">
-                        <i class="fas fa-user-md"></i>Kelola Tenaga Medis
-                    </a>
+                    <a href="{{ route('admin.tenaga-medis.index') }}"><i class="fas fa-user-md"></i>Kelola Tenaga Medis</a>
                 </li>
                 <li class="{{ request()->is('admin/laporan*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.laporan') }}" data-turbo-scroll="false">
-                        <i class="fas fa-chart-line"></i>Laporan Kunjungan
-                    </a>
+                    <a href="{{ route('admin.laporan') }}"><i class="fas fa-chart-line"></i>Laporan Kunjungan</a>
                 </li>
-                
             </ul>
         </div>
 
         <div class="sidebar-footer">
             <a href="#" class="logout-link" onclick="confirmAdminLogout(event)">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Keluar</span>
+                <i class="fas fa-sign-out-alt"></i> <span style="margin-left:8px">Keluar</span>
             </a>
-            {{-- Form logout admin (sesuai route Anda, bisa GET atau POST) --}}
-            <form id="logout-form-admin" action="{{ route('admin.logout') }}" method="GET" style="display: none;">
-                @csrf
-            </form>
-            <div class="app-info">
-                <p><strong>Praktek Bersama</strong></p>
-                <p>Didukung oleh POLBENG</p>
-                <p>© 2025 • v2.0</p>
-            </div>
+            <form id="logout-form-admin" action="{{ route('admin.logout') }}" method="GET" style="display: none;">@csrf</form>
         </div>
     </aside>
 
     <main class="main-content">
         <div class="topbar">
-            <div class="topbar-left">
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div id="greeting">
-                    <i class="fas fa-sun"></i>
-                    Selamat Pagi!
-                </div>
-            </div>
-            <div class="topbar-right">
-                <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
-                    <i class="fas fa-moon"></i>
-                </button>
-                <span id="datetime">
-                    <i class="far fa-calendar-alt"></i>
-                    <span id="datetime-text"></span>
-                </span>
-            </div>
+            <button class="menu-toggle" id="menuToggle" style="border:none; background:none; font-size:24px; color:var(--p1);">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div id="greeting" style="font-weight:600; color:var(--p1);">Selamat Datang</div>
+            <button class="theme-toggle" id="themeToggle" style="border:none; background:none; font-size:18px;">
+                <i class="fas fa-moon"></i>
+            </button>
         </div>
 
         <div class="page-content">
@@ -1091,14 +1086,9 @@
         }
         
         // =========================
-        // GLOBAL AUTO REFRESH SYSTEM (UPDATED FIX)
+        // GLOBAL AUTO REFRESH SYSTEM
         // =========================
         
-        /**
-         * Fitur: Update elemen spesifik tanpa reload halaman & tanpa scroll ke atas
-         * Digunakan untuk real-time update pada tabel/card
-         * Perbaikan: Smart Pause (berhenti saat ada modal/swal/ketik)
-         */
         window.initAutoRefresh = function(selectors, interval = 5000) {
             if (window.autoRefreshInterval) {
                 clearInterval(window.autoRefreshInterval);
@@ -1109,16 +1099,11 @@
             let isUpdating = false;
 
             window.autoRefreshInterval = setInterval(() => {
-                
-                // 🛑 STOP REFRESH JIKA:
-                // 1. Ada Modal Bootstrap yang terbuka
                 const isModalOpen = document.querySelector('.modal.show') || 
                                     (document.querySelector('.modal-overlay') && getComputedStyle(document.querySelector('.modal-overlay')).display !== 'none');
                 
-                // 2. Ada SweetAlert yang terbuka
                 const isSwalOpen = Swal.isVisible();
 
-                // 3. User sedang mengetik di input/textarea
                 const isTyping = document.activeElement && (
                     document.activeElement.tagName === 'INPUT' || 
                     document.activeElement.tagName === 'TEXTAREA' ||
@@ -1126,7 +1111,6 @@
                 );
 
                 if (isModalOpen || isSwalOpen || isTyping) {
-                    // console.log('⏸️ Refresh paused: User busy');
                     return;
                 }
 
@@ -1152,15 +1136,10 @@
                             if (oldEl.innerHTML.trim() !== newEl.innerHTML.trim()) {
                                 console.log('⚡ Data changed! Updating:', selector);
                                 
-                                // Simpan posisi scroll sebelum update
                                 const scrollY = window.scrollY;
-
                                 oldEl.innerHTML = newEl.innerHTML;
-                                
-                                // Kembalikan posisi scroll (agar tidak lompat)
                                 window.scrollTo(0, scrollY);
                                 
-                                // Rebind Event Listeners (penting agar tombol di konten baru jalan)
                                 if (typeof window.rebindEvents === 'function') {
                                     window.rebindEvents();
                                 }

@@ -130,6 +130,12 @@ class AdminController extends Controller
     // ==========================================
     public function catatanpemeriksaan(Request $request)
     {
+        // 🔥 UPDATE SESSION SAAT HALAMAN DIBUKA 🔥
+        // Ini akan mereset notifikasi menjadi 0 karena kita sudah melihat data terbaru
+        if (!$request->ajax()) {
+        session(['last_seen_pendaftaran' => now()]);
+    }
+
         $tanggal = $request->input('tanggal'); 
         $targetDate = $tanggal ? $tanggal : Carbon::today();
 
@@ -140,7 +146,6 @@ class AdminController extends Controller
             ->pluck('layanan');
 
         // 2. Query Pendaftaran
-        // Order by Status: Menunggu & Hadir duluan, baru Diperiksa Awal, lalu Selesai
         $query = Pendaftaran::with(['user', 'jadwalPraktek.tenagaMedis'])
             ->whereDate('jadwal_dipilih', $targetDate);
 
@@ -246,61 +251,115 @@ class AdminController extends Controller
     // ==========================================
 
     public function laporan(Request $request)
-    {
-        $filter = $request->input('filter', 'bulan_ini'); 
-        $tanggalDipilih = $request->input('tanggal', Carbon::today()->toDateString());
-        $bulanDipilih = $request->input('bulan', Carbon::now()->format('Y-m')); 
+{
+    // Default filter jika tidak ada
+    $filter = $request->input('filter', 'bulan_ini'); 
+    $tanggalDipilih = $request->input('tanggal', Carbon::today()->toDateString());
+    $bulanDipilih = $request->input('bulan', Carbon::now()->format('Y-m')); 
 
-        $kunjunganHariIni = Pendaftaran::whereDate('created_at', Carbon::today())->count();
-        $kunjunganBulanIni = Pendaftaran::whereMonth('created_at', Carbon::now()->month)->whereYear('created_at', Carbon::now()->year)->count();
-        $semuaKunjungan = Pendaftaran::count();
+    // --- 1. LOGIC QUERY UTAMA (SAMA SEPERTI SEBELUMNYA) ---
+    $query = Pendaftaran::join('users', 'pendaftarans.user_id', '=', 'users.id')
+        ->leftJoin('jadwal_prakteks', 'pendaftarans.jadwal_praktek_id', '=', 'jadwal_prakteks.id')
+        ->leftJoin('tenaga_medis', 'jadwal_prakteks.tenaga_medis_id', '=', 'tenaga_medis.id')
+        ->select(
+            'pendaftarans.id as pendaftaran_id',
+            'pendaftarans.created_at as tanggal_kunjungan',
+            'pendaftarans.nama_layanan as layanan',
+            'users.id as pasien_id',
+            'users.name as nama_pasien',
+            'users.alamat',
+            'users.tanggal_lahir',
+            'tenaga_medis.name as nama_dokter',
+            'users.profile_photo_path'
+        );
 
-        $query = Pendaftaran::join('users', 'pendaftarans.user_id', '=', 'users.id')
-            ->leftJoin('jadwal_prakteks', 'pendaftarans.jadwal_praktek_id', '=', 'jadwal_prakteks.id')
-            ->leftJoin('tenaga_medis', 'jadwal_prakteks.tenaga_medis_id', '=', 'tenaga_medis.id')
-            ->select(
-                'pendaftarans.id as pendaftaran_id',
-                'pendaftarans.created_at as tanggal_kunjungan',
-                'pendaftarans.nama_layanan as layanan',
-                'users.id as pasien_id',
-                'users.name as nama_pasien',
-                'users.alamat',
-                'users.tanggal_lahir',
-                'tenaga_medis.name as nama_dokter',
-                'users.profile_photo_path'
-            );
+    // Apply Filter
+    if ($filter == 'hari_ini') {
+        $query->whereDate('pendaftarans.created_at', Carbon::today());
+    } elseif ($filter == 'bulan_ini') {
+        $query->whereMonth('pendaftarans.created_at', Carbon::now()->month)
+              ->whereYear('pendaftarans.created_at', Carbon::now()->year);
+    } elseif ($filter == 'tanggal') {
+        $query->whereDate('pendaftarans.created_at', $tanggalDipilih);
+    } elseif ($filter == 'bulan_terpilih') {
+        $carbonBulan = Carbon::parse($bulanDipilih);
+        $query->whereMonth('pendaftarans.created_at', $carbonBulan->month)
+              ->whereYear('pendaftarans.created_at', $carbonBulan->year);
+    } elseif ($filter == 'semua_data') {
+        // Tidak ada where filter
+    }
 
-        if ($filter == 'hari_ini') {
-            $query->whereDate('pendaftarans.created_at', Carbon::today());
-        } elseif ($filter == 'bulan_ini') {
-            $query->whereMonth('pendaftarans.created_at', Carbon::now()->month)->whereYear('pendaftarans.created_at', Carbon::now()->year);
-        } elseif ($filter == 'tanggal') {
-            $query->whereDate('pendaftarans.created_at', $tanggalDipilih);
-        } elseif ($filter == 'bulan_terpilih') {
+    $kunjunganData = $query->latest('pendaftarans.created_at')->get();
+
+    // --- 2. LOGIC CHART ---
+    $chartLabels = [];
+    $chartData = [];
+
+    if ($filter == 'hari_ini' || $filter == 'tanggal') {
+        $tanggal = ($filter == 'hari_ini') ? Carbon::today() : $tanggalDipilih;
+        $chartQuery = Pendaftaran::select(DB::raw('HOUR(created_at) as jam'), DB::raw('COUNT(*) as jumlah'))
+            ->whereDate('created_at', $tanggal)
+            ->groupBy('jam')->orderBy('jam', 'asc')->get();
+        
+        $chartLabels = $chartQuery->pluck('jam')->map(fn($jam) => "$jam:00");
+        $chartData = $chartQuery->pluck('jumlah');
+    } else {
+        // Logic chart untuk bulan/semua data
+        $chartBase = Pendaftaran::select(DB::raw('DATE(created_at) as tanggal'), DB::raw('COUNT(*) as jumlah'));
+        
+        if($filter == 'bulan_ini') {
+            $chartBase->whereMonth('created_at', Carbon::now()->month)->whereYear('created_at', Carbon::now()->year);
+        } elseif($filter == 'bulan_terpilih') {
             $carbonBulan = Carbon::parse($bulanDipilih);
-            $query->whereMonth('pendaftarans.created_at', $carbonBulan->month)->whereYear('pendaftarans.created_at', $carbonBulan->year);
-        }
-
-        $kunjunganData = $query->latest('pendaftarans.created_at')->get();
-
-        $chartLabels = [];
-        $chartData = [];
-
-        if ($filter == 'hari_ini' || $filter == 'tanggal') {
-            $tanggal = ($filter == 'hari_ini') ? Carbon::today() : $tanggalDipilih;
-            $chartQuery = Pendaftaran::select(DB::raw('HOUR(created_at) as jam'), DB::raw('COUNT(*) as jumlah'))
-                ->whereDate('created_at', $tanggal)->groupBy('jam')->orderBy('jam', 'asc')->get();
-            $chartLabels = $chartQuery->pluck('jam')->map(fn($jam) => "$jam:00");
-            $chartData = $chartQuery->pluck('jumlah');
-        } else {
-            $chartQuery = Pendaftaran::select(DB::raw('DATE(created_at) as tanggal'), DB::raw('COUNT(*) as jumlah'))
-                ->whereMonth('created_at', Carbon::now()->month)->groupBy('tanggal')->orderBy('tanggal', 'asc')->get();
-            $chartLabels = $chartQuery->pluck('tanggal')->map(fn($tgl) => Carbon::parse($tgl)->format('d M'));
-            $chartData = $chartQuery->pluck('jumlah');
+            $chartBase->whereMonth('created_at', $carbonBulan->month)->whereYear('created_at', $carbonBulan->year);
         }
         
-        return view('admin.laporan', compact('kunjunganHariIni', 'kunjunganBulanIni', 'semuaKunjungan', 'kunjunganData', 'chartLabels', 'chartData', 'filter', 'tanggalDipilih', 'bulanDipilih'));
+        $chartQuery = $chartBase->groupBy('tanggal')->orderBy('tanggal', 'asc')->get();
+        $chartLabels = $chartQuery->pluck('tanggal')->map(fn($tgl) => Carbon::parse($tgl)->format('d M'));
+        $chartData = $chartQuery->pluck('jumlah');
     }
+
+    // --- 3. HITUNG KPI STATS ---
+    // Kita hitung ulang statistik global agar real-time saat ajax
+    $kunjunganHariIni = Pendaftaran::whereDate('created_at', Carbon::today())->count();
+    $kunjunganBulanIni = Pendaftaran::whereMonth('created_at', Carbon::now()->month)->count();
+    $semuaKunjungan = Pendaftaran::count();
+
+    // === 🔥 BAGIAN PENTING: RESPONSE AJAX 🔥 ===
+    if ($request->ajax()) {
+        return response()->json([
+            'status' => 'success',
+            'filter' => $filter,
+            'kpi' => [
+                'hari_ini' => $kunjunganHariIni,
+                'bulan_ini' => $kunjunganBulanIni,
+                'total' => $semuaKunjungan
+            ],
+            'chart' => [
+                'labels' => $chartLabels,
+                'data' => $chartData
+            ],
+            // Kita kirim data raw agar JS yang render tabelnya (lebih cepat & smooth)
+            'table_data' => $kunjunganData->map(function($item) {
+                return [
+                    'pasien_id' => $item->pasien_id,
+                    'nama_pasien' => $item->nama_pasien,
+                    'profile_photo_url' => $item->profile_photo_path ? asset('storage/' . $item->profile_photo_path) : null,
+                    'nama_dokter' => $item->nama_dokter ?? 'N/A',
+                    'layanan' => $item->layanan,
+                    'tanggal_formatted' => Carbon::parse($item->tanggal_kunjungan)->isoFormat('DD MMM YYYY, HH:mm')
+                ];
+            })
+        ]);
+    }
+
+    // Response View Biasa (Load Pertama)
+    return view('admin.laporan', compact(
+        'kunjunganHariIni', 'kunjunganBulanIni', 'semuaKunjungan', 
+        'kunjunganData', 'chartLabels', 'chartData', 
+        'filter', 'tanggalDipilih', 'bulanDipilih'
+    ));
+}
 
     public function riwayatPasien(Request $request, User $user)
     {

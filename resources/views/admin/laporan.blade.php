@@ -5,6 +5,43 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/plugins/monthSelect/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Loading Overlay Style */
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            border-radius: 24px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(2px);
+        }
+        .loading-active .loading-overlay {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #39A616; /* var(--p1) */
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Smooth Fade Animation */
+        .fade-enter { opacity: 0; transform: translateY(10px); }
+        .fade-enter-active { opacity: 1; transform: translateY(0); transition: all 0.4s ease-out; }
+
+        /* Cursor pointer for buttons */
+        .filter-btn { cursor: pointer; }
+    </style>
 @endpush
 
 @section('content')
@@ -38,28 +75,20 @@
     </div>
 
     {{-- STATS SECTION (KPI CARDS) --}}
-    {{-- ID "live-kpi" ditambahkan untuk Auto Refresh --}}
     <div class="stats-section-modern">
         <div class="section-header">
             <h2><i class="fas fa-chart-bar"></i> Statistik Kunjungan</h2>
         </div>
         <div class="kpi-grid-modern" id="live-kpi">
             
-            {{-- DATA TERSEMBUNYI UNTUK UPDATE GRAFIK --}}
-            {{-- Ini trik agar data chart ikut ter-update saat auto-refresh berjalan --}}
-            <div id="chart-data-source" 
-                 data-labels="{{ json_encode($chartLabels) }}" 
-                 data-values="{{ json_encode($chartData) }}" 
-                 style="display:none;">
-            </div>
-
             <div class="kpi-card-modern card-info">
                 <div class="card-gradient-overlay card-info-overlay"></div>
                 <div class="kpi-icon-wrapper kpi-info">
                     <i class="fas fa-calendar-day"></i>
                 </div>
                 <div class="kpi-content">
-                    <div class="kpi-value">{{ $kunjunganHariIni }}</div>
+                    {{-- ID ditambahkan untuk update angka via JS --}}
+                    <div class="kpi-value" id="kpi-hari-ini">{{ $kunjunganHariIni }}</div>
                     <div class="kpi-label">Kunjungan Hari Ini</div>
                     <div class="kpi-trend">
                         <i class="fas fa-arrow-up"></i> Aktif
@@ -76,7 +105,7 @@
                     <i class="fas fa-calendar-alt"></i>
                 </div>
                 <div class="kpi-content">
-                    <div class="kpi-value">{{ $kunjunganBulanIni }}</div>
+                    <div class="kpi-value" id="kpi-bulan-ini">{{ $kunjunganBulanIni }}</div>
                     <div class="kpi-label">Kunjungan Bulan Ini</div>
                     <div class="kpi-trend">
                         <i class="fas fa-chart-line"></i> Bulanan
@@ -93,7 +122,7 @@
                     <i class="fas fa-users"></i>
                 </div>
                 <div class="kpi-content">
-                    <div class="kpi-value">{{ $semuaKunjungan }}</div>
+                    <div class="kpi-value" id="kpi-total">{{ $semuaKunjungan }}</div>
                     <div class="kpi-label">Semua Kunjungan</div>
                     <div class="kpi-trend">
                         <i class="fas fa-database"></i> Total
@@ -114,36 +143,53 @@
         <div class="filter-card-modern">
             <div class="filter-controls-grid">
                 <div class="filter-buttons-group">
-                    <a href="{{ route('admin.laporan', ['filter' => 'hari_ini']) }}" 
-                       class="btn-filter-modern {{ $filter == 'hari_ini' ? 'btn-filter-active' : '' }}">
+                    {{-- UBAH KE BUTTON ONCLICK UNTUK MENCEGAH RELOAD --}}
+                    <button type="button" onclick="loadData('hari_ini')" 
+                       class="btn-filter-modern filter-btn {{ $filter == 'hari_ini' ? 'btn-filter-active' : '' }}"
+                       data-filter="hari_ini">
                         <i class="fas fa-calendar-day"></i>
                         <span>Hari Ini</span>
-                    </a>
-                    <a href="{{ route('admin.laporan', ['filter' => 'bulan_ini']) }}" 
-                       class="btn-filter-modern {{ $filter == 'bulan_ini' ? 'btn-filter-active' : '' }}">
+                    </button>
+
+                    <button type="button" onclick="loadData('bulan_ini')" 
+                       class="btn-filter-modern filter-btn {{ $filter == 'bulan_ini' ? 'btn-filter-active' : '' }}"
+                       data-filter="bulan_ini">
                         <i class="fas fa-calendar-alt"></i>
                         <span>Bulan Ini</span>
-                    </a>
-                    <a href="{{ route('admin.laporan', ['filter' => 'semua_data']) }}" 
-                       class="btn-filter-modern {{ $filter == 'semua_data' ? 'btn-filter-active' : '' }}">
+                    </button>
+
+                    <button type="button" onclick="loadData('semua_data')" 
+                       class="btn-filter-modern filter-btn {{ $filter == 'semua_data' ? 'btn-filter-active' : '' }}"
+                       data-filter="semua_data">
                         <i class="fas fa-database"></i>
                         <span>Semua Data</span>
-                    </a>
+                    </button>
                     
+                    {{-- Picker Bulan --}}
                     <div class="input-picker-wrapper">
                         <i class="fas fa-calendar-week input-icon"></i>
                         <input type="text" id="bulanFilter" 
-                               class="btn-filter-modern input-picker {{ $filter == 'bulan_terpilih' ? 'btn-filter-active' : '' }}" 
+                               class="btn-filter-modern input-picker filter-input {{ $filter == 'bulan_terpilih' ? 'btn-filter-active' : '' }}" 
                                placeholder="Pilih Bulan" 
-                               value="{{ $filter == 'bulan_terpilih' ? \Carbon\Carbon::parse($bulanDipilih)->isoFormat('MMMM YYYY') : '' }}">
+                               value="{{ $filter == 'bulan_terpilih' ? \Carbon\Carbon::parse($bulanDipilih)->format('Y-m') : '' }}">
                     </div>
                     
+                    {{-- Picker Tanggal --}}
                     <div class="input-picker-wrapper">
                         <i class="fas fa-calendar-day input-icon"></i>
                         <input type="text" id="tanggalFilter" 
-                               class="btn-filter-modern input-picker {{ $filter == 'tanggal' ? 'btn-filter-active' : '' }}" 
+                               class="btn-filter-modern input-picker filter-input {{ $filter == 'tanggal' ? 'btn-filter-active' : '' }}" 
                                placeholder="Pilih Tanggal"
-                               value="{{ $filter == 'tanggal' ? \Carbon\Carbon::parse($tanggalDipilih)->isoFormat('D MMM YYYY') : '' }}">
+                               value="{{ $filter == 'tanggal' ? \Carbon\Carbon::parse($tanggalDipilih)->format('Y-m-d') : '' }}">
+                    </div>
+
+                    {{-- INPUT PENCARIAN --}}
+                    <div class="input-picker-wrapper search-wrapper">
+                        <i class="fas fa-search input-icon"></i>
+                        <input type="text" id="searchInput" 
+                               class="btn-filter-modern input-picker" 
+                               placeholder="Cari Pasien/Dokter..."
+                               style="min-width: 220px;">
                     </div>
                 </div>
                 
@@ -162,7 +208,14 @@
     </div>
 
     {{-- DATA SECTION --}}
-    <div class="data-section-modern">
+    {{-- Tambahkan ID dataContainer dan class position-relative --}}
+    <div class="data-section-modern" id="dataContainer" style="position: relative; min-height: 400px;">
+        
+        {{-- Loading Spinner (Hidden by default) --}}
+        <div class="loading-overlay">
+            <div class="spinner"></div>
+        </div>
+
         <div class="section-header">
             <h2><i class="fas fa-list-alt"></i> Data Kunjungan Pasien</h2>
         </div>
@@ -191,10 +244,10 @@
                         </tr>
                     </thead>
                     
-                    {{-- ID "live-table-body" ditambahkan untuk Auto Refresh --}}
                     <tbody id="live-table-body">
+                        {{-- Data awal dirender PHP agar SEO friendly & First Paint --}}
                         @forelse ($kunjunganData as $index => $data)
-                            <tr class="schedule-row"> {{-- Animasi dihapus --}}
+                            <tr class="schedule-row">
                                 <td>
                                     <span class="number-badge">{{ $data->pasien_id }}</span>
                                 </td>
@@ -227,7 +280,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr>
+                            <tr id="no-data-row">
                                 <td colspan="5">
                                     <div class="empty-schedule">
                                         <i class="fas fa-inbox"></i>
@@ -248,7 +301,7 @@
                 <div class="table-card-header">
                     <h3 class="table-title">
                         <i class="fas fa-chart-area"></i> 
-                        Grafik Kunjungan ({{ ucfirst(str_replace('_', ' ', $filter)) }})
+                        <span id="chart-title">Grafik Kunjungan ({{ ucfirst(str_replace('_', ' ', $filter)) }})</span>
                     </h3>
                 </div>
                 <div class="chart-container-wrapper">
@@ -330,7 +383,7 @@
         padding: 40px 20px;
     }
 
-    /* ===== HEADER BANNER (NO ANIMATION) ===== */
+    /* ===== HEADER BANNER ===== */
     .page-header-banner {
         margin-bottom: 40px;
     }
@@ -482,7 +535,7 @@
         font-size: 1.4rem;
     }
 
-    /* ===== STATS SECTION (NO ANIMATION) ===== */
+    /* ===== STATS SECTION ===== */
     .stats-section-modern {
         margin-bottom: 40px;
     }
@@ -591,7 +644,7 @@
         z-index: 0;
     }
 
-    /* ===== FILTER SECTION (NO ANIMATION) ===== */
+    /* ===== FILTER SECTION ===== */
     .filter-section-modern {
         margin-bottom: 40px;
     }
@@ -710,6 +763,11 @@
         cursor: pointer;
     }
 
+    /* Gaya khusus untuk search wrapper agar tidak kaku */
+    .search-wrapper .input-picker {
+        cursor: text;
+    }
+
     .input-picker::placeholder {
         color: var(--text-muted);
     }
@@ -770,7 +828,7 @@
         box-shadow: 0 10px 30px rgba(57, 166, 22, 0.5);
     }
 
-    /* ===== DATA SECTION (NO ANIMATION) ===== */
+    /* ===== DATA SECTION ===== */
     .data-section-modern {
         margin-bottom: 40px;
     }
@@ -872,7 +930,6 @@
         opacity: 0.95;
     }
 
-    /* ROW ANIMATIONS REMOVED FOR AUTO-REFRESH STABILITY */
     .schedule-row {
         border-bottom: 1px solid var(--border-color);
         transition: all 0.3s ease;
@@ -1103,130 +1160,20 @@
 <script src="https://npmcdn.com/flatpickr/dist/plugins/monthSelect/index.js"></script>
 
 <script>
+    // --- GLOBAL VARIABLES ---
+    let myChartInstance = null;
+    let currentFilter = '{{ $filter }}';
+
     document.addEventListener('DOMContentLoaded', function () {
         // --- 1. INISIALISASI CHART AWAL ---
-        const chartLabels = {!! json_encode($chartLabels) !!};
-        const chartData = {!! json_encode($chartData) !!};
+        const ctx = document.getElementById('kunjunganChart').getContext('2d');
+        const initialLabels = {!! json_encode($chartLabels) !!};
+        const initialData = {!! json_encode($chartData) !!};
         
-        // Detect dark mode
-        const isDarkMode = document.documentElement.classList.contains('dark-mode') || 
-                          (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        
-        // Simpan instance chart ke global variable agar bisa di-update nanti
-        window.myChartInstance = null;
+        // Simpan instance chart
+        initChart(ctx, initialLabels, initialData);
 
-        if (chartData.length > 0) {
-            const ctx = document.getElementById('kunjunganChart').getContext('2d');
-            
-            window.myChartInstance = new Chart(ctx, {
-                type: 'line', 
-                data: {
-                    labels: chartLabels,
-                    datasets: [{
-                        label: 'Jumlah Kunjungan',
-                        data: chartData,
-                        backgroundColor: isDarkMode ? 'rgba(57, 166, 22, 0.2)' : 'rgba(57, 166, 22, 0.1)',
-                        borderColor: '#39A616',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#39A616',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 7
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    scales: { 
-                        y: { 
-                            beginAtZero: true,
-                            ticks: { color: isDarkMode ? '#d1d5db' : '#6b7280' },
-                            grid: { color: isDarkMode ? 'rgba(57, 166, 22, 0.15)' : 'rgba(57, 166, 22, 0.1)' }
-                        },
-                        x: {
-                            ticks: { color: isDarkMode ? '#d1d5db' : '#6b7280' },
-                            grid: { display: false }
-                        }
-                    },
-                    plugins: { 
-                        tooltip: { 
-                            backgroundColor: isDarkMode ? '#1f2937' : '#0C5B00',
-                            padding: 14,
-                            titleFont: { size: 14, weight: 'bold' },
-                            bodyFont: { size: 13 }
-                        },
-                        legend: {
-                            display: true,
-                            position: 'top',
-                            labels: {
-                                font: { size: 13, weight: '600' },
-                                color: isDarkMode ? '#f9fafb' : '#556E85'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // --- 2. AUTO LOAD SYSTEM ---
-        if (typeof window.initAutoRefresh === 'function') {
-            window.initAutoRefresh([
-                '#live-kpi',        // KPI Cards + Hidden Chart Data
-                '#live-table-body'  // Isi Tabel
-            ]);
-        }
-
-        // --- 3. REBIND & UPDATE CHART (SANGAT PENTING) ---
-        // Fungsi ini dipanggil otomatis setelah data HTML diganti oleh initAutoRefresh
-        window.rebindEvents = function() {
-            console.log('📊 Laporan updated!');
-
-            // Update Chart Data jika ada
-            const hiddenData = document.getElementById('chart-data-source');
-            if (hiddenData && window.myChartInstance) {
-                try {
-                    // Ambil data baru dari atribut data
-                    const newLabels = JSON.parse(hiddenData.dataset.labels);
-                    const newValues = JSON.parse(hiddenData.dataset.values);
-
-                    // Update instance chart
-                    window.myChartInstance.data.labels = newLabels;
-                    window.myChartInstance.data.datasets[0].data = newValues;
-                    window.myChartInstance.update(); // Render ulang grafik halus
-                    
-                    console.log('📈 Grafik updated real-time!');
-                } catch (e) {
-                    console.error('Gagal parse data chart:', e);
-                }
-            }
-        };
-
-        // Toggle Tabel/Grafik
-        const showTableBtn = document.getElementById('showTableBtn');
-        const showChartBtn = document.getElementById('showChartBtn');
-        const tableView = document.getElementById('tableView');
-        const chartView = document.getElementById('chartView');
-
-        if(showTableBtn) {
-            showTableBtn.addEventListener('click', function() {
-                tableView.classList.add('view-active');
-                chartView.classList.remove('view-active');
-                showTableBtn.classList.add('btn-toggle-active');
-                showChartBtn.classList.remove('btn-toggle-active');
-            });
-        }
-        if(showChartBtn) {
-            showChartBtn.addEventListener('click', function() {
-                tableView.classList.remove('view-active');
-                chartView.classList.add('view-active');
-                showChartBtn.classList.add('btn-toggle-active');
-                showTableBtn.classList.remove('btn-toggle-active');
-            });
-        }
-
+        // --- 2. FLATPICKR SETTINGS ---
         // Filter Tanggal
         flatpickr("#tanggalFilter", {
             dateFormat: "Y-m-d",
@@ -1234,7 +1181,8 @@
             altFormat: "d M Y",
             onChange: function(selectedDates, dateStr, instance) {
                 if (dateStr) {
-                    window.location.href = `{{ route('admin.laporan') }}?filter=tanggal&tanggal=${dateStr}`;
+                    // Panggil AJAX Load Data (Tidak Reload Page)
+                    loadData('tanggal', { tanggal: dateStr });
                 }
             }
         });
@@ -1250,10 +1198,299 @@
             ],
             onChange: function(selectedDates, dateStr, instance) {
                  if (dateStr) {
-                    window.location.href = `{{ route('admin.laporan') }}?filter=bulan_terpilih&bulan=${dateStr}`;
+                    // Panggil AJAX Load Data (Tidak Reload Page)
+                    loadData('bulan_terpilih', { bulan: dateStr });
                 }
             }
         });
+
+        // --- 3. TOGGLE TABEL/GRAFIK ---
+        const showTableBtn = document.getElementById('showTableBtn');
+        const showChartBtn = document.getElementById('showChartBtn');
+        const tableView = document.getElementById('tableView');
+        const chartView = document.getElementById('chartView');
+
+        if(showTableBtn) {
+            showTableBtn.addEventListener('click', function() {
+                switchView('table');
+            });
+        }
+        if(showChartBtn) {
+            showChartBtn.addEventListener('click', function() {
+                switchView('chart');
+            });
+        }
+
+        // --- 4. SEARCH FILTER FUNCTION (Client Side) ---
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                const filter = this.value.toLowerCase();
+                const rows = document.querySelectorAll('#live-table-body tr.schedule-row');
+                const noDataRow = document.getElementById('no-data-row');
+                let hasVisibleRow = false;
+
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    if (text.includes(filter)) {
+                        row.style.display = '';
+                        hasVisibleRow = true;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                if (noDataRow) {
+                    noDataRow.style.display = hasVisibleRow ? 'none' : '';
+                }
+            });
+        }
     });
+
+    // --- MAIN FUNCTION: LOAD DATA VIA AJAX (AUTO LOAD) ---
+    function loadData(filterType, params = {}) {
+        // 1. Tampilkan Loading Spinner
+        document.getElementById('dataContainer').classList.add('loading-active');
+        
+        // 2. Update status tombol aktif secara visual
+        updateActiveButton(filterType);
+
+        // 3. Build URL
+        let url = `{{ route('admin.laporan') }}?filter=${filterType}`;
+        if(params.tanggal) url += `&tanggal=${params.tanggal}`;
+        if(params.bulan) url += `&bulan=${params.bulan}`;
+
+        // 4. Fetch Data ke Server
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest' // Penting agar controller tahu ini AJAX
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // A. Update KPI (Angka Statistik)
+            animateValue("kpi-hari-ini", data.kpi.hari_ini);
+            animateValue("kpi-bulan-ini", data.kpi.bulan_ini);
+            animateValue("kpi-total", data.kpi.total);
+
+            // B. Update Chart
+            updateChart(data.chart.labels, data.chart.data);
+            
+            // C. Update Judul Grafik
+            const judul = filterType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            const chartTitle = document.getElementById('chart-title');
+            if(chartTitle) chartTitle.innerText = `Grafik Kunjungan (${judul})`;
+
+            // D. Update Tabel
+            updateTable(data.table_data);
+
+            // E. Hilangkan Loading Spinner dengan delay sedikit agar smooth
+            setTimeout(() => {
+                document.getElementById('dataContainer').classList.remove('loading-active');
+            }, 300);
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+            document.getElementById('dataContainer').classList.remove('loading-active');
+        });
+    }
+
+    // --- HELPER FUNCTIONS ---
+
+    function switchView(view) {
+        const tableView = document.getElementById('tableView');
+        const chartView = document.getElementById('chartView');
+        const showTableBtn = document.getElementById('showTableBtn');
+        const showChartBtn = document.getElementById('showChartBtn');
+
+        if(view === 'table') {
+            tableView.classList.add('view-active');
+            chartView.classList.remove('view-active');
+            showTableBtn.classList.add('btn-toggle-active');
+            showChartBtn.classList.remove('btn-toggle-active');
+        } else {
+            tableView.classList.remove('view-active');
+            chartView.classList.add('view-active');
+            showChartBtn.classList.add('btn-toggle-active');
+            showTableBtn.classList.remove('btn-toggle-active');
+        }
+    }
+
+    function updateActiveButton(filterType) {
+        // Reset semua tombol/input active
+        document.querySelectorAll('.filter-btn, .filter-input').forEach(el => el.classList.remove('btn-filter-active'));
+        
+        // Set tombol yang diklik jadi active
+        if(filterType === 'hari_ini' || filterType === 'bulan_ini' || filterType === 'semua_data') {
+            const btn = document.querySelector(`button[data-filter="${filterType}"]`);
+            if(btn) btn.classList.add('btn-filter-active');
+        } else if (filterType === 'tanggal') {
+            // Flatpickr menggunakan input kedua (altInput) untuk tampilan
+            const picker = document.getElementById('tanggalFilter');
+            if(picker && picker.nextSibling) picker.nextSibling.classList.add('btn-filter-active');
+        } else if (filterType === 'bulan_terpilih') {
+            const picker = document.getElementById('bulanFilter');
+            if(picker && picker.nextSibling) picker.nextSibling.classList.add('btn-filter-active');
+        }
+    }
+
+    function initChart(ctx, labels, data) {
+        // Detect dark mode
+        const isDarkMode = document.documentElement.classList.contains('dark-mode') || 
+                          (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        const bgColor = isDarkMode ? 'rgba(57, 166, 22, 0.2)' : 'rgba(57, 166, 22, 0.1)';
+        const gridColor = isDarkMode ? 'rgba(57, 166, 22, 0.15)' : 'rgba(57, 166, 22, 0.1)';
+        const textColor = isDarkMode ? '#d1d5db' : '#6b7280';
+        const tooltipBg = isDarkMode ? '#1f2937' : '#0C5B00';
+
+        myChartInstance = new Chart(ctx, {
+            type: 'line', 
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Jumlah Kunjungan',
+                    data: data,
+                    backgroundColor: bgColor,
+                    borderColor: '#39A616',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#39A616',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: { 
+                    y: { 
+                        beginAtZero: true,
+                        ticks: { color: textColor },
+                        grid: { color: gridColor }
+                    },
+                    x: {
+                        ticks: { color: textColor },
+                        grid: { display: false }
+                    }
+                },
+                plugins: { 
+                    tooltip: { 
+                        backgroundColor: tooltipBg,
+                        padding: 14,
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: { size: 13, weight: '600' },
+                            color: isDarkMode ? '#f9fafb' : '#556E85'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateChart(labels, data) {
+        if(myChartInstance) {
+            myChartInstance.data.labels = labels;
+            myChartInstance.data.datasets[0].data = data;
+            myChartInstance.update();
+        }
+    }
+
+    function updateTable(data) {
+        const tbody = document.getElementById('live-table-body');
+        tbody.innerHTML = ''; // Kosongkan tabel lama
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `
+                <tr id="no-data-row">
+                    <td colspan="5">
+                        <div class="empty-schedule">
+                            <i class="fas fa-inbox"></i>
+                            <p>Tidak ada data kunjungan untuk periode ini</p>
+                            <small>Silakan pilih filter lain untuk melihat data</small>
+                        </div>
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        let html = '';
+        data.forEach(item => {
+            // Logic Avatar (Ganti Image vs Initial)
+            let avatarContent = '';
+            if (item.profile_photo_url) {
+                avatarContent = `<img src="${item.profile_photo_url}" alt="Foto" style="width:100%; height:100%; object-fit:cover;">`;
+            } else {
+                avatarContent = item.nama_pasien.charAt(0).toUpperCase();
+            }
+
+            // Generate Row HTML
+            html += `
+                <tr class="schedule-row fade-enter">
+                    <td>
+                        <span class="number-badge">${item.pasien_id}</span>
+                    </td>
+                    <td>
+                        <div class="doctor-info">
+                            <div class="doctor-avatar">
+                                ${avatarContent}
+                            </div>
+                            <span class="doctor-name">${item.nama_pasien}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="text-secondary-color">${item.nama_dokter}</span>
+                    </td>
+                    <td>
+                        <span class="service-badge">
+                            <i class="fas fa-briefcase-medical"></i>
+                            ${item.layanan}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="time-badge-modern">
+                            <i class="far fa-clock"></i>
+                            <span>${item.tanggal_formatted}</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
+        
+        // Trigger animation fade-in
+        setTimeout(() => {
+            document.querySelectorAll('.fade-enter').forEach(el => el.classList.add('fade-enter-active'));
+        }, 50);
+    }
+
+    // Fungsi animasi angka naik (Counter Animation)
+    function animateValue(id, end) {
+        const obj = document.getElementById(id);
+        const start = parseInt(obj.innerHTML.replace(/\D/g,'')) || 0; // Hapus non-digit jika ada
+        if(start === end) return;
+        
+        let current = start;
+        const range = end - start;
+        const increment = end > start ? 1 : -1;
+        const step = Math.abs(Math.floor(1000 / range)); // Durasi total ~1 detik
+        
+        const timer = setInterval(() => {
+            current += increment;
+            obj.innerHTML = current;
+            if (current == end) clearInterval(timer);
+        }, Math.max(step, 10)); // Min 10ms per frame
+        
+        obj.innerHTML = end; // Fallback instant update
+    }
 </script>
 @endpush
