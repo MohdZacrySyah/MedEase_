@@ -753,14 +753,14 @@
                     <a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i>Dashboard</a>
                 </li>
                 
-                {{-- MENU DENGAN NOTIFIKASI --}}
+                {{-- MENU 1: DAFTAR PASIEN (ANTRIAN) --}}
                 <li class="{{ request()->is('admin/catatanpemeriksaan*') ? 'active' : '' }}">
                     <a href="{{ route('admin.catatanpemeriksaan') }}">
                         <div style="display: flex; align-items: center; width: 100%;">
                             <i class="fas fa-clipboard-list"></i>
                             <span style="flex-grow: 1;">Daftar Pasien</span>
                             
-                            {{-- Container ID ini PENTING untuk Auto Refresh --}}
+                            {{-- Container ID untuk Notif Pendaftaran --}}
                             <span id="notif-container-daftar">
                                 @if(isset($notifPasienBaru) && $notifPasienBaru > 0)
                                     <span class="badge-notification">
@@ -772,8 +772,23 @@
                     </a>
                 </li>
                 
+                {{-- MENU 2: KELOLA DATA PASIEN (USER BARU) --}}
                 <li class="{{ request()->is('admin/keloladatapasien*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.keloladatapasien') }}"><i class="fas fa-users-cog"></i>Data Pasien</a>
+                    <a href="{{ route('admin.keloladatapasien') }}">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <i class="fas fa-users-cog"></i>
+                            <span style="flex-grow: 1;">Data Pasien</span>
+                            
+                            {{-- Container ID untuk Notif User Baru --}}
+                            <span id="notif-container-user">
+                                @if(isset($notifUserBaru) && $notifUserBaru > 0)
+                                    <span class="badge-notification">
+                                        {{ $notifUserBaru }}
+                                    </span>
+                                @endif
+                            </span>
+                        </div>
+                    </a>
                 </li>
             </ul>
 
@@ -1019,15 +1034,25 @@
         }
 
         // =========================
-        // EVENT LISTENERS
+        // EVENT LISTENERS & POLLING
         // =========================
         
-        document.addEventListener('DOMContentLoaded', initPageScripts);
-        document.addEventListener('turbo:load', initPageScripts);
+        document.addEventListener('DOMContentLoaded', () => {
+            initPageScripts();
+            startNotificationPolling(); // 🔥 MULAI POLLING
+        });
+        
+        document.addEventListener('turbo:load', () => {
+            initPageScripts();
+            startNotificationPolling();
+        });
         
         document.addEventListener('turbo:before-cache', () => {
             if (window.dateTimeInterval) {
                 clearInterval(window.dateTimeInterval);
+            }
+            if (window.notifInterval) {
+                clearInterval(window.notifInterval);
             }
         });
 
@@ -1086,79 +1111,66 @@
         }
         
         // =========================
-        // GLOBAL AUTO REFRESH SYSTEM
+        // NOTIFICATION POLLING SYSTEM (AJAX)
         // =========================
         
-        window.initAutoRefresh = function(selectors, interval = 5000) {
-            if (window.autoRefreshInterval) {
-                clearInterval(window.autoRefreshInterval);
-            }
+        let notifInterval;
 
-            console.log('🔄 Auto refresh system started monitoring:', selectors);
+        function startNotificationPolling() {
+            if (notifInterval) clearInterval(notifInterval);
 
-            let isUpdating = false;
-
-            window.autoRefreshInterval = setInterval(() => {
-                const isModalOpen = document.querySelector('.modal.show') || 
-                                    (document.querySelector('.modal-overlay') && getComputedStyle(document.querySelector('.modal-overlay')).display !== 'none');
-                
-                const isSwalOpen = Swal.isVisible();
-
-                const isTyping = document.activeElement && (
-                    document.activeElement.tagName === 'INPUT' || 
-                    document.activeElement.tagName === 'TEXTAREA' ||
-                    document.activeElement.isContentEditable
-                );
-
-                if (isModalOpen || isSwalOpen || isTyping) {
-                    return;
-                }
-
-                if (isUpdating) return;
-                isUpdating = true;
-
-                const url = new URL(window.location.href);
-                url.searchParams.set('auto_reload_time', new Date().getTime());
-
-                fetch(url.toString(), {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            const checkNotif = () => {
+                fetch("{{ route('admin.api.check_notif') }}", {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
                 })
-                .then(response => response.text())
-                .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-
-                    selectors.forEach(selector => {
-                        const oldEl = document.querySelector(selector);
-                        const newEl = doc.querySelector(selector);
-
-                        if (oldEl && newEl) {
-                            if (oldEl.innerHTML.trim() !== newEl.innerHTML.trim()) {
-                                console.log('⚡ Data changed! Updating:', selector);
-                                
-                                const scrollY = window.scrollY;
-                                oldEl.innerHTML = newEl.innerHTML;
-                                window.scrollTo(0, scrollY);
-                                
-                                if (typeof window.rebindEvents === 'function') {
-                                    window.rebindEvents();
-                                }
-                            }
-                        }
-                    });
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
                 })
-                .catch(err => console.error('❌ Auto refresh error:', err))
-                .finally(() => {
-                    isUpdating = false;
+                .then(data => {
+                    if (data.success) {
+                        // 1. Update Badge Daftar Pasien
+                        updateBadge('notif-container-daftar', data.counts.pendaftaran);
+                        
+                        // 2. Update Badge Data Pasien (User Baru)
+                        updateBadge('notif-container-user', data.counts.user_baru);
+                    }
+                })
+                .catch(err => {
+                    // console.error('Gagal cek notif:', err);
                 });
-            }, interval);
-        };
+            };
 
-        document.addEventListener('turbo:before-cache', () => {
-            if (window.autoRefreshInterval) {
-                clearInterval(window.autoRefreshInterval);
+            checkNotif();
+            notifInterval = setInterval(checkNotif, 3000); // Cek tiap 3 detik
+            window.notifInterval = notifInterval;
+        }
+
+        function updateBadge(elementId, count) {
+            const wrapper = document.getElementById(elementId);
+            if (!wrapper) return;
+
+            if (count > 0) {
+                let badge = wrapper.querySelector('.badge-notification');
+                
+                if (badge) {
+                    if (badge.textContent != count) {
+                        badge.textContent = count;
+                        badge.style.transform = 'scale(1.3)';
+                        setTimeout(() => badge.style.transform = 'scale(1)', 200);
+                    }
+                } else {
+                    wrapper.innerHTML = `<span class="badge-notification animate__animated animate__bounceIn">${count}</span>`;
+                }
+            } else {
+                wrapper.innerHTML = '';
             }
-        });
+        }
 
     </script>
 

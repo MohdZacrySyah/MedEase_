@@ -84,6 +84,8 @@ Route::controller(PendaftaranController::class)->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
+    // 🔥 API CHECK NOTIFIKASI PASIEN (REALTIME)
+    Route::get('/api/patient/check-notif', [AuthController::class, 'checkNotif'])->name('api.patient.check_notif');
     // Dashboard & Profil
     Route::controller(AuthController::class)->group(function () {
         Route::get('/dashboard', 'dashboard')->name('dashboard');
@@ -170,8 +172,9 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
         Route::post('/tandai-hadir/{id}', 'tandaiHadir')->name('tandai.hadir');
         Route::post('/stop-panggil/{id}', 'stopPanggil')->name('stop.panggil');
         Route::post('/alihkan-pasien/{id}', 'alihkanPasien')->name('alihkan.pasien');
+        
     });
-
+Route::get('/api/check-notif', [AdminController::class, 'checkNotif'])->name('api.check_notif');
     Route::resource('tenaga-medis', AdminTenagaMedisController::class); 
     Route::resource('kelolajadwalpraktek', JadwalPraktekController::class);
 

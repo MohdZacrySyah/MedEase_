@@ -10,7 +10,8 @@ use App\Models\User;
 use App\Models\Pendaftaran;
 use App\Models\Pemeriksaan;
 use App\Models\JadwalPraktek;
-use App\Models\DoctorAvailability; // 🔥 Import Model Ini
+use App\Models\DoctorAvailability;
+use App\Models\Message; // 🔥 Tambahkan Import Model Message
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -223,18 +224,18 @@ class AuthController extends Controller
         // Notifikasi Hari Ini untuk dashboard
         // MODIFIKASI: Tambahkan eager loading untuk mendapatkan nama dokter/layanan di view
         $notifikasiHariIni = Pendaftaran::with('jadwalPraktek.tenagaMedis') 
-                                         ->where('user_id', $user->id)
-                                         ->whereDate('jadwal_dipilih', $today)
-                                         // Status Diperiksa Awal/Menunggu/Sedang Diperiksa 
-                                         ->whereNotIn('status', ['Selesai', 'Dibatalkan']) 
-                                         ->first();
+                                        ->where('user_id', $user->id)
+                                        ->whereDate('jadwal_dipilih', $today)
+                                        // Status Diperiksa Awal/Menunggu/Sedang Diperiksa 
+                                        ->whereNotIn('status', ['Selesai', 'Dibatalkan']) 
+                                        ->first();
 
         $pemeriksaanTahunIni = Pemeriksaan::where('pasien_id', $pasienId)
-                                             ->whereYear('created_at', Carbon::now()->year)
-                                             ->count();
+                                          ->whereYear('created_at', Carbon::now()->year)
+                                          ->count();
         $jumlahDokterDikunjungi = Pemeriksaan::where('pasien_id', $pasienId)
-                                                 ->distinct('tenaga_medis_id')
-                                                 ->count('tenaga_medis_id');
+                                             ->distinct('tenaga_medis_id')
+                                             ->count('tenaga_medis_id');
 
         return view('dashboard', compact(
             'user',
@@ -326,8 +327,15 @@ class AuthController extends Controller
             'my_queue_number' => $myQueueNumber,
         ]);
     }
+
     public function riwayatPemeriksaan(Request $request)
     {
+        // 🔥 TAMBAHAN LOGIKA RESET NOTIFIKASI 🔥
+        // Saat halaman ini dibuka (bukan request ajax), update session last_seen
+        if (!$request->ajax()) {
+            session(['last_seen_riwayat' => now()]);
+        }
+
         $query = Pemeriksaan::with([
                             'tenagaMedis', 
                             'pendaftaran.pemeriksaanAwal', 
@@ -360,11 +368,11 @@ class AuthController extends Controller
         
         // 2. Pendaftaran Aktif (Jadwal Aktif)
         $pendaftaranAktif = Pendaftaran::where('user_id', $userId)
-                                    ->whereIn('status', ['Menunggu', 'Diperiksa Awal']) 
-                                    ->whereDate('jadwal_dipilih', '>=', Carbon::today()) 
-                                    ->with('jadwalPraktek.tenagaMedis') 
-                                    ->orderBy('created_at', 'desc')
-                                    ->get();
+                                       ->whereIn('status', ['Menunggu', 'Diperiksa Awal']) 
+                                       ->whereDate('jadwal_dipilih', '>=', Carbon::today()) 
+                                       ->with('jadwalPraktek.tenagaMedis') 
+                                       ->orderBy('created_at', 'desc')
+                                       ->get();
         
         $allNotifications = collect();
         
@@ -474,6 +482,7 @@ class AuthController extends Controller
         $user->save();
         return redirect()->route('profil')->with('success', 'Foto profil berhasil diperbarui!');
     }
+    
     public function konfirmasiDatang($id)
     {
         $pendaftaran = Pendaftaran::findOrFail($id);
@@ -487,5 +496,43 @@ class AuthController extends Controller
         }
         
         return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+    }
+
+    // ==========================================
+    // 🔥 TAMBAHAN: API CHECK NOTIFIKASI PASIEN
+    // ==========================================
+    public function checkNotif()
+    {
+        $userId = Auth::id();
+
+        // 1. NOTIFIKASI JADWAL (Menghitung antrian aktif / belum selesai)
+        $countJadwal = Pendaftaran::where('user_id', $userId)
+            ->where('status', '!=', 'Selesai')
+            ->where('status', '!=', 'Dibatalkan')
+            ->whereDate('jadwal_dipilih', '>=', Carbon::today())
+            ->count();
+
+        // 2. NOTIFIKASI RIWAYAT (Pemeriksaan baru selesai)
+        $lastSeenRiwayat = session('last_seen_riwayat', now());
+        
+        $countRiwayat = Pendaftaran::where('user_id', $userId)
+            ->where('status', 'Selesai')
+            ->where('updated_at', '>', $lastSeenRiwayat)
+            ->count();
+
+        // 3. NOTIFIKASI CHAT (Pesan belum dibaca)
+        $countChat = Message::where('receiver_id', $userId)
+            ->where('receiver_type', 'user') // Penerimanya adalah User (Pasien)
+            ->where('is_read', false)
+            ->count();
+
+        return response()->json([
+            'success' => true,
+            'counts' => [
+                'jadwal' => $countJadwal,
+                'riwayat' => $countRiwayat,
+                'chat' => $countChat
+            ]
+        ]);
     }
 }

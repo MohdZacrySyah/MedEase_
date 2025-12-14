@@ -37,7 +37,8 @@
             --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.12);
             --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.15);
             
-            --sidebar-width: 280px; /* Variabel lebar sidebar */
+            --sidebar-width: 280px;
+            --danger: #ef4444; /* Warna Merah Notifikasi */
         }
         
         [data-theme="dark"] {
@@ -150,7 +151,6 @@
             z-index: 1;
         }
 
-        /* SIDEBAR CLOSE BUTTON (PERBAIKAN POSISI) */
         .sidebar-close-btn {
             position: absolute;
             top: 15px;
@@ -163,7 +163,7 @@
             border-radius: 50%;
             cursor: pointer;
             z-index: 20;
-            display: none; /* Default hidden on desktop */
+            display: none;
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
@@ -407,26 +407,29 @@
             transform: scaleY(1);
         }
         
-        .nav-badge {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        /* ===== NOTIFICATION BADGE STYLE (NEW) ===== */
+        .badge-notification {
+            background-color: var(--danger);
             color: white;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 700;
-            padding: 4px 8px;
-            border-radius: 12px;
-            margin-left: auto;
-            box-shadow: 0 3px 10px rgba(231, 76, 60, 0.5);
-            animation: pulse-badge 2s infinite, glow 2s ease-in-out infinite;
+            min-width: 22px;
+            height: 22px;
+            border-radius: 50%; /* Bulat sempurna */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto; /* Otomatis geser ke kanan */
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            animation: pulse-red 2s infinite;
         }
         
-        @keyframes pulse-badge {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-        }
-        
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 3px 10px rgba(231, 76, 60, 0.5); }
-            50% { box-shadow: 0 4px 20px rgba(231, 76, 60, 0.8); }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); transform: scale(1); }
+            50% { transform: scale(1.1); }
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(1); }
         }
 
         /* Sidebar Footer */
@@ -538,7 +541,6 @@
             gap: 20px;
         }
         
-        /* Updated Menu Toggle */
         .menu-toggle {
             display: inline-flex; 
             align-items: center;
@@ -563,7 +565,6 @@
             box-shadow: 0 4px 15px rgba(57, 166, 22, 0.3);
         }
         
-        /* Rotasi icon saat toggle aktif */
         .menu-toggle i {
             transition: transform 0.3s ease;
         }
@@ -592,7 +593,6 @@
             gap: 15px;
         }
         
-        /* Dark Mode Toggle */
         .theme-toggle {
             width: 52px;
             height: 52px;
@@ -708,7 +708,6 @@
         }
 
         /* ===== LOGIC: SIDEBAR COLLAPSED (DESKTOP) ===== */
-        /* Ketika class 'sidebar-closed' ditambahkan ke body */
         body.sidebar-closed .sidebar {
             transform: translateX(-100%);
         }
@@ -724,28 +723,14 @@
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 992px) {
-            /* Default Mobile State: Sidebar Hidden */
             .sidebar { transform: translateX(-100%); }
-            
-            /* Mobile Open State */
             .sidebar.mobile-show { transform: translateX(0); }
-            
-            /* Reset Desktop Logic on Mobile */
             .main-content { margin-left: 0; width: 100%; }
             .topbar { left: 0; }
-            
-            /* PERBAIKAN PENTING: TAMPILKAN TOMBOL CLOSE DI MOBILE */
-            .sidebar-close-btn { 
-                display: flex; 
-                top: 10px;
-                right: 10px;
-            } 
-            
+            .sidebar-close-btn { display: flex; top: 10px; right: 10px; } 
             .page-content { padding: 95px 20px 30px; }
             #datetime { display: none; }
-            
-            /* Logic Override */
-            body.sidebar-closed .sidebar { transform: translateX(-100%); } /* Ensure hidden */
+            body.sidebar-closed .sidebar { transform: translateX(-100%); }
         }
         
         @media (max-width: 576px) {
@@ -829,47 +814,82 @@
             <div class="nav-section-title">Menu Utama</div>
             <ul class="sidebar-menu">
                 <li class="{{ request()->is('/') ? 'active' : '' }}">
-                <a href="{{ url('/') }}" data-turbo-scroll="false">
-                    <i class="fas fa-globe"></i>Halaman Utama
-                </a>
-            </li>
+                    <a href="{{ url('/') }}" data-turbo-scroll="false">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <i class="fas fa-globe"></i>
+                            <span style="flex-grow: 1;">Halaman Utama</span>
+                        </div>
+                    </a>
+                </li>
             
-            <li class="{{ request()->is('dashboard') ? 'active' : '' }}">
+                <li class="{{ request()->is('dashboard') ? 'active' : '' }}">
                     <a href="{{ route('dashboard') }}" data-turbo-scroll="false">
-                        <i class="fas fa-home"></i>Dashboard
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <i class="fas fa-home"></i>
+                            <span style="flex-grow: 1;">Dashboard</span>
+                        </div>
                     </a>
                 </li>
                 <li class="{{ request()->is('daftar*') ? 'active' : '' }}">
                     <a href="{{ route('daftar.index') }}" data-turbo-scroll="false">
-                        <i class="fas fa-calendar-plus"></i>Daftar Konsultasi
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <i class="fas fa-calendar-plus"></i>
+                            <span style="flex-grow: 1;">Daftar Konsultasi</span>
+                        </div>
                     </a>
                 </li>
                 <li class="{{ request()->is('jadwal') ? 'active' : '' }}">
                     <a href="{{ route('jadwal') }}" data-turbo-scroll="false">
-                        <i class="fas fa-calendar-alt"></i>Jadwal Praktek
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span style="flex-grow: 1;">Jadwal Praktek</span>
+                        </div>
                     </a>
                 </li>
             </ul>
 
             <div class="nav-section-title">Informasi</div>
             <ul class="sidebar-menu">
+                {{-- MENU 1: NOTIFIKASI JADWAL --}}
                 <li class="{{ request()->is('notifikasi-jadwal*') ? 'active' : '' }}">
                     <a href="{{ route('notifikasi.list') }}" data-turbo-scroll="false">
-                        <i class="fas fa-bell"></i>Notifikasi Jadwal
-                        @if($notifikasiCount > 0)
-                            <span class="nav-badge">{{ $notifikasiCount }}</span>
-                        @endif
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <i class="fas fa-bell"></i>
+                            <span style="flex-grow: 1;">Notifikasi Jadwal</span>
+                            
+                            {{-- BADGE CONTAINER JADWAL --}}
+                            <span id="notif-badge-jadwal">
+                                @if($notifikasiCount > 0)
+                                    <span class="badge-notification">{{ $notifikasiCount }}</span>
+                                @endif
+                            </span>
+                        </div>
                     </a>
                 </li>
+
+                {{-- MENU 2: RIWAYAT PEMERIKSAAN --}}
                 <li class="{{ request()->is('riwayat-pemeriksaan*') ? 'active' : '' }}">
                     <a href="{{ route('riwayat.index') }}" data-turbo-scroll="false">
-                        <i class="fas fa-history"></i>Riwayat Pemeriksaan
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <i class="fas fa-history"></i>
+                            <span style="flex-grow: 1;">Riwayat Pemeriksaan</span>
+                            
+                            {{-- BADGE CONTAINER RIWAYAT --}}
+                            <span id="notif-badge-riwayat"></span>
+                        </div>
                     </a>
                 </li>
             
+                {{-- MENU 3: CHAT DOKTER --}}
                 <li class="{{ request()->routeIs('chat.*') ? 'active' : '' }}">
-                    <a href="{{ route('chat.index') }}" data-turbo-scroll="false">> 
-                        <i class="fas fa-comments"></i> Chat Dokter
+                    <a href="{{ route('chat.index') }}" data-turbo-scroll="false">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <i class="fas fa-comments"></i>
+                            <span style="flex-grow: 1;">Chat Dokter</span>
+                            
+                            {{-- BADGE CONTAINER CHAT --}}
+                            <span id="notif-badge-chat"></span>
+                        </div>
                     </a>
                 </li>
             </ul>
@@ -922,9 +942,8 @@
     
     <script>
         // =========================
-        // SIDEBAR LOGIC (NEW)
+        // SIDEBAR LOGIC
         // =========================
-        
         function initSidebarLogic() {
             const menuToggle = document.getElementById('menuToggle');
             const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
@@ -932,47 +951,35 @@
             const sidebarOverlay = document.getElementById('sidebarOverlay');
             const body = document.body;
 
-            // Load saved state from localStorage
             const savedState = localStorage.getItem('sidebarState');
             if (window.innerWidth > 992 && savedState === 'closed') {
                 body.classList.add('sidebar-closed');
             }
 
-            // Function to handle toggling based on screen size
             function handleSidebarToggle() {
                 const isMobile = window.innerWidth <= 992;
-                
                 if (isMobile) {
-                    // Mobile logic: Toggle class 'mobile-show' and overlay
                     sidebar.classList.toggle('mobile-show');
                     sidebarOverlay.classList.toggle('active');
                 } else {
-                    // Desktop logic: Toggle class 'sidebar-closed' on body
                     body.classList.toggle('sidebar-closed');
-                    
-                    // Save state
                     if (body.classList.contains('sidebar-closed')) {
                         localStorage.setItem('sidebarState', 'closed');
                     } else {
                         localStorage.setItem('sidebarState', 'open');
                     }
                 }
-                
                 if (navigator.vibrate) navigator.vibrate(10);
             }
 
-            // Event Listeners
             if (menuToggle) {
-                // Remove existing listeners first to prevent duplicates (important for Turbo)
                 const newMenuToggle = menuToggle.cloneNode(true);
                 menuToggle.parentNode.replaceChild(newMenuToggle, menuToggle);
-                
                 newMenuToggle.addEventListener('click', handleSidebarToggle);
             }
 
             if (sidebarCloseBtn) {
                 sidebarCloseBtn.addEventListener('click', () => {
-                    // Logika khusus tombol X
                     const isMobile = window.innerWidth <= 992;
                     if(isMobile) {
                         sidebar.classList.remove('mobile-show');
@@ -995,7 +1002,6 @@
         // =========================
         // DARK MODE FUNCTIONALITY
         // =========================
-        
         function initTheme() {
             const themeToggle = document.getElementById('themeToggle');
             const html = document.documentElement;
@@ -1011,13 +1017,10 @@
             newThemeToggle.addEventListener('click', () => {
                 const currentTheme = html.getAttribute('data-theme');
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                
                 document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
-                
                 html.setAttribute('data-theme', newTheme);
                 localStorage.setItem('theme', newTheme);
                 updateThemeIcon(newThemeToggle.querySelector('i'), newTheme);
-                
                 showThemeNotification(newTheme);
             });
         }
@@ -1034,62 +1037,36 @@
         
         function showThemeNotification(theme) {
             document.querySelectorAll('.theme-notification').forEach(n => n.remove());
-
             const message = theme === 'dark' ? '🌙 Mode Gelap Aktif' : '☀️ Mode Terang Aktif';
-            
             const notification = document.createElement('div');
             notification.classList.add('theme-notification');
             notification.textContent = message;
             notification.style.cssText = `
-                position: fixed;
-                bottom: 30px;
-                right: 30px;
-                background: var(--grad);
-                color: white;
-                padding: 15px 25px;
-                border-radius: 12px;
-                font-weight: 600;
-                font-size: 14px;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-                z-index: 10000;
-                animation: slideInRight 0.4s ease-out, slideOutRight 0.4s ease-in 2s forwards;
+                position: fixed; bottom: 30px; right: 30px; background: var(--grad); color: white; padding: 15px 25px; border-radius: 12px; font-weight: 600; font-size: 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); z-index: 10000; animation: slideInRight 0.4s ease-out, slideOutRight 0.4s ease-in 2s forwards;
             `;
-            
             document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 2500);
+            setTimeout(() => { notification.remove(); }, 2500);
         }
         
         const style = document.createElement('style');
         style.textContent = `
-            @keyframes slideInRight {
-                from { transform: translateX(400px); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOutRight {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(400px); opacity: 0; }
-            }
+            @keyframes slideInRight { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+            @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }
         `;
         document.head.appendChild(style);
 
         // =========================
         // PAGE SCRIPTS INITIALIZATION
         // =========================
-        
         function initPageScripts() {
-            initSidebarLogic(); // Initialize new sidebar logic
+            initSidebarLogic();
             initTheme();
             setGreeting();
             updateDateTime();
-            
             if (window.dateTimeInterval) clearInterval(window.dateTimeInterval);
             window.dateTimeInterval = setInterval(updateDateTime, 1000);
         }
 
-        // Dynamic Greeting
         function setGreeting() {
             const now = new Date();
             const hour = now.getHours();
@@ -1097,36 +1074,19 @@
             let iconClass = "fas fa-smile";
             let iconColor = "#39A616";
             
-            if (hour >= 5 && hour < 11) {
-                greeting = "Selamat Pagi!";
-                iconClass = "fas fa-sun";
-                iconColor = "#ffb300";
-            } else if (hour >= 11 && hour < 15) {
-                greeting = "Selamat Siang!";
-                iconClass = "fas fa-cloud-sun";
-                iconColor = "#f7c948";
-            } else if (hour >= 15 && hour < 18) {
-                greeting = "Selamat Sore!";
-                iconClass = "fas fa-cloud-sun-rain";
-                iconColor = "#f57c00";
-            } else {
-                greeting = "Selamat Malam!";
-                iconClass = "fas fa-moon";
-                iconColor = "#5c6bc0";
-            }
+            if (hour >= 5 && hour < 11) { greeting = "Selamat Pagi!"; iconClass = "fas fa-sun"; iconColor = "#ffb300"; } 
+            else if (hour >= 11 && hour < 15) { greeting = "Selamat Siang!"; iconClass = "fas fa-cloud-sun"; iconColor = "#f7c948"; } 
+            else if (hour >= 15 && hour < 18) { greeting = "Selamat Sore!"; iconClass = "fas fa-cloud-sun-rain"; iconColor = "#f57c00"; } 
+            else { greeting = "Selamat Malam!"; iconClass = "fas fa-moon"; iconColor = "#5c6bc0"; }
             
             const greetingEl = document.getElementById("greeting");
-            if (greetingEl) {
-                greetingEl.innerHTML = `<i class="${iconClass}" style="color:${iconColor};"></i> ${greeting}`;
-            }
+            if (greetingEl) greetingEl.innerHTML = `<i class="${iconClass}" style="color:${iconColor};"></i> ${greeting}`;
         }
 
-        // Update DateTime
         function updateDateTime() {
             const now = new Date();
             const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
             const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            
             const hari = days[now.getDay()];
             const tanggal = now.getDate();
             const bulan = months[now.getMonth()];
@@ -1134,28 +1094,29 @@
             const jam = String(now.getHours()).padStart(2, '0');
             const menit = String(now.getMinutes()).padStart(2, '0');
             const detik = String(now.getSeconds()).padStart(2, '0');
-            
             const datetimeEl = document.getElementById("datetime-text");
-            if (datetimeEl) {
-                datetimeEl.textContent = `${hari}, ${tanggal} ${bulan} ${tahun} • ${jam}:${menit}:${detik}`;
-            }
+            if (datetimeEl) datetimeEl.textContent = `${hari}, ${tanggal} ${bulan} ${tahun} • ${jam}:${menit}:${detik}`;
         }
 
         // =========================
         // EVENT LISTENERS
         // =========================
-        
-        document.addEventListener('DOMContentLoaded', initPageScripts);
-        document.addEventListener('turbo:load', initPageScripts);
-        
+        document.addEventListener('DOMContentLoaded', () => {
+            initPageScripts();
+            startNotificationPolling(); // 🔥 START POLLING PASIEN
+        });
+        document.addEventListener('turbo:load', () => {
+            initPageScripts();
+            startNotificationPolling(); // 🔥 START POLLING PASIEN
+        });
         document.addEventListener('turbo:before-cache', () => {
             if (window.dateTimeInterval) clearInterval(window.dateTimeInterval);
             if (window.autoRefreshInterval) clearInterval(window.autoRefreshInterval);
+            if (window.notifInterval) clearInterval(window.notifInterval);
         });
 
         function confirmLogout(event) {
             event.preventDefault();
-            
             Swal.fire({
                 title: '🚪 Yakin ingin keluar?',
                 text: "Anda akan kembali ke halaman login.",
@@ -1167,10 +1128,7 @@
                 cancelButtonText: '<i class="fas fa-times"></i> Batal',
                 reverseButtons: true,
                 backdrop: `rgba(0,0,0,0.6) left top no-repeat`,
-                customClass: {
-                    confirmButton: 'swal-btn-confirm',
-                    cancelButton: 'swal-btn-cancel',
-                }
+                customClass: { confirmButton: 'swal-btn-confirm', cancelButton: 'swal-btn-cancel' }
             }).then((result) => {
                 if (result.isConfirmed) {
                     Swal.fire({
@@ -1179,7 +1137,6 @@
                         allowOutsideClick: false,
                         didOpen: () => { Swal.showLoading(); }
                     });
-                    
                     setTimeout(() => {
                         const form = document.getElementById('logout-form-main');
                         form.setAttribute('data-turbo', 'false');
@@ -1199,59 +1156,83 @@
             });
         });
 
-        // =========================
-        // GLOBAL AUTO REFRESH SYSTEM
-        // =========================
-        window.initAutoRefresh = function(selectors, interval = 5000) {
-            if (window.autoRefreshInterval) clearInterval(window.autoRefreshInterval);
-
-            let isUpdating = false;
-            window.autoRefreshInterval = setInterval(() => {
-                if (isUpdating) return;
-                isUpdating = true;
-
-                const url = new URL(window.location.href);
-                url.searchParams.set('auto_reload_time', new Date().getTime());
-
-                fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(response => response.text())
-                .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-
-                    selectors.forEach(selector => {
-                        const oldEl = document.querySelector(selector);
-                        const newEl = doc.querySelector(selector);
-
-                        if (oldEl && newEl && oldEl.innerHTML.trim() !== newEl.innerHTML.trim()) {
-                            oldEl.innerHTML = newEl.innerHTML;
-                            if (typeof window.rebindEvents === 'function') window.rebindEvents();
-                        }
-                    });
-                })
-                .catch(err => console.error('Auto refresh error:', err))
-                .finally(() => { isUpdating = false; });
-            }, interval);
-        };
+        // ======================================
+        // 🔥 AJAX NOTIFICATION POLLING SYSTEM 🔥
+        // ======================================
         
+        let notifInterval;
+
+        function startNotificationPolling() {
+            if (notifInterval) clearInterval(notifInterval);
+
+            // Fungsi cek API
+            const checkNotif = () => {
+                // Route ini didefinisikan di routes/web.php
+                fetch("{{ route('api.patient.check_notif') }}", {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // 1. Notifikasi Jadwal
+                        updateBadge('notif-badge-jadwal', data.counts.jadwal);
+                        // 2. Notifikasi Riwayat
+                        updateBadge('notif-badge-riwayat', data.counts.riwayat);
+                        // 3. Notifikasi Chat
+                        updateBadge('notif-badge-chat', data.counts.chat);
+                    }
+                })
+                .catch(err => {
+                    // Silent error, biar ga spam console kalau logout/pindah halaman
+                });
+            };
+
+            // Jalankan pertama kali & Interval 3 detik
+            checkNotif();
+            notifInterval = setInterval(checkNotif, 3000);
+            window.notifInterval = notifInterval;
+        }
+
+        function updateBadge(elementId, count) {
+            const wrapper = document.getElementById(elementId);
+            if (!wrapper) return;
+
+            if (count > 0) {
+                let badge = wrapper.querySelector('.badge-notification');
+                if (badge) {
+                    if (badge.textContent != count) {
+                        badge.textContent = count;
+                        badge.style.transform = 'scale(1.3)';
+                        setTimeout(() => badge.style.transform = 'scale(1)', 200);
+                    }
+                } else {
+                    wrapper.innerHTML = `<span class="badge-notification animate__animated animate__bounceIn">${count}</span>`;
+                }
+            } else {
+                wrapper.innerHTML = '';
+            }
+        }
     </script>
 
     {{-- 🔥 SCRIPT KHUSUS UNTUK POP-UP PEMANGGILAN PASIEN 🔥 --}}
     @auth
     <script>
         setInterval(() => {
-            // Jangan cek kalau swal sudah muncul
             if (Swal.isVisible()) return; 
 
             fetch('{{ route("check.panggilan") }}')
                 .then(response => response.json())
                 .then(data => {
                     if (data.dipanggil) {
-                        // Mainkan Audio
                         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); 
                         audio.play().catch(e => console.log('Audio autoplay blocked'));
 
-                        // Tampilkan Pop-up
                         Swal.fire({
                             title: '📢 GILIRAN ANDA!',
                             html: `
@@ -1270,7 +1251,6 @@
                             allowOutsideClick: false,
                             backdrop: `rgba(0,0,0,0.8) left top no-repeat`,
                             
-                            // Saat tombol diklik, panggil endpoint stop-alarm
                             preConfirm: () => {
                                 return fetch(`/stop-alarm/${data.data.id}`, {
                                     method: 'POST',
@@ -1289,7 +1269,6 @@
                             }
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                // Setelah sukses matikan alarm
                                 Swal.fire({
                                     title: 'Silakan Masuk',
                                     text: 'Segera menuju ke ruangan dokter.',
@@ -1302,7 +1281,7 @@
                     }
                 })
                 .catch(err => console.error('Error polling:', err));
-        }, 3000); // Cek setiap 3 detik
+        }, 3000); 
     </script>
     @endauth
 
