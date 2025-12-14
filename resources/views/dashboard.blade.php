@@ -859,7 +859,7 @@
                 padding: 8px 14px;
             }
         }
-</style>
+    </style>
 @endpush
 
 @section('content')
@@ -986,7 +986,7 @@
             </div>
             @endif
 
-            {{-- Kartu Notifikasi (Jadwal & Antrian) - MODIFIKASI: Hapus Estimasi Waktu di dalam badge --}}
+            {{-- Kartu Notifikasi (Jadwal & Antrian) --}}
             <div class="info-card">
                 <div class="card-gradient-bg card-notification-bg"></div>
                 <div class="card-content-modern">
@@ -1010,8 +1010,6 @@
                                                 <i class="fas fa-ticket-alt"></i> 
                                                 No. Antrian Anda: {{ $notifikasiHariIni->no_antrian }}
                                             </span>
-
-                                            {{-- BAGIAN INI DIHAPUS karena sudah ada di kartu Status Antrian Aktif --}}
                                         </div>
                                     @else
                                         <span class="pending-badge">
@@ -1200,8 +1198,8 @@
                 // 1. Update Antrian Sedang Berjalan
                 const currentQueueElement = document.getElementById('antrian-sedang-berjalan');
                 if (currentQueueElement) {
-                    if (data.current_queue_info) {
-                         currentQueueElement.textContent = `${data.current_queue_info}`;
+                    if (data.antrian_sekarang) {
+                         currentQueueElement.textContent = `${data.antrian_sekarang}`;
                     } else {
                          currentQueueElement.textContent = 'Tidak ada antrian aktif saat ini.';
                     }
@@ -1223,7 +1221,7 @@
 
             })
             .catch(error => {
-                console.error('Error fetching queue status:', error);
+                // console.error('Error fetching queue status:', error);
                 const currentQueueElement = document.getElementById('antrian-sedang-berjalan');
                 if (currentQueueElement) {
                     currentQueueElement.textContent = 'Gagal memuat status.';

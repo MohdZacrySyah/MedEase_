@@ -252,82 +252,89 @@ class AuthController extends Controller
      * @param JadwalPraktek $jadwal Jadwal praktek yang sedang diakses pasien.
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getQueueStatus(JadwalPraktek $jadwal)
+   public function getQueueStatus($jadwalId)
     {
-        // Pastikan pengguna sudah login
-        if (!Auth::check()) {
-            return response()->json(['error' => 'Unauthenticated'], 401);
+        $jadwal = \App\Models\JadwalPraktek::find($jadwalId);
+
+        if (!$jadwal) {
+            return response()->json([
+                'status' => 'Tutup',
+                'antrian_sekarang' => '-',
+                'total_antrian' => 0,
+                'sisa_antrian' => 0
+            ]);
         }
 
-        $pasien = Auth::user();
-        $today = Carbon::today();
+        // 1. Cek Waktu Mulai Praktek
+        $now = \Carbon\Carbon::now();
+        $jamMulai = \Carbon\Carbon::parse($jadwal->jam_mulai);
         
-        $currentQueueInfo = "Tidak ada antrian aktif saat ini.";
-        $currentQueueNumber = null;
-
-        // 1. Cek Prioritas 1: Antrian yang Sedang diperiksa oleh dokter ('Sedang Diperiksa')
-        $antrianAktif = Pendaftaran::with('user')
-                                   ->where('jadwal_praktek_id', $jadwal->id)
-                                   ->where('status', 'Sedang Diperiksa') // FIX: Menggunakan field 'status'
-                                   ->whereDate('jadwal_dipilih', $today)
-                                   ->orderBy('no_antrian')
-                                   ->first();
-        
-        if ($antrianAktif) {
-            $currentQueueNumber = $antrianAktif->no_antrian;
-            $currentQueueInfo = "No. {$currentQueueNumber} (a/n {$antrianAktif->user->name}) **SEDANG DILAYANI**";
+        // Jika belum masuk jam praktek (misal: belum jam 16:00)
+        if ($now->lessThan($jamMulai)) {
+             $antrianSekarang = "Jadwal Belum Mulai";
         } else {
-            
-            // 2. Cek Prioritas 2 (Sesuai permintaan Anda): Antrian yang Sudah diperiksa awal dan menunggu giliran dokter ('Diperiksa Awal')
-            $antrianAktif = Pendaftaran::with('user')
-                                       ->where('jadwal_praktek_id', $jadwal->id)
-                                       ->where('status', 'Diperiksa Awal') // FIX: Menggunakan field 'status'
-                                       ->whereDate('jadwal_dipilih', $today)
-                                       ->orderBy('no_antrian')
-                                       ->first();
-            
-            if ($antrianAktif) {
-                $currentQueueNumber = $antrianAktif->no_antrian;
-                $currentQueueInfo = "No. {$currentQueueNumber} (a/n {$antrianAktif->user->name}) **DI RUANG PERSIAPAN**";
-            } else {
-                
-                // 3. Cek Prioritas 3: Antrian yang baru daftar dan menunggu diperiksa awal ('Menunggu' atau 'Hadir')
-                $antrianAktif = Pendaftaran::with('user')
-                                           ->where('jadwal_praktek_id', $jadwal->id)
-                                           ->whereIn('status', ['Menunggu', 'Hadir']) // FIX: Menggunakan field 'status' & mencakup 'Hadir'
-                                           ->whereDate('jadwal_dipilih', $today)
-                                           ->orderBy('no_antrian')
-                                           ->first();
+            // 2. Cek Pasien yang "Sedang Dilayani" (Prioritas Utama)
+            // Kriteria: Status Panggilan 'hadir' ATAU Status Medis sedang berjalan (Diperiksa Awal/Dokter)
+            $pasienAktif = \App\Models\Pendaftaran::where('jadwal_praktek_id', $jadwalId)
+                ->whereDate('jadwal_dipilih', \Carbon\Carbon::today())
+                ->where(function($q) {
+                    $q->where('status_panggilan', 'hadir') // Pasien yang sudah konfirmasi hadir
+                      ->orWhereIn('status', ['Diperiksa Awal', 'Diperiksa Dokter']); // Pasien yang sedang diperiksa
+                })
+                ->where('status', '!=', 'Selesai') // Pastikan belum selesai
+                ->where('status', '!=', 'Batal')
+                ->orderBy('updated_at', 'desc') // Ambil yang paling baru diupdate
+                ->first();
 
-                if ($antrianAktif) {
-                    $currentQueueNumber = $antrianAktif->no_antrian;
-                    $statusText = $antrianAktif->status == 'Hadir' ? 'HADIR' : 'BARU';
-                    $currentQueueInfo = "No. {$currentQueueNumber} (a/n {$antrianAktif->user->name}) **MENUNGGU DIPERIKSA AWAL ({$statusText})**";
+            if ($pasienAktif) {
+                // TAMPILKAN PASIEN YANG SEDANG DILAYANI
+                // Contoh: "No 1 Koyeh"
+                $namaPasien = $pasienAktif->user->name ?? $pasienAktif->nama_lengkap;
+                // Potong nama jika terlalu panjang
+                $namaPendek = strlen($namaPasien) > 15 ? substr($namaPasien, 0, 15) . '...' : $namaPasien;
+                
+                $antrianSekarang = "No " . $pasienAktif->no_antrian . " " . $namaPendek;
+            } else {
+                // 3. Jika tidak ada yang sedang dilayani, cari antrian selanjutnya yang "Menunggu"
+                $nextPasien = \App\Models\Pendaftaran::where('jadwal_praktek_id', $jadwalId)
+                    ->whereDate('jadwal_dipilih', \Carbon\Carbon::today())
+                    ->where('status', 'Menunggu')
+                    ->where('status_panggilan', '!=', 'hadir') // Yang belum masuk ruangan
+                    ->where('status', '!=', 'Batal')
+                    ->orderBy('no_antrian', 'asc')
+                    ->first();
+
+                if ($nextPasien) {
+                    // TAMPILKAN SIAPA YANG SEDANG DITUNGGU
+                    $antrianSekarang = "Menunggu Pasien No " . $nextPasien->no_antrian;
+                } else {
+                    $antrianSekarang = "Tidak ada antrian";
                 }
             }
         }
 
-        // 4. Ambil estimasi waktu pasien yang sedang login (My Estimated Time)
-        $myPendaftaran = Pendaftaran::where('user_id', $pasien->id)
-                                    ->where('jadwal_praktek_id', $jadwal->id)
-                                    ->whereDate('jadwal_dipilih', $today)
-                                    ->whereIn('status', ['Menunggu', 'Hadir', 'Diperiksa Awal', 'Sedang Diperiksa']) // FIX: Menggunakan field 'status'
-                                    ->first();
-        
-        $myEstimatedTime = $myPendaftaran && $myPendaftaran->estimasi_dilayani
-                           ? Carbon::parse($myPendaftaran->estimasi_dilayani)->format('H:i')
-                           : 'Estimasi belum tersedia';
+        // Hitung statistik lain
+        $totalAntrian = \App\Models\Pendaftaran::where('jadwal_praktek_id', $jadwalId)
+            ->whereDate('jadwal_dipilih', \Carbon\Carbon::today())
+            ->where('status', '!=', 'Batal')
+            ->count();
 
-        $myQueueNumber = $myPendaftaran ? $myPendaftaran->no_antrian : null;
+        // Sisa antrian = Total - Selesai - Batal
+        $selesaiCount = \App\Models\Pendaftaran::where('jadwal_praktek_id', $jadwalId)
+            ->whereDate('jadwal_dipilih', \Carbon\Carbon::today())
+            ->where('status', 'Selesai')
+            ->count();
+            
+        $sisaAntrian = $totalAntrian - $selesaiCount;
+        if($sisaAntrian < 0) $sisaAntrian = 0;
 
         return response()->json([
-            'current_queue_number' => $currentQueueNumber,
-            'current_queue_info' => $currentQueueInfo,
-            'my_estimated_time' => $myEstimatedTime,
-            'my_queue_number' => $myQueueNumber,
+            'status' => 'Buka',
+            'antrian_sekarang' => $antrianSekarang,
+            'total_antrian' => $totalAntrian,
+            'sisa_antrian' => $sisaAntrian
         ]);
     }
-
     public function riwayatPemeriksaan(Request $request)
     {
         // 🔥 TAMBAHAN LOGIKA RESET NOTIFIKASI 🔥
