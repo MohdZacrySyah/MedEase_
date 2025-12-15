@@ -79,7 +79,7 @@
         padding: 40px 20px;
     }
 
-    /* ===== HEADER BANNER (NO ANIMATION) ===== */
+    /* ===== HEADER BANNER ===== */
     .page-header-banner {
         margin-bottom: 40px;
     }
@@ -212,6 +212,7 @@
         position: relative;
         z-index: 1;
         overflow: hidden;
+        white-space: nowrap;
     }
 
     .btn-add::before {
@@ -256,6 +257,7 @@
         border: none;
         transition: all 0.3s ease;
         box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        white-space: nowrap;
     }
 
     .btn-danger-action:hover {
@@ -264,7 +266,7 @@
         box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
     }
 
-    /* ===== ALERT (NO ANIMATION) ===== */
+    /* ===== ALERT ===== */
     .alert-success-modern {
         display: flex;
         align-items: center;
@@ -318,7 +320,7 @@
         transform: rotate(90deg);
     }
 
-    /* ===== TABLE (NO ANIMATION) ===== */
+    /* ===== TABLE WITH RESPONSIVE HORIZONTAL SCROLL ===== */
     .schedule-container-modern {
         background: var(--bg-primary);
         border-radius: 24px;
@@ -367,9 +369,39 @@
         backdrop-filter: blur(10px);
     }
 
+    /* TABLE RESPONSIVE WRAPPER WITH HORIZONTAL SCROLL */
+    .table-responsive {
+        overflow-x: auto;
+        width: 100%;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(57, 166, 22, 0.3) var(--bg-secondary);
+    }
+
+    /* Custom Scrollbar untuk Table */
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+        border-radius: 10px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background-color: rgba(57, 166, 22, 0.3);
+        border-radius: 10px;
+        border: 2px solid var(--bg-secondary);
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(57, 166, 22, 0.5);
+    }
+
     .schedule-table {
         width: 100%;
         border-collapse: collapse;
+        min-width: 900px; /* Minimum width agar tabel tidak terlalu sempit */
     }
 
     .schedule-table thead {
@@ -384,6 +416,7 @@
         font-size: 0.95rem;
         text-transform: uppercase;
         letter-spacing: 0.8px;
+        white-space: nowrap;
     }
 
     .schedule-table thead th i {
@@ -395,7 +428,6 @@
         text-align: center !important;
     }
 
-    /* NO ANIMATION FOR ROWS */
     .schedule-row {
         border-bottom: 1px solid var(--border-color);
         transition: all 0.3s ease;
@@ -408,6 +440,7 @@
     .schedule-table tbody td {
         padding: 20px 24px;
         color: var(--text-secondary);
+        white-space: nowrap;
     }
 
     /* Number Badge */
@@ -459,6 +492,7 @@
     .doctor-name {
         font-weight: 600;
         color: var(--text-primary);
+        min-width: 120px;
     }
 
     /* Badges */
@@ -578,7 +612,6 @@
         font-size: 4.5rem;
         margin-bottom: 24px;
         opacity: 0.3;
-        animation: float 3s ease-in-out infinite;
     }
 
     .empty-schedule p {
@@ -593,7 +626,7 @@
         color: var(--text-muted);
     }
 
-    /* ===== MODAL (NO ANIMATION) ===== */
+    /* ===== MODAL ===== */
     .modal-overlay {
         display: none;
         position: fixed;
@@ -794,7 +827,7 @@
     /* Checkbox Grid */
     .checkbox-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
         gap: 12px;
         margin-top: 10px;
     }
@@ -982,29 +1015,57 @@
         box-shadow: 0 10px 30px rgba(231, 76, 60, 0.5);
     }
 
-    /* ===== RESPONSIVE ===== */
+    /* ===== RESPONSIVE DESIGN FOR MOBILE ===== */
+    
+    /* Tablet */
     @media (max-width: 992px) {
         .hero-illustration {
             display: none;
         }
+
+        .schedule-table {
+            min-width: 850px;
+        }
     }
 
+    /* Mobile Landscape & Portrait */
     @media (max-width: 768px) {
         .container-fluid-modern {
-            padding: 20px 15px;
+            padding: 25px 16px;
+        }
+
+        .page-header-banner {
+            margin-bottom: 30px;
         }
 
         .header-content {
             flex-direction: column;
             text-align: center;
-            padding: 30px 24px;
+            padding: 28px 20px;
+            gap: 16px;
+        }
+
+        .header-icon {
+            width: 65px;
+            height: 65px;
+            font-size: 32px;
         }
 
         .page-title {
-            font-size: 1.8rem;
+            font-size: 1.75rem;
         }
 
-        .btn-add {
+        .page-subtitle {
+            font-size: 0.95rem;
+            justify-content: center;
+        }
+
+        .page-action-bar {
+            justify-content: stretch;
+            margin-bottom: 25px;
+        }
+
+        .btn-danger-action {
             width: 100%;
             justify-content: center;
         }
@@ -1012,15 +1073,26 @@
         .table-card-header {
             flex-direction: column;
             align-items: flex-start;
+            padding: 18px 20px;
+        }
+
+        .table-title {
+            font-size: 1.05rem;
+        }
+
+        .schedule-count {
+            padding: 10px 20px;
+            font-size: 0.9rem;
         }
 
         .schedule-table {
             font-size: 0.9rem;
+            min-width: 800px;
         }
 
         .schedule-table thead th,
         .schedule-table tbody td {
-            padding: 14px 12px;
+            padding: 16px 14px;
         }
 
         .doctor-avatar {
@@ -1029,28 +1101,15 @@
             font-size: 18px;
         }
 
-        .modal-content {
-            padding: 24px;
+        .doctor-name {
+            min-width: 100px;
         }
 
-        .form-actions {
-            flex-direction: column;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .page-title {
-            font-size: 1.5rem;
-        }
-
-        .greeting-badge {
+        .service-badge,
+        .day-badge,
+        .time-badge-modern {
             font-size: 0.8rem;
-            padding: 8px 16px;
-        }
-
-        .modal-card {
-            width: 95%;
-            margin: 10px;
+            padding: 8px 14px;
         }
 
         .action-buttons {
@@ -1058,8 +1117,196 @@
         }
 
         .btn-action {
+            width: 38px;
+            height: 38px;
+        }
+
+        .modal-card {
+            width: 95%;
+            margin: 10px;
+        }
+
+        .modal-content {
+            padding: 28px 24px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .checkbox-grid {
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        #cancelScheduleModal .modal-card .form-actions {
+            padding: 0 24px 28px;
+        }
+    }
+
+    /* Extra Small Mobile */
+    @media (max-width: 576px) {
+        .container-fluid-modern {
+            padding: 20px 12px;
+        }
+
+        .header-content {
+            padding: 24px 18px;
+            border-radius: 20px;
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 28px;
+            border-radius: 14px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+        }
+
+        .page-subtitle {
+            font-size: 0.9rem;
+        }
+
+        .greeting-badge {
+            font-size: 0.8rem;
+            padding: 8px 16px;
+        }
+
+        .btn-danger-action {
+            font-size: 0.9rem;
+            padding: 12px 20px;
+        }
+
+        .table-card-header {
+            padding: 16px 18px;
+        }
+
+        .table-title {
+            font-size: 1rem;
+        }
+
+        .schedule-count {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
+        .schedule-table {
+            min-width: 750px;
+        }
+
+        .schedule-table thead th {
+            font-size: 0.8rem;
+            padding: 14px 12px;
+        }
+
+        .schedule-table tbody td {
+            padding: 14px 12px;
+            font-size: 0.85rem;
+        }
+
+        .doctor-avatar {
+            width: 42px;
+            height: 42px;
+            font-size: 16px;
+            border-width: 2px;
+        }
+
+        .doctor-name {
+            font-size: 0.9rem;
+            min-width: 90px;
+        }
+
+        .number-badge {
+            min-width: 36px;
+            height: 36px;
+            font-size: 0.9rem;
+        }
+
+        .service-badge,
+        .day-badge,
+        .time-badge-modern {
+            font-size: 0.75rem;
+            padding: 7px 12px;
+        }
+
+        .btn-action {
             width: 36px;
             height: 36px;
+            font-size: 0.9rem;
+        }
+
+        .empty-schedule {
+            padding: 50px 16px;
+        }
+
+        .empty-schedule i {
+            font-size: 3.5rem;
+        }
+
+        .empty-schedule p {
+            font-size: 1rem;
+        }
+
+        .empty-schedule small {
+            font-size: 0.85rem;
+        }
+
+        .modal-content {
+            padding: 24px 20px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+        }
+
+        .modal-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 28px;
+        }
+
+        .checkbox-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .checkbox-label {
+            padding: 12px;
+        }
+
+        .checkbox-text {
+            font-size: 0.85rem;
+        }
+
+        .btn-primary,
+        .btn-secondary,
+        .btn-danger {
+            padding: 14px 24px;
+            font-size: 0.95rem;
+        }
+    }
+
+    /* Ultra Small Mobile (< 400px) */
+    @media (max-width: 400px) {
+        .page-title {
+            font-size: 1.35rem;
+        }
+
+        .schedule-table {
+            min-width: 700px;
+        }
+
+        .checkbox-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -1120,130 +1367,133 @@
                 Daftar Jadwal Praktek
             </h3>
             
-            {{-- ID "total-jadwal" ditambahkan untuk Auto Refresh --}}
             <span class="schedule-count" id="total-jadwal">
                 <i class="fas fa-calendar-check"></i>
                 {{ $jadwals->count() }} Jadwal Aktif
             </span>
         </div>
-        <table class="schedule-table">
-            <thead>
-                <tr>
-                    <th><i class="fas fa-hashtag"></i> No</th>
-                    <th><i class="fas fa-user-md"></i> Nama Dokter</th>
-                    <th><i class="fas fa-stethoscope"></i> Layanan</th>
-                    <th><i class="fas fa-calendar"></i> Hari</th>
-                    <th><i class="far fa-clock"></i> Waktu</th>
-                    <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
-                </tr>
-            </thead>
 
-            {{-- ID "table-body" ditambahkan untuk Auto Refresh --}}
-            <tbody id="table-body">
-                @php
-                    if (!function_exists('formatHariFleksibel')) {
-                        function formatHariFleksibel($hariArray) {
-                            if (empty($hariArray) || !is_array($hariArray)) return '';
-                            if (count($hariArray) == 7) return 'Setiap Hari';
-                            $semuaHari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-                            $indeksHari = array_map(fn($h) => array_search($h, $semuaHari), $hariArray); 
-                            sort($indeksHari); 
-                            $rentang = [];
-                            for ($i = 0, $j = 0, $n = count($indeksHari); $i < $n; $i = $j) {
-                                $j = $i + 1; 
-                                while ($j < $n && $indeksHari[$j] == $indeksHari[$j-1] + 1) $j++; 
-                                $rentang[] = [$indeksHari[$i], $indeksHari[$j-1]];
-                            }
-                            $outputStrings = [];
-                            foreach ($rentang as $r) { 
-                                $awal = $semuaHari[$r[0]]; 
-                                $akhir = $semuaHari[$r[1]]; 
-                                $outputStrings[] = ($awal == $akhir) ? $awal : "$awal - $akhir"; 
-                            }
-                            return implode(', ', $outputStrings);
-                        }
-                    }
-                @endphp
-
-                @forelse ($jadwals as $index => $jadwal)
-                    <tr class="schedule-row"> {{-- Animation removed --}}
-                        <td>
-                            <span class="number-badge">{{ $index + 1 }}</span>
-                        </td>
-                        <td>
-                            <div class="doctor-info">
-                                <div class="doctor-avatar">
-                                    @if($jadwal->tenagaMedis && $jadwal->tenagaMedis->profile_photo_path)
-                                        <img src="{{ asset('storage/' . $jadwal->tenagaMedis->profile_photo_path) }}" alt="{{ $jadwal->tenagaMedis->name }}">
-                                    @else
-                                        <i class="fas fa-user-md"></i>
-                                    @endif
-                                </div>
-                                <span class="doctor-name">{{ $jadwal->tenagaMedis?->name ?? 'N/A' }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="service-badge">
-                                <i class="fas fa-briefcase-medical"></i>
-                                {{ $jadwal->layanan }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="day-badge">
-                                <i class="fas fa-calendar-week"></i>
-                                {{ formatHariFleksibel($jadwal->hari) }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="time-badge-modern">
-                                <i class="far fa-clock"></i>
-                                <span>
-                                    {{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }} - 
-                                    {{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }} WIB
-                                </span>
-                            </div>
-                        </td>
-                        <td class="text-center">
-                            <div class="action-buttons">
-                                <button class="btn-action btn-edit" 
-                                        data-id="{{ $jadwal->id }}"
-                                        data-tenaga-medis-id="{{ $jadwal->tenaga_medis_id }}"
-                                        data-layanan="{{ $jadwal->layanan }}"
-                                        data-hari='@json($jadwal->hari)'
-                                        data-jam-mulai="{{ $jadwal->jam_mulai }}"
-                                        data-jam-selesai="{{ $jadwal->jam_selesai }}"
-                                        title="Edit Jadwal">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <form action="{{ route('admin.kelolajadwalpraktek.destroy', $jadwal->id) }}" 
-                                      method="POST" 
-                                      class="delete-form"
-                                      style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn-action btn-hapus" title="Hapus Jadwal">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
+        {{-- WRAPPER RESPONSIVE DENGAN HORIZONTAL SCROLL --}}
+        <div class="table-responsive">
+            <table class="schedule-table">
+                <thead>
                     <tr>
-                        <td colspan="6">
-                            <div class="empty-schedule">
-                                <i class="fas fa-calendar-times"></i>
-                                <p>Belum ada jadwal praktek</p>
-                                <small>Klik tombol "Tambah Jadwal" untuk membuat jadwal baru</small>
-                            </div>
-                        </td>
+                        <th><i class="fas fa-hashtag"></i> No</th>
+                        <th><i class="fas fa-user-md"></i> Nama Dokter</th>
+                        <th><i class="fas fa-stethoscope"></i> Layanan</th>
+                        <th><i class="fas fa-calendar"></i> Hari</th>
+                        <th><i class="far fa-clock"></i> Waktu</th>
+                        <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody id="table-body">
+                    @php
+                        if (!function_exists('formatHariFleksibel')) {
+                            function formatHariFleksibel($hariArray) {
+                                if (empty($hariArray) || !is_array($hariArray)) return '';
+                                if (count($hariArray) == 7) return 'Setiap Hari';
+                                $semuaHari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+                                $indeksHari = array_map(fn($h) => array_search($h, $semuaHari), $hariArray); 
+                                sort($indeksHari); 
+                                $rentang = [];
+                                for ($i = 0, $j = 0, $n = count($indeksHari); $i < $n; $i = $j) {
+                                    $j = $i + 1; 
+                                    while ($j < $n && $indeksHari[$j] == $indeksHari[$j-1] + 1) $j++; 
+                                    $rentang[] = [$indeksHari[$i], $indeksHari[$j-1]];
+                                }
+                                $outputStrings = [];
+                                foreach ($rentang as $r) { 
+                                    $awal = $semuaHari[$r[0]]; 
+                                    $akhir = $semuaHari[$r[1]]; 
+                                    $outputStrings[] = ($awal == $akhir) ? $awal : "$awal - $akhir"; 
+                                }
+                                return implode(', ', $outputStrings);
+                            }
+                        }
+                    @endphp
+
+                    @forelse ($jadwals as $index => $jadwal)
+                        <tr class="schedule-row">
+                            <td>
+                                <span class="number-badge">{{ $index + 1 }}</span>
+                            </td>
+                            <td>
+                                <div class="doctor-info">
+                                    <div class="doctor-avatar">
+                                        @if($jadwal->tenagaMedis && $jadwal->tenagaMedis->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $jadwal->tenagaMedis->profile_photo_path) }}" alt="{{ $jadwal->tenagaMedis->name }}">
+                                        @else
+                                            <i class="fas fa-user-md"></i>
+                                        @endif
+                                    </div>
+                                    <span class="doctor-name">{{ $jadwal->tenagaMedis?->name ?? 'N/A' }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="service-badge">
+                                    <i class="fas fa-briefcase-medical"></i>
+                                    {{ $jadwal->layanan }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="day-badge">
+                                    <i class="fas fa-calendar-week"></i>
+                                    {{ formatHariFleksibel($jadwal->hari) }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="time-badge-modern">
+                                    <i class="far fa-clock"></i>
+                                    <span>
+                                        {{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }} - 
+                                        {{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }} WIB
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-edit" 
+                                            data-id="{{ $jadwal->id }}"
+                                            data-tenaga-medis-id="{{ $jadwal->tenaga_medis_id }}"
+                                            data-layanan="{{ $jadwal->layanan }}"
+                                            data-hari='@json($jadwal->hari)'
+                                            data-jam-mulai="{{ $jadwal->jam_mulai }}"
+                                            data-jam-selesai="{{ $jadwal->jam_selesai }}"
+                                            title="Edit Jadwal">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <form action="{{ route('admin.kelolajadwalpraktek.destroy', $jadwal->id) }}" 
+                                          method="POST" 
+                                          class="delete-form"
+                                          style="display:inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn-action btn-hapus" title="Hapus Jadwal">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-schedule">
+                                    <i class="fas fa-calendar-times"></i>
+                                    <p>Belum ada jadwal praktek</p>
+                                    <small>Klik tombol "Tambah Jadwal" untuk membuat jadwal baru</small>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
+{{-- MODAL FORM (CREATE / EDIT) --}}
 <div id="jadwalModal" class="modal-overlay">
     <div class="modal-card">
         <button class="close-modal" id="closeModalBtn">
@@ -1332,6 +1582,7 @@
     </div>
 </div>
 
+{{-- MODAL CANCEL SCHEDULE --}}
 <div id="cancelScheduleModal" class="modal-overlay">
     <div class="modal-card modal-card-small">
         <button class="close-modal" id="closeCancelModalBtn">
@@ -1394,6 +1645,7 @@
     </div>
 </div>
 
+{{-- MODAL KONFIRMASI HAPUS --}}
 <div id="deleteConfirmModal" class="modal-overlay">
     <div class="modal-card modal-card-small">
         <button class="close-modal" id="closeDeleteModalBtn">
@@ -1458,25 +1710,23 @@
         // --- GLOBAL AUTO REFRESH ---
         if (typeof window.initAutoRefresh === 'function') {
             window.initAutoRefresh([
-                '#total-jadwal', // Jumlah jadwal
-                '#table-body'    // Isi tabel
+                '#total-jadwal',
+                '#table-body'
             ]);
         }
 
-        // --- REBIND EVENTS (Penting agar tombol Edit/Hapus tetap jalan setelah refresh) ---
+        // --- REBIND EVENTS ---
         window.rebindEvents = function() {
             bindTableEvents();
             console.log('♻️ Table events rebound!');
         };
 
         function bindTableEvents() {
-            // Re-attach Edit Events
             document.querySelectorAll('.btn-edit').forEach(btn => {
-                btn.removeEventListener('click', handleEditClick); // Prevent duplicate
+                btn.removeEventListener('click', handleEditClick);
                 btn.addEventListener('click', handleEditClick);
             });
 
-            // Re-attach Delete Events
             document.querySelectorAll('.delete-form').forEach(form => {
                 form.removeEventListener('submit', handleDeleteSubmit);
                 form.addEventListener('submit', handleDeleteSubmit);
@@ -1566,13 +1816,11 @@
         }
 
         // --- EVENT LISTENERS ---
-        // Jalankan bind pertama kali
         bindTableEvents();
 
-        // Alert auto-hide
         const alert = document.getElementById('autoHideAlert');
         if (alert) {
-            setTimeout(() => {
+            setTimeout(() => { 
                 alert.style.opacity = '0';
                 alert.style.transition = 'opacity 0.6s ease';
                 setTimeout(() => alert.remove(), 600);
@@ -1680,7 +1928,6 @@
             });
         }
 
-        // Close modal on click outside
         window.addEventListener('click', function(event) {
             if (event.target == modal) closeModal();
             if (event.target == deleteModal) closeDeleteModal();

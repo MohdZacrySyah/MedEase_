@@ -372,6 +372,9 @@ class AdminController extends Controller
 
     public function riwayatPasien(Request $request, User $user)
     {
+        // Mapping $user ke $pasien agar tidak error di view
+        $pasien = $user;
+
         $query = Pemeriksaan::with(['pendaftaran.user', 'pendaftaran.pemeriksaanAwal', 'tenagaMedis', 'resep'])
             ->where('pasien_id', $user->id);
 
@@ -383,7 +386,7 @@ class AdminController extends Controller
         $layanans = Layanan::orderBy('nama_layanan')->get();
         $tenagaMedisList = TenagaMedis::orderBy('name')->get();
         
-        return view('admin.riwayat.index', compact('riwayats', 'layanans', 'tenagaMedisList', 'request', 'user'));
+        return view('admin.riwayat.index', compact('riwayats', 'layanans', 'tenagaMedisList', 'request', 'user', 'pasien'));
     }
 
     // ==========================================

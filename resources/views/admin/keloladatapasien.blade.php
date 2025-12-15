@@ -97,107 +97,111 @@
                 {{ $pasiens->count() }} Pasien
             </span>
         </div>
-        <table class="schedule-table">
-            <thead>
-                <tr>
-                    <th><i class="fas fa-hashtag"></i> No</th>
-                    <th><i class="fas fa-user"></i> Nama Pasien</th>
-                    <th><i class="fas fa-birthday-cake"></i> Tanggal Lahir</th>
-                    <th><i class="fas fa-map-marker-alt"></i> Alamat</th>
-                    <th><i class="fas fa-phone"></i> No HP/WA</th>
-                    <th><i class="fas fa-calendar-plus"></i> Registrasi</th>
-                    <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
-                </tr>
-            </thead>
-            
-            {{-- ID "table-body" untuk Auto Load --}}
-            <tbody id="table-body">
-                @forelse ($pasiens as $index => $pasien)
-                    <tr class="schedule-row"> {{-- Animasi dihapus --}}
-                        <td>
-                            <span class="number-badge">{{ $index + 1 }}</span>
-                        </td>
-                        <td>
-                            <div class="doctor-info">
-                                <div class="doctor-avatar">
-                                    @if($pasien->profile_photo_path)
-                                        <img src="{{ asset('storage/' . $pasien->profile_photo_path) }}" alt="Foto">
-                                    @else
-                                        {{ substr($pasien->name, 0, 1) }}
-                                    @endif
-                                </div>
-                                <div class="patient-details">
-                                    <span class="doctor-name">{{ $pasien->name }}</span>
-                                    @if($pasien->email)
-                                        <span class="patient-email">{{ $pasien->email }}</span>
-                                    @endif
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="date-badge">
-                                <i class="fas fa-calendar"></i>
-                                {{ $pasien->tanggal_lahir ? \Carbon\Carbon::parse($pasien->tanggal_lahir)->isoFormat('DD-MM-YYYY') : 'N/A' }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="text-muted">{{ Str::limit($pasien->alamat ?? 'N/A', 35) }}</span>
-                        </td>
-                        <td>
-                            @if($pasien->no_hp)
-                                <span class="phone-badge">
-                                    <i class="fab fa-whatsapp"></i>
-                                    {{ $pasien->no_hp }}
-                                </span>
-                            @else
-                                <span class="text-muted">N/A</span>
-                            @endif
-                        </td>
-                        <td>
-                            <span class="text-muted">{{ $pasien->created_at->isoFormat('D MMM YYYY') }}</span>
-                        </td>
-                        <td class="text-center">
-                            <div class="action-buttons">
-                                <a href="{{ route('admin.pasien.riwayat', $pasien->id) }}" 
-                                   class="btn-action btn-info"
-                                   title="Lihat Riwayat">
-                                    <i class="fas fa-history"></i>
-                                </a>
-                                <form action="{{ route('admin.pasien.hapus', $pasien->id) }}" 
-                                      method="POST" 
-                                      class="delete-form"
-                                      style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" 
-                                            class="btn-action btn-hapus" 
-                                            title="Hapus Pasien">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
+        
+        {{-- WRAPPER RESPONSIVE DENGAN HORIZONTAL SCROLL --}}
+        <div class="table-responsive">
+            <table class="schedule-table">
+                <thead>
                     <tr>
-                        <td colspan="7">
-                            <div class="empty-schedule">
-                                <i class="fas fa-user-slash"></i>
-                                <p>Tidak ada data pasien ditemukan</p>
-                                @if($search ?? false)
-                                    <a href="{{ route('admin.keloladatapasien') }}" class="btn-reset">
-                                        <span>Tampilkan Semua Pasien</span>
-                                        <i class="fas fa-redo"></i>
-                                    </a>
-                                @else
-                                    <small>Data pasien akan muncul di sini setelah ada yang mendaftar</small>
-                                @endif
-                            </div>
-                        </td>
+                        <th><i class="fas fa-hashtag"></i> No</th>
+                        <th><i class="fas fa-user"></i> Nama Pasien</th>
+                        <th><i class="fas fa-birthday-cake"></i> Tanggal Lahir</th>
+                        <th><i class="fas fa-map-marker-alt"></i> Alamat</th>
+                        <th><i class="fas fa-phone"></i> No HP/WA</th>
+                        <th><i class="fas fa-calendar-plus"></i> Registrasi</th>
+                        <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                
+                {{-- ID "table-body" untuk Auto Load --}}
+                <tbody id="table-body">
+                    @forelse ($pasiens as $index => $pasien)
+                        <tr class="schedule-row">
+                            <td>
+                                <span class="number-badge">{{ $index + 1 }}</span>
+                            </td>
+                            <td>
+                                <div class="doctor-info">
+                                    <div class="doctor-avatar">
+                                        @if($pasien->profile_photo_path)
+                                            <img src="{{ asset('storage/' . $pasien->profile_photo_path) }}" alt="Foto">
+                                        @else
+                                            {{ substr($pasien->name, 0, 1) }}
+                                        @endif
+                                    </div>
+                                    <div class="patient-details">
+                                        <span class="doctor-name">{{ $pasien->name }}</span>
+                                        @if($pasien->email)
+                                            <span class="patient-email">{{ $pasien->email }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="date-badge">
+                                    <i class="fas fa-calendar"></i>
+                                    {{ $pasien->tanggal_lahir ? \Carbon\Carbon::parse($pasien->tanggal_lahir)->isoFormat('DD-MM-YYYY') : 'N/A' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-muted">{{ Str::limit($pasien->alamat ?? 'N/A', 35) }}</span>
+                            </td>
+                            <td>
+                                @if($pasien->no_hp)
+                                    <span class="phone-badge">
+                                        <i class="fab fa-whatsapp"></i>
+                                        {{ $pasien->no_hp }}
+                                    </span>
+                                @else
+                                    <span class="text-muted">N/A</span>
+                                @endif
+                            </td>
+                            <td>
+                                <span class="text-muted">{{ $pasien->created_at->isoFormat('D MMM YYYY') }}</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="action-buttons">
+                                    <a href="{{ route('admin.pasien.riwayat', $pasien->id) }}" 
+                                       class="btn-action btn-info"
+                                       title="Lihat Riwayat">
+                                        <i class="fas fa-history"></i>
+                                    </a>
+                                    <form action="{{ route('admin.pasien.hapus', $pasien->id) }}" 
+                                          method="POST" 
+                                          class="delete-form"
+                                          style="display:inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                class="btn-action btn-hapus" 
+                                                title="Hapus Pasien">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-schedule">
+                                    <i class="fas fa-user-slash"></i>
+                                    <p>Tidak ada data pasien ditemukan</p>
+                                    @if($search ?? false)
+                                        <a href="{{ route('admin.keloladatapasien') }}" class="btn-reset">
+                                            <span>Tampilkan Semua Pasien</span>
+                                            <i class="fas fa-redo"></i>
+                                        </a>
+                                    @else
+                                        <small>Data pasien akan muncul di sini setelah ada yang mendaftar</small>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
 @endsection
@@ -272,7 +276,7 @@
         padding: 40px 20px;
     }
 
-    /* ===== HEADER BANNER (NO ANIMATION) ===== */
+    /* ===== HEADER BANNER ===== */
     .page-header-banner {
         margin-bottom: 40px;
     }
@@ -399,7 +403,6 @@
         gap: 12px;
         color: white;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-        animation: float 3s ease-in-out infinite;
         min-width: 160px;
         justify-content: center;
     }
@@ -424,7 +427,7 @@
         font-size: 1.4rem;
     }
 
-    /* ===== SEARCH SECTION (NO ANIMATION) ===== */
+    /* ===== SEARCH SECTION ===== */
     .search-section {
         margin-bottom: 30px;
     }
@@ -500,6 +503,7 @@
         box-shadow: 0 6px 20px rgba(57, 166, 22, 0.3);
         position: relative;
         overflow: hidden;
+        white-space: nowrap;
     }
 
     .btn-search::before {
@@ -534,6 +538,7 @@
         color: var(--text-primary);
         font-size: 0.9rem;
         font-weight: 500;
+        flex-wrap: wrap;
     }
 
     [data-theme="dark"] .search-info,
@@ -560,6 +565,7 @@
         text-decoration: none;
         transition: all 0.3s ease;
         box-shadow: 0 2px 8px rgba(231, 76, 60, 0.25);
+        white-space: nowrap;
     }
 
     .btn-clear:hover {
@@ -568,7 +574,7 @@
         box-shadow: 0 4px 12px rgba(231, 76, 60, 0.35);
     }
 
-    /* ===== ALERT (NO ANIMATION) ===== */
+    /* ===== ALERT ===== */
     .alert-success-modern {
         display: flex;
         align-items: center;
@@ -622,7 +628,7 @@
         transform: rotate(90deg);
     }
 
-    /* ===== TABLE (NO ANIMATION) ===== */
+    /* ===== TABLE WITH HORIZONTAL SCROLL ===== */
     .schedule-container-modern {
         background: var(--bg-primary);
         border-radius: 24px;
@@ -671,9 +677,39 @@
         backdrop-filter: blur(10px);
     }
 
+    /* TABLE RESPONSIVE WRAPPER WITH HORIZONTAL SCROLL */
+    .table-responsive {
+        overflow-x: auto;
+        width: 100%;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(57, 166, 22, 0.3) var(--bg-secondary);
+    }
+
+    /* Custom Scrollbar untuk Table */
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+        border-radius: 10px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background-color: rgba(57, 166, 22, 0.3);
+        border-radius: 10px;
+        border: 2px solid var(--bg-secondary);
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(57, 166, 22, 0.5);
+    }
+
     .schedule-table {
         width: 100%;
         border-collapse: collapse;
+        min-width: 1000px; /* Minimum width agar tabel tidak terlalu sempit */
     }
 
     .schedule-table thead {
@@ -688,6 +724,7 @@
         font-size: 0.95rem;
         text-transform: uppercase;
         letter-spacing: 0.8px;
+        white-space: nowrap;
     }
 
     .schedule-table thead th i {
@@ -699,7 +736,6 @@
         text-align: center !important;
     }
 
-    /* ROW ANIMATIONS REMOVED FOR STABILITY */
     .schedule-row {
         border-bottom: 1px solid var(--border-color);
         transition: all 0.3s ease;
@@ -712,6 +748,7 @@
     .schedule-table tbody td {
         padding: 20px 24px;
         color: var(--text-secondary);
+        white-space: nowrap;
     }
 
     .text-muted {
@@ -768,6 +805,7 @@
         display: flex;
         flex-direction: column;
         gap: 4px;
+        min-width: 150px;
     }
 
     .doctor-name {
@@ -878,7 +916,6 @@
         font-size: 4.5rem;
         margin-bottom: 24px;
         opacity: 0.3;
-        animation: float 3s ease-in-out infinite;
     }
 
     .empty-schedule p {
@@ -931,35 +968,70 @@
         box-shadow: 0 10px 30px rgba(57, 166, 22, 0.5);
     }
 
-    /* ===== RESPONSIVE ===== */
+    /* ===== RESPONSIVE DESIGN FOR MOBILE ===== */
+    
+    /* Tablet */
     @media (max-width: 992px) {
         .hero-illustration {
             display: none;
         }
+
+        .schedule-table {
+            min-width: 900px;
+        }
     }
 
+    /* Mobile Landscape & Portrait */
     @media (max-width: 768px) {
         .container-fluid-modern {
-            padding: 20px 15px;
+            padding: 25px 16px;
+        }
+
+        .page-header-banner {
+            margin-bottom: 30px;
         }
 
         .header-content {
             flex-direction: column;
             text-align: center;
-            padding: 30px 24px;
+            padding: 28px 20px;
+            gap: 16px;
+        }
+
+        .header-icon {
+            width: 65px;
+            height: 65px;
+            font-size: 32px;
         }
 
         .page-title {
-            font-size: 1.8rem;
+            font-size: 1.75rem;
+        }
+
+        .page-subtitle {
+            font-size: 0.95rem;
+            justify-content: center;
+        }
+
+        .section-header h2 {
+            font-size: 1.4rem;
+        }
+
+        .search-section {
+            margin-bottom: 25px;
+        }
+
+        .search-card {
+            padding: 24px 20px;
         }
 
         .search-input-wrapper {
             flex-direction: column;
+            gap: 10px;
         }
 
         .search-icon {
-            position: relative;
-            left: 0;
+            position: static;
         }
 
         .search-input {
@@ -974,6 +1046,7 @@
         .search-info {
             flex-direction: column;
             align-items: flex-start;
+            gap: 10px;
         }
 
         .btn-clear {
@@ -985,15 +1058,26 @@
         .table-card-header {
             flex-direction: column;
             align-items: flex-start;
+            padding: 18px 20px;
+        }
+
+        .table-title {
+            font-size: 1.05rem;
+        }
+
+        .schedule-count {
+            padding: 10px 20px;
+            font-size: 0.9rem;
         }
 
         .schedule-table {
             font-size: 0.9rem;
+            min-width: 850px;
         }
 
         .schedule-table thead th,
         .schedule-table tbody td {
-            padding: 14px 12px;
+            padding: 16px 14px;
         }
 
         .doctor-avatar {
@@ -1002,14 +1086,44 @@
             font-size: 18px;
         }
 
+        .patient-details {
+            min-width: 130px;
+        }
+
         .action-buttons {
             gap: 6px;
         }
+
+        .btn-action {
+            width: 38px;
+            height: 38px;
+        }
     }
 
+    /* Extra Small Mobile */
     @media (max-width: 576px) {
+        .container-fluid-modern {
+            padding: 20px 12px;
+        }
+
+        .header-content {
+            padding: 24px 18px;
+            border-radius: 20px;
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 28px;
+            border-radius: 14px;
+        }
+
         .page-title {
             font-size: 1.5rem;
+        }
+
+        .page-subtitle {
+            font-size: 0.9rem;
         }
 
         .greeting-badge {
@@ -1018,12 +1132,135 @@
         }
 
         .section-header h2 {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
+        }
+
+        .section-header h2 i {
+            font-size: 1.2rem;
+        }
+
+        .search-card {
+            padding: 20px 16px;
+            border-radius: 20px;
+        }
+
+        .search-input {
+            font-size: 0.9rem;
+            padding: 14px 16px;
+        }
+
+        .btn-search {
+            padding: 14px 24px;
+            font-size: 0.9rem;
+        }
+
+        .btn-search span {
+            display: none;
+        }
+
+        .search-info {
+            font-size: 0.85rem;
+            padding: 14px 16px;
+        }
+
+        .btn-clear {
+            padding: 8px 16px;
+            font-size: 0.8rem;
+        }
+
+        .table-card-header {
+            padding: 16px 18px;
+        }
+
+        .table-title {
+            font-size: 1rem;
+        }
+
+        .schedule-count {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
+        .schedule-table {
+            min-width: 800px;
+        }
+
+        .schedule-table thead th {
+            font-size: 0.8rem;
+            padding: 14px 12px;
+        }
+
+        .schedule-table tbody td {
+            padding: 14px 12px;
+            font-size: 0.85rem;
+        }
+
+        .doctor-avatar {
+            width: 42px;
+            height: 42px;
+            font-size: 16px;
+            border-width: 2px;
+        }
+
+        .patient-details {
+            min-width: 120px;
+        }
+
+        .doctor-name {
+            font-size: 0.9rem;
+        }
+
+        .patient-email {
+            font-size: 0.8rem;
+        }
+
+        .number-badge {
+            min-width: 36px;
+            height: 36px;
+            font-size: 0.9rem;
+        }
+
+        .date-badge,
+        .phone-badge {
+            font-size: 0.8rem;
+            padding: 8px 14px;
         }
 
         .btn-action {
             width: 36px;
             height: 36px;
+            font-size: 0.9rem;
+        }
+
+        .empty-schedule {
+            padding: 50px 16px;
+        }
+
+        .empty-schedule i {
+            font-size: 3.5rem;
+        }
+
+        .empty-schedule p {
+            font-size: 1rem;
+        }
+
+        .empty-schedule small {
+            font-size: 0.85rem;
+        }
+    }
+
+    /* Ultra Small Mobile (< 400px) */
+    @media (max-width: 400px) {
+        .page-title {
+            font-size: 1.35rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.15rem;
+        }
+
+        .schedule-table {
+            min-width: 750px;
         }
     }
 </style>

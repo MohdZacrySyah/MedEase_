@@ -80,7 +80,6 @@
             <h2><i class="fas fa-chart-bar"></i> Statistik Pemeriksaan</h2>
         </div>
         <div class="kpi-grid-modern" id="live-kpi">
-            
             <div class="kpi-card-modern card-info">
                 <div class="card-gradient-overlay card-info-overlay"></div>
                 <div class="kpi-icon-wrapper kpi-info">
@@ -225,20 +224,24 @@
                         Export
                     </button>
                 </div>
-                <table class="schedule-table">
-                    <thead>
-                        <tr>
-                            <th><i class="fas fa-hashtag"></i> ID Pasien</th>
-                            <th><i class="fas fa-user"></i> Nama Pasien</th>
-                            <th><i class="fas fa-hospital"></i> Layanan</th>
-                            <th><i class="far fa-clock"></i> Tanggal Pemeriksaan</th>
-                        </tr>
-                    </thead>
-                    
-                    <tbody id="live-table-body">
-                        {{-- Data akan di-load via AJAX --}}
-                    </tbody>
-                </table>
+
+                {{-- WRAPPER UNTUK RESPONSIVE TABLE --}}
+                <div class="table-responsive-wrapper">
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-hashtag"></i> ID Pasien</th>
+                                <th><i class="fas fa-user"></i> Nama Pasien</th>
+                                <th><i class="fas fa-hospital"></i> Layanan</th>
+                                <th><i class="far fa-clock"></i> Tanggal Pemeriksaan</th>
+                            </tr>
+                        </thead>
+                        
+                        <tbody id="live-table-body">
+                            {{-- Data di-load via AJAX --}}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -276,7 +279,6 @@
         --grad: linear-gradient(135deg, #39A616, #1D8208, #0C5B00);
         --grad-reverse: linear-gradient(135deg, #0C5B00, #1D8208, #39A616);
         
-        /* Light Mode Colors */
         --text-primary: #1f2937;
         --text-secondary: #6b7280;
         --text-muted: #9ca3af;
@@ -288,7 +290,6 @@
         --hover-bg: rgba(57, 166, 22, 0.04);
     }
 
-    /* Dark Mode Colors */
     [data-theme="dark"],
     .dark-mode {
         --text-primary: #f9fafb;
@@ -302,7 +303,6 @@
         --hover-bg: rgba(57, 166, 22, 0.15);
     }
 
-    /* Auto Dark Mode */
     @media (prefers-color-scheme: dark) {
         :root:not([data-theme="light"]) {
             --text-primary: #f9fafb;
@@ -325,9 +325,7 @@
     }
 
     /* ===== HEADER BANNER ===== */
-    .page-header-banner {
-        margin-bottom: 40px;
-    }
+    .page-header-banner { margin-bottom: 40px; }
 
     .header-content {
         display: flex;
@@ -462,9 +460,7 @@
     }
 
     /* ===== SECTION HEADER ===== */
-    .section-header {
-        margin-bottom: 25px;
-    }
+    .section-header { margin-bottom: 25px; }
 
     .section-header h2 {
         font-size: 1.6rem;
@@ -482,9 +478,7 @@
     }
 
     /* ===== STATS SECTION ===== */
-    .stats-section-modern {
-        margin-bottom: 40px;
-    }
+    .stats-section-modern { margin-bottom: 40px; }
     
     .kpi-grid-modern {
         display: grid;
@@ -527,9 +521,7 @@
     .card-info-overlay { background: linear-gradient(135deg, #3498db, #2980b9); }
     .card-success-overlay { background: var(--grad); }
 
-    .kpi-card-modern:hover .card-gradient-overlay {
-        opacity: 0.08;
-    }
+    .kpi-card-modern:hover .card-gradient-overlay { opacity: 0.08; }
 
     .kpi-icon-wrapper {
         width: 70px;
@@ -551,10 +543,7 @@
     .kpi-info { background: linear-gradient(135deg, #3498db, #2980b9); box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3); }
     .kpi-success { background: var(--grad); box-shadow: 0 6px 20px rgba(57, 166, 22, 0.3); }
 
-    .kpi-content {
-        flex: 1;
-        z-index: 1;
-    }
+    .kpi-content { flex: 1; z-index: 1; }
 
     .kpi-value {
         font-size: 2.5rem;
@@ -597,9 +586,7 @@
     }
 
     /* ===== FILTER SECTION ===== */
-    .filter-section-modern {
-        margin-bottom: 40px;
-    }
+    .filter-section-modern { margin-bottom: 40px; }
 
     .filter-card-modern {
         background: var(--bg-primary);
@@ -667,9 +654,7 @@
         transition: left 0.6s ease;
     }
 
-    .btn-filter-modern:hover::before {
-        left: 100%;
-    }
+    .btn-filter-modern:hover::before { left: 100%; }
 
     .btn-filter-modern:hover {
         background: var(--hover-bg);
@@ -690,9 +675,7 @@
         box-shadow: 0 10px 30px rgba(57, 166, 22, 0.5);
     }
 
-    .input-picker-wrapper {
-        position: relative;
-    }
+    .input-picker-wrapper { position: relative; }
 
     .input-icon {
         position: absolute;
@@ -705,9 +688,7 @@
         z-index: 1;
     }
 
-    .btn-filter-active .input-icon {
-        color: rgba(255, 255, 255, 0.9);
-    }
+    .btn-filter-active .input-icon { color: rgba(255, 255, 255, 0.9); }
 
     .input-picker {
         min-width: 200px;
@@ -715,17 +696,11 @@
         cursor: pointer;
     }
 
-    .search-wrapper .input-picker {
-        cursor: text;
-    }
+    .search-wrapper .input-picker { cursor: text; }
 
-    .input-picker::placeholder {
-        color: var(--text-muted);
-    }
+    .input-picker::placeholder { color: var(--text-muted); }
 
-    .input-picker.btn-filter-active::placeholder {
-        color: rgba(255, 255, 255, 0.9);
-    }
+    .input-picker.btn-filter-active::placeholder { color: rgba(255, 255, 255, 0.9); }
 
     .btn-toggle-modern {
         display: inline-flex;
@@ -757,9 +732,7 @@
         transition: left 0.6s ease;
     }
 
-    .btn-toggle-modern:hover::before {
-        left: 100%;
-    }
+    .btn-toggle-modern:hover::before { left: 100%; }
 
     .btn-toggle-modern:hover {
         background: var(--hover-bg);
@@ -780,13 +753,9 @@
     }
 
     /* ===== DATA SECTION ===== */
-    .data-section-modern {
-        margin-bottom: 40px;
-    }
+    .data-section-modern { margin-bottom: 40px; }
 
-    .view-content-modern {
-        display: none;
-    }
+    .view-content-modern { display: none; }
 
     .view-active {
         display: block;
@@ -850,6 +819,7 @@
         cursor: pointer;
         transition: all 0.3s ease;
         border: none;
+        background: transparent;
     }
 
     .btn-export-modern:hover {
@@ -857,14 +827,31 @@
         transform: translateY(-2px);
     }
 
+    /* WRAPPER RESPONSIVE UNTUK TABEL */
+    .table-responsive-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table-responsive-wrapper::-webkit-scrollbar {
+        height: 6px;
+    }
+    .table-responsive-wrapper::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+    }
+    .table-responsive-wrapper::-webkit-scrollbar-thumb {
+        background-color: rgba(57, 166, 22, 0.3);
+        border-radius: 4px;
+    }
+
     .schedule-table {
         width: 100%;
         border-collapse: collapse;
+        min-width: 600px;
     }
 
-    .schedule-table thead {
-        background: var(--grad);
-    }
+    .schedule-table thead { background: var(--grad); }
 
     .schedule-table thead th {
         padding: 20px 24px;
@@ -886,16 +873,10 @@
         transition: all 0.3s ease;
     }
     
-    .schedule-row:hover {
-        background: var(--hover-bg);
-    }
+    .schedule-row:hover { background: var(--hover-bg); }
 
     .schedule-table tbody td {
         padding: 20px 24px;
-        color: var(--text-secondary);
-    }
-
-    .text-secondary-color {
         color: var(--text-secondary);
     }
 
@@ -1015,13 +996,13 @@
 
     .chart-container-wrapper {
         padding: 40px;
+        max-width: 100%;
+        overflow-x: auto;
     }
 
     /* ===== RESPONSIVE ===== */
     @media (max-width: 992px) {
-        .hero-illustration {
-            display: none;
-        }
+        .hero-illustration { display: none; }
 
         .filter-controls-grid {
             flex-direction: column;
@@ -1029,9 +1010,7 @@
         }
 
         .filter-buttons-group,
-        .view-toggle-group {
-            width: 100%;
-        }
+        .view-toggle-group { width: 100%; }
 
         .btn-filter-modern,
         .btn-toggle-modern {
@@ -1047,17 +1026,11 @@
             padding: 30px 24px;
         }
 
-        .page-title {
-            font-size: 1.8rem;
-        }
+        .page-title { font-size: 1.8rem; }
 
-        .kpi-grid-modern {
-            grid-template-columns: 1fr;
-        }
+        .kpi-grid-modern { grid-template-columns: 1fr; }
 
-        .filter-buttons-group {
-            flex-direction: column;
-        }
+        .filter-buttons-group { flex-direction: column; }
 
         .table-card-header {
             flex-direction: column;
@@ -1079,24 +1052,22 @@
             font-size: 18px;
         }
 
-        .view-toggle-group {
-            flex-direction: column;
-        }
+        .view-toggle-group { flex-direction: column; }
     }
 
     @media (max-width: 576px) {
-        .page-title {
-            font-size: 1.5rem;
-        }
+        .page-title { font-size: 1.5rem; }
 
         .greeting-badge {
             font-size: 0.8rem;
             padding: 8px 16px;
         }
 
-        .section-header h2 {
-            font-size: 1.3rem;
-        }
+        .section-header h2 { font-size: 1.3rem; }
+
+        .filter-card-modern { padding: 20px; }
+
+        .chart-container-wrapper { padding: 20px 12px; }
     }
 </style>
 @endpush
@@ -1115,8 +1086,6 @@
     document.addEventListener('DOMContentLoaded', function () {
         // --- 1. INISIALISASI CHART AWAL ---
         const ctx = document.getElementById('kunjunganChart').getContext('2d');
-        
-        // Simpan instance chart
         initChart(ctx, [], []);
 
         // Load data pertama kali
@@ -1125,20 +1094,18 @@
         // --- 2. FLATPICKR SETTINGS ---
         flatpickr.localize(flatpickr.l10ns.id);
 
-        // Filter Tanggal
         flatpickr("#tanggalFilter", {
             dateFormat: "Y-m-d",
             altInput: true,
             altFormat: "j F Y",
             allowInput: true,
-            onChange: function(selectedDates, dateStr, instance) {
+            onChange: function(selectedDates, dateStr) {
                 if (dateStr) {
                     loadData('tanggal', { tanggal: dateStr });
                 }
             }
         });
 
-        // Filter Bulan
         flatpickr("#bulanFilter", {
             plugins: [
                 new monthSelectPlugin({
@@ -1149,7 +1116,7 @@
                 })
             ],
             altInput: true,
-            onChange: function(selectedDates, dateStr, instance) {
+            onChange: function(selectedDates, dateStr) {
                  if (dateStr) {
                     loadData('bulan_terpilih', { bulan: dateStr });
                 }
@@ -1171,7 +1138,7 @@
             });
         }
 
-        // --- 4. SEARCH FILTER FUNCTION (Client Side) ---
+        // --- 4. SEARCH FILTER (client-side) ---
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('keyup', function() {
@@ -1197,20 +1164,15 @@
         }
     });
 
-    // --- MAIN FUNCTION: LOAD DATA VIA AJAX (AUTO LOAD) ---
+    // --- MAIN FUNCTION: LOAD DATA VIA AJAX ---
     function loadData(filterType, params = {}) {
-        // 1. Tampilkan Loading Spinner
         document.getElementById('dataContainer').classList.add('loading-active');
-        
-        // 2. Update status tombol aktif secara visual
         updateActiveButton(filterType);
 
-        // 3. Build URL
         let url = `{{ route('tenaga-medis.laporan.data') }}?filter=${filterType}`;
         if(params.tanggal) url += `&tanggal=${params.tanggal}`;
         if(params.bulan) url += `&bulan=${params.bulan}`;
 
-        // 4. Fetch Data ke Server
         fetch(url, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -1219,22 +1181,17 @@
         })
         .then(response => response.json())
         .then(data => {
-            // A. Update KPI (Angka Statistik)
             animateValue("kpi-hari-ini", data.stats.hari_ini);
             animateValue("kpi-bulan-ini", data.stats.bulan_ini);
             animateValue("kpi-total", data.stats.total);
 
-            // B. Update Chart
             updateChart(data.chart.labels, data.chart.data);
             
-            // C. Update Judul Grafik
             const chartTitle = document.getElementById('chart-title');
             if(chartTitle) chartTitle.innerText = `Grafik Pemeriksaan - ${data.chart.title}`;
 
-            // D. Update Tabel
             updateTable(data.table_data);
 
-            // E. Hilangkan Loading Spinner dengan delay sedikit agar smooth
             setTimeout(() => {
                 document.getElementById('dataContainer').classList.remove('loading-active');
             }, 300);
@@ -1246,7 +1203,6 @@
     }
 
     // --- HELPER FUNCTIONS ---
-
     function switchView(view) {
         const tableView = document.getElementById('tableView');
         const chartView = document.getElementById('chartView');
@@ -1267,10 +1223,9 @@
     }
 
     function updateActiveButton(filterType) {
-        // Reset semua tombol/input active
-        document.querySelectorAll('.filter-btn, .filter-input').forEach(el => el.classList.remove('btn-filter-active'));
+        document.querySelectorAll('.filter-btn, .filter-input')
+            .forEach(el => el.classList.remove('btn-filter-active'));
         
-        // Set tombol yang diklik jadi active
         if(filterType === 'hari_ini' || filterType === 'bulan_ini' || filterType === 'semua_data') {
             const btn = document.querySelector(`button[data-filter="${filterType}"]`);
             if(btn) btn.classList.add('btn-filter-active');
@@ -1284,7 +1239,6 @@
     }
 
     function initChart(ctx, labels, data) {
-        // Detect dark mode
         const isDarkMode = document.documentElement.classList.contains('dark-mode') || 
                           (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
         const bgColor = isDarkMode ? 'rgba(57, 166, 22, 0.2)' : 'rgba(57, 166, 22, 0.1)';
@@ -1313,7 +1267,10 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: 10
+                },
                 scales: { 
                     y: { 
                         beginAtZero: true,
@@ -1373,7 +1330,6 @@
 
         let html = '';
         data.forEach(item => {
-            // Logic Avatar
             let avatarContent = '';
             if (item.profile_photo_url) {
                 avatarContent = `<img src="${item.profile_photo_url}" alt="Foto">`;
@@ -1381,7 +1337,6 @@
                 avatarContent = item.nama_pasien.charAt(0).toUpperCase();
             }
 
-            // Generate Row HTML
             html += `
                 <tr class="schedule-row fade-enter">
                     <td>
@@ -1413,13 +1368,11 @@
 
         tbody.innerHTML = html;
         
-        // Trigger animation fade-in
         setTimeout(() => {
             document.querySelectorAll('.fade-enter').forEach(el => el.classList.add('fade-enter-active'));
         }, 50);
     }
 
-    // Fungsi animasi angka naik (Counter Animation)
     function animateValue(id, end) {
         const obj = document.getElementById(id);
         if(!obj) return;
@@ -1437,7 +1390,6 @@
             obj.innerHTML = current;
             if (current == end) {
                 clearInterval(timer);
-                // Add pulse effect
                 obj.classList.add('updated');
                 setTimeout(() => obj.classList.remove('updated'), 300);
             }

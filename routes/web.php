@@ -235,4 +235,6 @@ Route::middleware(['auth:apoteker'])->prefix('apoteker')->name('apoteker.')->gro
     Route::post('antrian/{resep}/selesaikan', [AntrianController::class, 'selesaikan'])->name('antrian.selesaikan');
     Route::get('riwayat', [RiwayatController::class, 'index'])->name('riwayat.index');
     Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
+
+    Route::get('api/antrian/updates', [AntrianController::class, 'getUpdates'])->name('api.antrian.updates');
 });

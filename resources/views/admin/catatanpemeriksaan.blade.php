@@ -75,7 +75,6 @@
     @endif
 
     {{-- MAIN CONTENT (ANTRIAN) --}}
-    {{-- Container ini yang akan di-refresh secara otomatis --}}
     <div class="schedule-section" id="queue-data-container">
         <div class="section-header">
             <h2><i class="fas fa-stethoscope"></i> Antrian Per Layanan</h2>
@@ -83,17 +82,19 @@
 
         @if($pendaftarans->count() > 0)
             
-            {{-- TAB NAVIGATION --}}
-            <div class="tabs-wrapper">
-                @foreach ($pendaftarans as $layanan => $listPendaftaran)
-                    <button class="tab-btn {{ $loop->first ? 'active' : '' }}" 
-                            id="btn-tab-{{ Str::slug($layanan) }}"
-                            onclick="openTab(event, 'tab-{{ Str::slug($layanan) }}')">
-                        <i class="fas fa-hospital-user"></i>
-                        {{ $layanan }}
-                        <span class="tab-count">{{ count($listPendaftaran) }}</span>
-                    </button>
-                @endforeach
+            {{-- TAB NAVIGATION WITH HORIZONTAL SCROLL --}}
+            <div class="tabs-container">
+                <div class="tabs-wrapper">
+                    @foreach ($pendaftarans as $layanan => $listPendaftaran)
+                        <button class="tab-btn {{ $loop->first ? 'active' : '' }}" 
+                                id="btn-tab-{{ Str::slug($layanan) }}"
+                                onclick="openTab(event, 'tab-{{ Str::slug($layanan) }}')">
+                            <i class="fas fa-hospital-user"></i>
+                            {{ $layanan }}
+                            <span class="tab-count">{{ count($listPendaftaran) }}</span>
+                        </button>
+                    @endforeach
+                </div>
             </div>
 
             {{-- TAB CONTENTS --}}
@@ -354,7 +355,7 @@
         transition: background 0.3s ease, color 0.3s ease;
     }
 
-    /* ===== HEADER BANNER (NO ANIMATION) ===== */
+    /* ===== HEADER BANNER ===== */
     .dashboard-header-banner {
         margin-bottom: 40px;
     }
@@ -510,7 +511,7 @@
         font-size: 1.4rem;
     }
 
-    /* ===== FILTER SECTION (NO ANIMATION) ===== */
+    /* ===== FILTER SECTION ===== */
     .stats-section {
         margin-bottom: 40px;
     }
@@ -538,7 +539,7 @@
 
     .filter-input-wrapper {
         flex: 1;
-        min-width: 300px;
+        min-width: 250px;
     }
 
     .filter-label {
@@ -591,6 +592,7 @@
     .filter-button-group {
         display: flex;
         gap: 12px;
+        flex-wrap: wrap;
     }
 
     .btn-filter-modern {
@@ -647,7 +649,7 @@
         box-shadow: 0 10px 30px rgba(108, 117, 125, 0.4);
     }
 
-    /* ===== ALERTS (NO ANIMATION) ===== */
+    /* ===== ALERTS ===== */
     .alert-success-modern,
     .alert-info-modern {
         display: flex;
@@ -713,14 +715,41 @@
         transform: rotate(90deg);
     }
 
-    /* ===== TABS SYSTEM (NO ANIMATION ON LOAD) ===== */
+    /* ===== TABS SYSTEM WITH HORIZONTAL SCROLL ===== */
+    .tabs-container {
+        margin-bottom: 25px;
+        position: relative;
+    }
+
     .tabs-wrapper {
         display: flex;
         gap: 15px;
-        margin-bottom: 25px;
         overflow-x: auto;
-        padding-bottom: 8px;
+        padding-bottom: 12px;
         -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(57, 166, 22, 0.3) var(--bg-secondary);
+    }
+
+    /* Custom Scrollbar untuk Tabs */
+    .tabs-wrapper::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .tabs-wrapper::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+        border-radius: 10px;
+    }
+
+    .tabs-wrapper::-webkit-scrollbar-thumb {
+        background-color: rgba(57, 166, 22, 0.3);
+        border-radius: 10px;
+        border: 2px solid var(--bg-secondary);
+    }
+
+    .tabs-wrapper::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(57, 166, 22, 0.5);
     }
 
     .tab-btn {
@@ -740,6 +769,7 @@
         box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         position: relative;
         overflow: hidden;
+        flex-shrink: 0;
     }
 
     .tab-btn i { font-size: 1.1rem; }
@@ -771,23 +801,15 @@
         color: var(--text-muted);
     }
 
-    /* PENTING: Hilangkan animasi fadeIn agar tidak kedip saat auto-reload */
     .tab-pane {
         display: none;
-        /* animation: fadeIn 0.3s ease-in-out; <- DIHAPUS */
     }
 
     .tab-pane.active {
         display: block;
     }
 
-    /* Keyframes fadeIn sudah tidak dipakai, bisa dihapus atau tetap ada untuk keperluan lain */
-    /* @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(5px); }
-        to { opacity: 1; transform: translateY(0); }
-    } */
-
-    /* ===== SCHEDULE SECTION (NO ANIMATION) ===== */
+    /* ===== SCHEDULE SECTION ===== */
     .schedule-section {
         margin-bottom: 30px;
     }
@@ -804,6 +826,8 @@
         justify-content: space-between;
         align-items: center;
         box-shadow: 0 4px 15px rgba(57, 166, 22, 0.2);
+        flex-wrap: wrap;
+        gap: 12px;
     }
 
     .layanan-title-wrapper {
@@ -844,8 +868,6 @@
         box-shadow: 0 8px 30px var(--shadow-color);
         border: 1px solid var(--border-color);
         overflow: hidden;
-        /* Transition bisa dikurangi atau dihilangkan jika masih terasa kedip */
-        /* transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); */
     }
 
     .schedule-container-modern:hover {
@@ -857,12 +879,34 @@
         overflow-x: auto;
         width: 100%;
         -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(57, 166, 22, 0.3) var(--bg-secondary);
+    }
+
+    /* Custom Scrollbar untuk Table */
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+        border-radius: 10px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background-color: rgba(57, 166, 22, 0.3);
+        border-radius: 10px;
+        border: 2px solid var(--bg-secondary);
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(57, 166, 22, 0.5);
     }
 
     .schedule-table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 800px;
+        min-width: 900px;
     }
 
     .schedule-table thead {
@@ -877,6 +921,7 @@
         font-size: 0.95rem;
         text-transform: uppercase;
         letter-spacing: 0.8px;
+        white-space: nowrap;
     }
 
     .schedule-table thead th i {
@@ -900,6 +945,7 @@
     .schedule-table tbody td {
         padding: 20px 24px;
         color: var(--text-secondary);
+        white-space: nowrap;
     }
 
     .schedule-table tbody td.text-center {
@@ -939,6 +985,7 @@
         display: flex;
         flex-direction: column;
         gap: 4px;
+        min-width: 150px;
     }
 
     .doctor-name {
@@ -1019,6 +1066,7 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
+        white-space: nowrap;
     }
 
     .btn-call-modern:hover { 
@@ -1047,6 +1095,7 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
+        white-space: nowrap;
     }
 
     .btn-stop-call:hover { 
@@ -1068,6 +1117,7 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
+        white-space: nowrap;
     }
 
     .btn-skip-modern:hover { 
@@ -1087,6 +1137,7 @@
         align-items: center;
         gap: 6px;
         border: 1px solid #bfdbfe;
+        white-space: nowrap;
     }
 
     .badge-skipped {
@@ -1113,6 +1164,7 @@
         box-shadow: 0 6px 20px rgba(57, 166, 22, 0.3);
         position: relative;
         overflow: hidden;
+        white-space: nowrap;
     }
 
     .btn-action-primary::before {
@@ -1157,6 +1209,7 @@
         border: none;
         cursor: not-allowed;
         opacity: 0.7;
+        white-space: nowrap;
     }
 
     /* ===== EMPTY STATE ===== */
@@ -1369,37 +1422,420 @@
         100% { transform: rotate(360deg); }
     }
 
-    /* ===== RESPONSIVE ===== */
+    /* ===== RESPONSIVE DESIGN FOR MOBILE ===== */
+    
+    /* Tablet */
     @media (max-width: 992px) {
-        .hero-illustration { display: none; }
-        .filter-form-modern { flex-direction: column; align-items: stretch; }
-        .filter-input-wrapper { width: 100%; }
-        .filter-button-group { width: 100%; }
-        .btn-filter-modern { flex: 1; justify-content: center; }
+        .hero-illustration { 
+            display: none; 
+        }
+        
+        .filter-form-modern { 
+            flex-direction: column; 
+            align-items: stretch; 
+        }
+        
+        .filter-input-wrapper { 
+            width: 100%; 
+            min-width: unset;
+        }
+        
+        .filter-button-group { 
+            width: 100%; 
+        }
+        
+        .btn-filter-modern { 
+            flex: 1; 
+            justify-content: center; 
+        }
+
+        .schedule-table {
+            min-width: 800px;
+        }
     }
 
+    /* Mobile Landscape & Portrait */
     @media (max-width: 768px) {
-        .header-content { flex-direction: column; text-align: center; padding: 30px 24px; }
-        .page-title { font-size: 1.8rem; }
-        .layanan-header-modern { flex-direction: column; gap: 12px; align-items: flex-start; }
-        .schedule-table { font-size: 0.9rem; }
-        .schedule-table thead th, .schedule-table tbody td { padding: 14px 12px; }
-        .doctor-avatar { width: 45px; height: 45px; font-size: 18px; }
-        .modal-card { width: 95%; margin: 20px; }
-        #modalFormContent { padding: 0 20px 30px 20px; }
-        .form-grid { grid-template-columns: 1fr; }
-        .action-group { flex-direction: column; }
-        .btn-call-modern, .btn-stop-call, .btn-skip-modern { width: 100%; justify-content: center; }
+        .dashboard-header-banner {
+            margin-bottom: 30px;
+        }
+
+        .header-content { 
+            flex-direction: column; 
+            text-align: center; 
+            padding: 28px 20px; 
+            gap: 16px;
+        }
+
+        .header-icon {
+            width: 65px;
+            height: 65px;
+            font-size: 32px;
+        }
+        
+        .page-title { 
+            font-size: 1.75rem; 
+        }
+
+        .page-subtitle {
+            font-size: 0.95rem;
+            justify-content: center;
+        }
+
+        .section-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .section-header h2 {
+            font-size: 1.4rem;
+        }
+
+        .stats-section {
+            margin-bottom: 30px;
+        }
+
+        .filter-card-modern {
+            padding: 24px 20px;
+        }
+
+        .filter-button-group {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .btn-filter-modern {
+            width: 100%;
+        }
+
+        .tabs-wrapper {
+            gap: 12px;
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            padding: 12px 22px;
+            font-size: 0.9rem;
+        }
+
+        .layanan-header-modern { 
+            flex-direction: column; 
+            gap: 12px; 
+            align-items: flex-start; 
+            padding: 20px 24px;
+        }
+
+        .layanan-title-wrapper h3 {
+            font-size: 1.2rem;
+        }
+
+        .schedule-count {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+        }
+        
+        .schedule-table { 
+            font-size: 0.9rem; 
+            min-width: 750px;
+        }
+        
+        .schedule-table thead th, 
+        .schedule-table tbody td { 
+            padding: 16px 14px; 
+        }
+        
+        .doctor-avatar { 
+            width: 45px; 
+            height: 45px; 
+            font-size: 18px; 
+        }
+
+        .patient-details {
+            min-width: 130px;
+        }
+
+        .queue-number-badge {
+            min-width: 45px;
+            height: 45px;
+            font-size: 1.1rem;
+        }
+
+        .action-group { 
+            flex-direction: column; 
+            gap: 6px;
+        }
+        
+        .btn-call-modern, 
+        .btn-stop-call, 
+        .btn-skip-modern { 
+            width: 100%; 
+            justify-content: center; 
+            padding: 10px 18px;
+        }
+
+        .btn-action-primary {
+            padding: 10px 20px;
+        }
+
+        .btn-action-disabled {
+            padding: 10px 20px;
+        }
+        
+        .modal-card { 
+            width: 95%; 
+            margin: 20px; 
+        }
+        
+        #modalFormContent { 
+            padding: 0 24px 30px 24px; 
+        }
+        
+        .form-grid { 
+            grid-template-columns: 1fr; 
+        }
+
+        .form-title {
+            font-size: 1.75rem;
+        }
     }
 
+    /* Extra Small Mobile */
     @media (max-width: 576px) {
-        .page-title { font-size: 1.5rem; }
-        .greeting-badge { font-size: 0.8rem; padding: 8px 16px; }
-        .section-header h2 { font-size: 1.3rem; }
-        .filter-button-group { flex-direction: column; }
-        .btn-action-primary span { display: none; }
-        .schedule-table thead th { font-size: 0.8rem; padding: 12px 10px; }
-        .schedule-table tbody td { padding: 12px 10px; }
+        .header-content {
+            padding: 24px 18px;
+            border-radius: 20px;
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 28px;
+            border-radius: 14px;
+        }
+
+        .page-title { 
+            font-size: 1.5rem; 
+        }
+
+        .page-subtitle {
+            font-size: 0.9rem;
+        }
+        
+        .greeting-badge { 
+            font-size: 0.8rem; 
+            padding: 8px 16px; 
+        }
+
+        .section-header h2 { 
+            font-size: 1.25rem; 
+        }
+
+        .section-header h2 i {
+            font-size: 1.2rem;
+        }
+
+        .stats-section {
+            margin-bottom: 25px;
+        }
+
+        .filter-card-modern {
+            padding: 20px 16px;
+            border-radius: 20px;
+        }
+
+        .filter-label {
+            font-size: 0.9rem;
+        }
+
+        .input-with-icon input {
+            padding: 14px 16px 14px 45px;
+            font-size: 0.9rem;
+        }
+
+        .btn-filter-modern {
+            padding: 14px 24px;
+            font-size: 0.9rem;
+        }
+
+        .tabs-wrapper {
+            gap: 10px;
+        }
+
+        .tab-btn {
+            padding: 11px 20px;
+            font-size: 0.85rem;
+        }
+
+        .tab-count {
+            padding: 2px 8px;
+            font-size: 0.8em;
+        }
+
+        .layanan-header-modern {
+            padding: 18px 20px;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .layanan-title-wrapper i {
+            font-size: 1.4rem;
+        }
+
+        .layanan-title-wrapper h3 {
+            font-size: 1.1rem;
+        }
+
+        .schedule-count {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
+        .schedule-container-modern {
+            border-radius: 0 0 20px 20px;
+        }
+
+        .schedule-table {
+            min-width: 700px;
+        }
+        
+        .schedule-table thead th { 
+            font-size: 0.8rem; 
+            padding: 14px 12px; 
+        }
+        
+        .schedule-table tbody td { 
+            padding: 14px 12px; 
+            font-size: 0.85rem;
+        }
+
+        .doctor-avatar {
+            width: 42px;
+            height: 42px;
+            font-size: 16px;
+            border-width: 2px;
+        }
+
+        .patient-details {
+            min-width: 120px;
+        }
+
+        .doctor-name {
+            font-size: 0.9rem;
+        }
+
+        .patient-email {
+            font-size: 0.8rem;
+        }
+
+        .queue-number-badge {
+            min-width: 42px;
+            height: 42px;
+            font-size: 1rem;
+        }
+
+        .status-badge-modern {
+            font-size: 0.8rem;
+            padding: 8px 14px;
+        }
+
+        .badge-call-status {
+            font-size: 0.75rem;
+            padding: 5px 10px;
+        }
+
+        .btn-call-modern,
+        .btn-stop-call,
+        .btn-skip-modern {
+            font-size: 0.85rem;
+            padding: 9px 16px;
+        }
+        
+        .btn-action-primary span { 
+            display: none; 
+        }
+
+        .btn-action-primary,
+        .btn-action-disabled {
+            padding: 10px 18px;
+            font-size: 0.85rem;
+        }
+
+        .empty-schedule {
+            padding: 50px 16px;
+        }
+
+        .empty-schedule i {
+            font-size: 3.5rem;
+        }
+
+        .empty-schedule p {
+            font-size: 1rem;
+        }
+
+        .modal-card {
+            width: 96%;
+            margin: 15px;
+            border-radius: 20px;
+        }
+
+        .close-modal {
+            font-size: 32px;
+            padding: 12px 20px;
+        }
+
+        #modalFormContent {
+            padding: 0 20px 25px 20px;
+        }
+
+        .form-title {
+            font-size: 1.5rem;
+        }
+
+        .form-subtitle {
+            font-size: 0.95rem;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            padding: 12px 16px;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            padding: 14px 35px;
+            font-size: 1rem;
+        }
+    }
+
+    /* Ultra Small Mobile (< 400px) */
+    @media (max-width: 400px) {
+        .page-title {
+            font-size: 1.35rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.15rem;
+        }
+
+        .tab-btn {
+            padding: 10px 18px;
+            font-size: 0.8rem;
+        }
+
+        .layanan-title-wrapper h3 {
+            font-size: 1rem;
+        }
+
+        .schedule-table {
+            min-width: 650px;
+        }
+
+        .form-title {
+            font-size: 1.35rem;
+        }
     }
 </style>
 @endpush
@@ -1413,38 +1849,34 @@
     // 1. MANAJEMEN TAB & STATE
     // ==========================================
     
-    // Fungsi untuk mengaplikasikan state tab (Dipanggil saat klik tab dan setelah refresh)
     function applyTabState(activeTabId) {
         if(!activeTabId) return;
         
-        // Sembunyikan semua tab dan nonaktifkan tombol
         document.querySelectorAll('.tab-pane').forEach(el => {
             el.style.display = 'none';
             el.classList.remove('active');
         });
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
 
-        // Tampilkan tab yang sesuai
         const pane = document.getElementById(activeTabId);
         if(pane) {
             pane.style.display = 'block';
             pane.classList.add('active');
         }
         
-        // Aktifkan tombol yang sesuai
         const btnId = 'btn-' + activeTabId;
         const btn = document.getElementById(btnId);
-        if(btn) btn.classList.add('active');
+        if(btn) {
+            btn.classList.add('active');
+            // Scroll tab ke posisi yang visible
+            btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
     }
     
     function openTab(evt, tabName) {
-        // Simpan ID tab yang aktif ke storage
         sessionStorage.setItem('activeQueueTab', tabName);
-        
-        // Panggil fungsi untuk mengaplikasikan state tab
         applyTabState(tabName);
 
-        // Mencegah scroll jump
         if (evt) {
             evt.preventDefault();
         }
@@ -1454,12 +1886,10 @@
     // 2. FUNGSI FORCE REFRESH (TANPA RELOAD)
     // ==========================================
     
-    // Fungsi ini dipanggil setelah tombol aksi diklik (Panggil/Hadir)
     window.forceRefreshQueueData = function() {
         const container = document.getElementById('queue-data-container');
         const url = new URL(window.location.href);
         
-        // Tambahkan parameter unik untuk mencegah caching
         url.searchParams.set('auto_reload_time', new Date().getTime());
 
         fetch(url.toString(), {
@@ -1472,16 +1902,10 @@
             const newContent = doc.getElementById('queue-data-container');
 
             if (newContent) {
-                // Simpan posisi scroll
                 const scrollPos = window.scrollY;
-                
-                // Ganti isi container
                 container.innerHTML = newContent.innerHTML;
-                
-                // Restore posisi scroll
                 window.scrollTo(0, scrollPos);
                 
-                // Panggil rebindEvents untuk memulihkan Tab yang aktif
                 if (typeof window.rebindEvents === 'function') {
                     window.rebindEvents();
                 }
@@ -1520,7 +1944,6 @@
                 });
                 Toast.fire({ icon: 'success', title: `Memanggil... (${data.jumlah_panggilan}x)` });
 
-                // REFRESH DATA TANPA RELOAD
                 window.forceRefreshQueueData();
             } else {
                 Swal.fire('Error', data.message, 'error');
@@ -1546,7 +1969,6 @@
             confirmButtonText: 'Ya, Pasien Hadir'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Loading state
                 btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                 btnElement.disabled = true;
 
@@ -1567,7 +1989,6 @@
                             timer: 1500,
                             showConfirmButton: false
                         });
-                        // REFRESH DATA TANPA RELOAD
                         window.forceRefreshQueueData();
                     } else {
                         btnElement.innerHTML = '<i class="fas fa-check"></i> Hadir';
@@ -1605,7 +2026,6 @@
                 .then(res => res.json())
                 .then(data => {
                     if(data.success) {
-                        // REFRESH DATA TANPA RELOAD
                         window.forceRefreshQueueData();
                     }
                 })
@@ -1698,29 +2118,21 @@
     // --- 6. INITIALIZE & REBINDING ---
     document.addEventListener('DOMContentLoaded', function() {
         
-        // Panggil Global Auto Refresh untuk kontainer antrian
         if (typeof window.initAutoRefresh === 'function') {
             window.initAutoRefresh(['#queue-data-container']);
         }
 
-        // ----------------------------------------------------------------
-        // FUNGSI INI WAJIB DIJALANKAN SETELAH DOM DI-UPDATE OLEH AJAX/AUTOLOAD
-        // ----------------------------------------------------------------
         window.rebindEvents = function() {
-            // Restore Active Tab dari Session Storage
             const activeTab = sessionStorage.getItem('activeQueueTab');
             
             if (activeTab && document.getElementById(activeTab)) {
                 applyTabState(activeTab);
             } else {
-                // Fallback: Default ke tab pertama jika session tidak ada/valid
                 const firstTab = document.querySelector('.tab-pane');
                 if(firstTab) applyTabState(firstTab.id);
             }
-            // console.log('✅ Queue data updated & Tab restored:', currentTab);
         };
         
-        // Restore tab saat load pertama kali
         window.rebindEvents();
     });
 

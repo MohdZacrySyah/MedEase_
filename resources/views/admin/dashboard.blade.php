@@ -156,58 +156,60 @@
                     {{ $jadwalHariIni->count() }} Jadwal Aktif
                 </span>
             </div>
-            <table class="schedule-table">
-                <thead>
-                    <tr>
-                        <th><i class="fas fa-user-md"></i> Nama Tenaga Medis</th>
-                        <th><i class="fas fa-stethoscope"></i> Layanan</th>
-                        <th><i class="far fa-clock"></i> Waktu Praktek</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($jadwalHariIni as $index => $jadwal)
-                        <tr class="schedule-row"> {{-- Animasi dihilangkan --}}
-                            <td>
-                                <div class="doctor-info">
-                                    <div class="doctor-avatar">
-                                        @if($jadwal->tenagaMedis?->profile_photo_path)
-                                            <img src="{{ asset('storage/' . $jadwal->tenagaMedis->profile_photo_path) }}" alt="Foto">
-                                        @else
-                                            <i class="fas fa-user-md"></i>
-                                        @endif
-                                    </div>
-                                    <span class="doctor-name">{{ $jadwal->tenagaMedis?->name ?? 'N/A' }}</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="service-badge">
-                                    <i class="fas fa-briefcase-medical"></i>
-                                    {{ $jadwal->layanan }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="time-badge-modern">
-                                    <i class="far fa-clock"></i>
-                                    <span>
-                                        {{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }} - 
-                                        {{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }} WIB
-                                    </span>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
+            <div class="table-responsive">
+                <table class="schedule-table">
+                    <thead>
                         <tr>
-                            <td colspan="3">
-                                <div class="empty-schedule">
-                                    <i class="fas fa-calendar-times"></i>
-                                    <p>Tidak ada jadwal praktek hari ini</p>
-                                    <small>Silakan cek kembali di hari berikutnya</small>
-                                </div>
-                            </td>
+                            <th><i class="fas fa-user-md"></i> Nama Tenaga Medis</th>
+                            <th><i class="fas fa-stethoscope"></i> Layanan</th>
+                            <th><i class="far fa-clock"></i> Waktu Praktek</th>
                         </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @forelse ($jadwalHariIni as $index => $jadwal)
+                            <tr class="schedule-row">
+                                <td>
+                                    <div class="doctor-info">
+                                        <div class="doctor-avatar">
+                                            @if($jadwal->tenagaMedis?->profile_photo_path)
+                                                <img src="{{ asset('storage/' . $jadwal->tenagaMedis->profile_photo_path) }}" alt="Foto">
+                                            @else
+                                                <i class="fas fa-user-md"></i>
+                                            @endif
+                                        </div>
+                                        <span class="doctor-name">{{ $jadwal->tenagaMedis?->name ?? 'N/A' }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="service-badge">
+                                        <i class="fas fa-briefcase-medical"></i>
+                                        {{ $jadwal->layanan }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="time-badge-modern">
+                                        <i class="far fa-clock"></i>
+                                        <span>
+                                            {{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }} - 
+                                            {{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }} WIB
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3">
+                                    <div class="empty-schedule">
+                                        <i class="fas fa-calendar-times"></i>
+                                        <p>Tidak ada jadwal praktek hari ini</p>
+                                        <small>Silakan cek kembali di hari berikutnya</small>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         {{-- Tabel Daftar Antrian --}}
@@ -223,56 +225,58 @@
                     {{ $pendaftaranMenunggu->count() }} Pasien
                 </span>
             </div>
-            <table class="schedule-table">
-                <thead>
-                    <tr>
-                        <th><i class="fas fa-user"></i> Nama Pasien</th>
-                        <th><i class="fas fa-stethoscope"></i> Layanan</th>
-                        <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($pendaftaranMenunggu as $index => $pendaftaran)
-                        <tr class="schedule-row"> {{-- Animasi dihilangkan --}}
-                            <td>
-                                <div class="doctor-info">
-                                    <div class="doctor-avatar">
-                                        @if($pendaftaran->user?->profile_photo_path)
-                                            <img src="{{ asset('storage/' . $pendaftaran->user->profile_photo_path) }}" alt="Foto">
-                                        @else
-                                            <i class="fas fa-user"></i>
-                                        @endif
-                                    </div>
-                                    <span class="doctor-name">{{ $pendaftaran->user->name ?? $pendaftaran->nama_lengkap }}</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="service-badge">
-                                    <i class="fas fa-briefcase-medical"></i>
-                                    {{ $pendaftaran->nama_layanan }}
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                <a href="{{ route('admin.catatanpemeriksaan') }}?open_modal_for={{ $pendaftaran->id }}" 
-                                   class="btn-action-primary">
-                                    <span>Input Periksa Awal</span>
-                                    <i class="fas fa-notes-medical"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
+            <div class="table-responsive">
+                <table class="schedule-table">
+                    <thead>
                         <tr>
-                            <td colspan="3">
-                                <div class="empty-schedule">
-                                    <i class="fas fa-inbox"></i>
-                                    <p>Tidak ada pasien menunggu saat ini</p>
-                                    <small>Semua pemeriksaan sudah ditangani</small>
-                                </div>
-                            </td>
+                            <th><i class="fas fa-user"></i> Nama Pasien</th>
+                            <th><i class="fas fa-stethoscope"></i> Layanan</th>
+                            <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
                         </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @forelse ($pendaftaranMenunggu as $index => $pendaftaran)
+                            <tr class="schedule-row">
+                                <td>
+                                    <div class="doctor-info">
+                                        <div class="doctor-avatar">
+                                            @if($pendaftaran->user?->profile_photo_path)
+                                                <img src="{{ asset('storage/' . $pendaftaran->user->profile_photo_path) }}" alt="Foto">
+                                            @else
+                                                <i class="fas fa-user"></i>
+                                            @endif
+                                        </div>
+                                        <span class="doctor-name">{{ $pendaftaran->user->name ?? $pendaftaran->nama_lengkap }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="service-badge">
+                                        <i class="fas fa-briefcase-medical"></i>
+                                        {{ $pendaftaran->nama_layanan }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ route('admin.catatanpemeriksaan') }}?open_modal_for={{ $pendaftaran->id }}" 
+                                       class="btn-action-primary">
+                                        <span>Input Periksa Awal</span>
+                                        <i class="fas fa-notes-medical"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3">
+                                    <div class="empty-schedule">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>Tidak ada pasien menunggu saat ini</p>
+                                        <small>Semua pemeriksaan sudah ditangani</small>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -366,7 +370,7 @@
     /* Stats Section */
     .stats-section { margin-bottom: 40px; }
     .stats-grid-modern {
-        display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 28px;
     }
     .stat-card-modern {
@@ -451,18 +455,56 @@
         font-weight: 600; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         backdrop-filter: blur(10px);
     }
-    .schedule-table { width: 100%; border-collapse: collapse; }
+
+    /* TABLE RESPONSIVE WRAPPER WITH HORIZONTAL SCROLL */
+    .table-responsive {
+        overflow-x: auto;
+        width: 100%;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(57, 166, 22, 0.3) var(--bg-secondary);
+    }
+
+    /* Custom Scrollbar untuk Table */
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+        border-radius: 10px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background-color: rgba(57, 166, 22, 0.3);
+        border-radius: 10px;
+        border: 2px solid var(--bg-secondary);
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(57, 166, 22, 0.5);
+    }
+
+    .schedule-table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        min-width: 700px; /* Minimum width agar tabel tidak terlalu sempit */
+    }
     .schedule-table thead { background: var(--grad); }
     .schedule-table thead th {
         padding: 20px 24px; text-align: left; color: white;
         font-weight: 600; font-size: 0.95rem; text-transform: uppercase;
-        letter-spacing: 0.8px;
+        letter-spacing: 0.8px; white-space: nowrap;
     }
     .schedule-table thead th i { margin-right: 10px; opacity: 0.95; }
     .schedule-table thead th.text-center { text-align: center; }
     .schedule-row { border-bottom: 1px solid var(--border-color); transition: all 0.3s ease; }
     .schedule-row:hover { background: var(--hover-bg); }
-    .schedule-table tbody td { padding: 20px 24px; color: var(--text-secondary); }
+    .schedule-table tbody td { 
+        padding: 20px 24px; 
+        color: var(--text-secondary); 
+        white-space: nowrap;
+    }
     .schedule-table tbody td.text-center { text-align: center; }
     
     .doctor-info { display: flex; align-items: center; gap: 14px; }
@@ -501,6 +543,7 @@
         border-radius: 25px; text-decoration: none; font-size: 0.9rem;
         font-weight: 600; transition: all 0.4s; cursor: pointer; border: none;
         box-shadow: 0 6px 20px rgba(57, 166, 22, 0.3); position: relative; overflow: hidden;
+        white-space: nowrap;
     }
     .btn-action-primary::before {
         content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
@@ -520,31 +563,297 @@
     .empty-schedule p { font-size: 1.15rem; font-weight: 600; margin-bottom: 10px; color: var(--text-secondary); }
     .empty-schedule small { font-size: 0.95rem; color: var(--text-muted); }
 
-    /* Responsive */
+    /* ===== RESPONSIVE DESIGN FOR MOBILE ===== */
+    
+    /* Tablet */
     @media (max-width: 992px) {
-        .stats-grid-modern { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-        .hero-illustration { display: none; }
+        .stats-grid-modern { 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+        }
+        .hero-illustration { 
+            display: none; 
+        }
+        .schedule-table {
+            min-width: 650px;
+        }
     }
+
+    /* Mobile Landscape & Portrait */
     @media (max-width: 768px) {
-        .header-content { flex-direction: column; text-align: center; padding: 30px 24px; }
-        .page-title { font-size: 1.8rem; }
-        .section-header { flex-direction: column; align-items: flex-start; }
-        .stat-card-modern { padding: 24px; }
-        .stat-icon-wrapper { width: 70px; height: 70px; font-size: 32px; }
-        .stat-value-modern { font-size: 2.4rem; }
-        .schedule-table { font-size: 0.9rem; }
-        .schedule-table thead th, .schedule-table tbody td { padding: 14px 12px; }
-        .doctor-avatar { width: 45px; height: 45px; font-size: 18px; }
+        .dashboard-header-banner {
+            margin-bottom: 30px;
+        }
+
+        .header-content { 
+            flex-direction: column; 
+            text-align: center; 
+            padding: 28px 20px; 
+            gap: 16px;
+        }
+
+        .header-icon {
+            width: 65px;
+            height: 65px;
+            font-size: 32px;
+        }
+        
+        .page-title { 
+            font-size: 1.75rem; 
+        }
+
+        .page-subtitle {
+            font-size: 0.95rem;
+            justify-content: center;
+        }
+
+        .section-header { 
+            flex-direction: column; 
+            align-items: flex-start; 
+            gap: 12px;
+        }
+
+        .section-header h2 {
+            font-size: 1.4rem;
+        }
+
+        .stats-section {
+            margin-bottom: 30px;
+        }
+
+        .stats-grid-modern {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .stat-card-modern { 
+            padding: 24px 20px; 
+            gap: 18px;
+        }
+
+        .stat-icon-wrapper { 
+            width: 70px; 
+            height: 70px; 
+            font-size: 32px; 
+        }
+
+        .stat-value-modern { 
+            font-size: 2.3rem; 
+        }
+
+        .stat-label-modern {
+            font-size: 1rem;
+        }
+
+        .stat-period {
+            font-size: 0.85rem;
+        }
+
+        .stat-decoration {
+            font-size: 60px;
+            bottom: 10px;
+            right: 10px;
+        }
+
+        .table-card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 18px 20px;
+        }
+
+        .table-title {
+            font-size: 1.05rem;
+        }
+
+        .schedule-count {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+        }
+        
+        .schedule-table { 
+            font-size: 0.9rem; 
+            min-width: 600px;
+        }
+        
+        .schedule-table thead th, 
+        .schedule-table tbody td { 
+            padding: 16px 14px; 
+        }
+        
+        .doctor-avatar { 
+            width: 45px; 
+            height: 45px; 
+            font-size: 18px; 
+        }
+
+        .doctor-name {
+            font-size: 0.95rem;
+        }
+
+        .service-badge,
+        .time-badge-modern {
+            font-size: 0.85rem;
+            padding: 8px 16px;
+        }
+
+        .btn-action-primary {
+            padding: 10px 20px;
+            font-size: 0.85rem;
+        }
     }
+
+    /* Extra Small Mobile */
     @media (max-width: 576px) {
-        .page-title { font-size: 1.5rem; }
-        .greeting-badge { font-size: 0.8rem; padding: 8px 16px; }
-        .stats-grid-modern { grid-template-columns: 1fr; }
-        .stat-card-modern { flex-direction: column; text-align: center; }
-        .schedule-table thead th { font-size: 0.8rem; padding: 12px 10px; }
-        .schedule-table tbody td { padding: 12px 10px; }
-        .service-badge, .time-badge-modern { font-size: 0.8rem; padding: 8px 14px; }
-        .btn-action-primary { padding: 10px 18px; font-size: 0.85rem; }
+        .header-content {
+            padding: 24px 18px;
+            border-radius: 20px;
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 28px;
+            border-radius: 14px;
+        }
+
+        .page-title { 
+            font-size: 1.5rem; 
+        }
+
+        .page-subtitle {
+            font-size: 0.9rem;
+        }
+        
+        .greeting-badge { 
+            font-size: 0.8rem; 
+            padding: 8px 16px; 
+        }
+
+        .section-header h2 {
+            font-size: 1.25rem;
+        }
+
+        .section-header h2 i {
+            font-size: 1.2rem;
+        }
+
+        .stats-section {
+            margin-bottom: 25px;
+        }
+
+        .stat-card-modern { 
+            flex-direction: column; 
+            text-align: center; 
+            padding: 20px 16px;
+            gap: 16px;
+        }
+
+        .stat-icon-wrapper {
+            width: 65px;
+            height: 65px;
+            font-size: 28px;
+            border-radius: 16px;
+        }
+
+        .stat-value-modern {
+            font-size: 2rem;
+        }
+
+        .stat-label-modern {
+            font-size: 0.95rem;
+        }
+
+        .stat-period {
+            font-size: 0.8rem;
+            justify-content: center;
+        }
+
+        .table-card-header {
+            padding: 16px 18px;
+        }
+
+        .table-title {
+            font-size: 1rem;
+        }
+
+        .schedule-count {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
+        .schedule-table {
+            min-width: 550px;
+        }
+        
+        .schedule-table thead th { 
+            font-size: 0.8rem; 
+            padding: 14px 12px; 
+        }
+        
+        .schedule-table tbody td { 
+            padding: 14px 12px; 
+            font-size: 0.85rem;
+        }
+
+        .doctor-avatar {
+            width: 42px;
+            height: 42px;
+            font-size: 16px;
+            border-width: 2px;
+        }
+
+        .doctor-name {
+            font-size: 0.9rem;
+        }
+        
+        .service-badge, 
+        .time-badge-modern { 
+            font-size: 0.8rem; 
+            padding: 8px 14px; 
+        }
+        
+        .btn-action-primary { 
+            padding: 10px 18px; 
+            font-size: 0.8rem; 
+        }
+
+        .btn-action-primary span {
+            display: none;
+        }
+
+        .empty-schedule {
+            padding: 50px 16px;
+        }
+
+        .empty-schedule i {
+            font-size: 3.5rem;
+        }
+
+        .empty-schedule p {
+            font-size: 1rem;
+        }
+
+        .empty-schedule small {
+            font-size: 0.85rem;
+        }
+    }
+
+    /* Ultra Small Mobile (< 400px) */
+    @media (max-width: 400px) {
+        .page-title {
+            font-size: 1.35rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.15rem;
+        }
+
+        .stat-value-modern {
+            font-size: 1.8rem;
+        }
+
+        .schedule-table {
+            min-width: 500px;
+        }
     }
 </style>
 @endpush

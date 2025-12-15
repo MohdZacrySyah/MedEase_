@@ -79,7 +79,7 @@
         padding: 40px 20px;
     }
 
-    /* ===== HEADER BANNER (NO ANIMATION) ===== */
+    /* ===== HEADER BANNER ===== */
     .page-header-banner {
         margin-bottom: 40px;
     }
@@ -211,8 +211,8 @@
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         position: relative;
         z-index: 1;
-        animation: float 3s ease-in-out infinite;
         overflow: hidden;
+        white-space: nowrap;
     }
 
     .btn-add::before {
@@ -236,7 +236,7 @@
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     }
 
-    /* ===== ALERT (NO ANIMATION) ===== */
+    /* ===== ALERT ===== */
     .alert-success-modern {
         display: flex;
         align-items: center;
@@ -290,7 +290,7 @@
         transform: rotate(90deg);
     }
 
-    /* ===== TABLE (NO ANIMATION) ===== */
+    /* ===== TABLE WITH RESPONSIVE HORIZONTAL SCROLL ===== */
     .schedule-container-modern {
         background: var(--bg-primary);
         border-radius: 24px;
@@ -339,9 +339,39 @@
         backdrop-filter: blur(10px);
     }
 
+    /* TABLE RESPONSIVE WRAPPER WITH HORIZONTAL SCROLL */
+    .table-responsive {
+        overflow-x: auto;
+        width: 100%;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(57, 166, 22, 0.3) var(--bg-secondary);
+    }
+
+    /* Custom Scrollbar untuk Table */
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+        border-radius: 10px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background-color: rgba(57, 166, 22, 0.3);
+        border-radius: 10px;
+        border: 2px solid var(--bg-secondary);
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(57, 166, 22, 0.5);
+    }
+
     .schedule-table {
         width: 100%;
         border-collapse: collapse;
+        min-width: 700px; /* Minimum width agar tabel tidak terlalu sempit */
     }
 
     .schedule-table thead {
@@ -356,6 +386,7 @@
         font-size: 0.95rem;
         text-transform: uppercase;
         letter-spacing: 0.8px;
+        white-space: nowrap;
     }
 
     .schedule-table thead th i {
@@ -367,7 +398,6 @@
         text-align: center !important;
     }
 
-    /* ROW ANIMATIONS REMOVED FOR STABILITY */
     .schedule-row {
         border-bottom: 1px solid var(--border-color);
         transition: all 0.3s ease;
@@ -381,6 +411,23 @@
         padding: 20px 24px;
         color: var(--text-secondary);
         vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    /* Number Badge */
+    .number-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #6c757d, #5a6268);
+        color: white;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        padding: 0 10px;
+        box-shadow: 0 2px 8px rgba(108, 117, 125, 0.25);
     }
 
     /* Doctor Avatar */
@@ -468,7 +515,6 @@
         font-size: 4.5rem;
         margin-bottom: 24px;
         opacity: 0.3;
-        animation: float 3s ease-in-out infinite;
     }
 
     .empty-schedule p {
@@ -483,7 +529,7 @@
         color: var(--text-muted);
     }
 
-    /* ===== MODAL (NO ANIMATION) ===== */
+    /* ===== MODAL ===== */
     .modal-overlay {
         display: none;
         position: fixed;
@@ -807,45 +853,74 @@
         box-shadow: 0 10px 30px rgba(231, 76, 60, 0.5);
     }
 
-    /* ===== RESPONSIVE ===== */
+    /* ===== RESPONSIVE DESIGN FOR MOBILE ===== */
+    
+    /* Tablet */
     @media (max-width: 992px) {
         .hero-illustration {
             display: none;
         }
+
+        .schedule-table {
+            min-width: 650px;
+        }
     }
 
+    /* Mobile Landscape & Portrait */
     @media (max-width: 768px) {
         .container-fluid-modern {
-            padding: 20px 15px;
+            padding: 25px 16px;
+        }
+
+        .page-header-banner {
+            margin-bottom: 30px;
         }
 
         .header-content {
             flex-direction: column;
             text-align: center;
-            padding: 30px 24px;
+            padding: 28px 20px;
+            gap: 16px;
+        }
+
+        .header-icon {
+            width: 65px;
+            height: 65px;
+            font-size: 32px;
         }
 
         .page-title {
-            font-size: 1.8rem;
+            font-size: 1.75rem;
         }
 
-        .btn-add {
-            width: 100%;
+        .page-subtitle {
+            font-size: 0.95rem;
             justify-content: center;
         }
 
         .table-card-header {
             flex-direction: column;
             align-items: flex-start;
+            padding: 18px 20px;
+        }
+
+        .table-title {
+            font-size: 1.05rem;
+        }
+
+        .schedule-count {
+            padding: 10px 20px;
+            font-size: 0.9rem;
         }
 
         .schedule-table {
             font-size: 0.9rem;
+            min-width: 600px;
         }
 
         .schedule-table thead th,
         .schedule-table tbody td {
-            padding: 14px 12px;
+            padding: 16px 14px;
         }
 
         .doctor-avatar {
@@ -854,23 +929,13 @@
             font-size: 18px;
         }
 
-        .modal-content {
-            padding: 24px;
+        .action-buttons {
+            gap: 6px;
         }
 
-        .form-actions {
-            flex-direction: column;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .page-title {
-            font-size: 1.5rem;
-        }
-
-        .greeting-badge {
-            font-size: 0.8rem;
-            padding: 8px 16px;
+        .btn-action {
+            width: 38px;
+            height: 38px;
         }
 
         .modal-card {
@@ -878,13 +943,142 @@
             margin: 10px;
         }
 
-        .action-buttons {
-            gap: 6px;
+        .modal-content {
+            padding: 28px 24px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+
+    /* Extra Small Mobile */
+    @media (max-width: 576px) {
+        .container-fluid-modern {
+            padding: 20px 12px;
+        }
+
+        .header-content {
+            padding: 24px 18px;
+            border-radius: 20px;
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 28px;
+            border-radius: 14px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+        }
+
+        .page-subtitle {
+            font-size: 0.9rem;
+        }
+
+        .greeting-badge {
+            font-size: 0.8rem;
+            padding: 8px 16px;
+        }
+
+        .table-card-header {
+            padding: 16px 18px;
+        }
+
+        .table-title {
+            font-size: 1rem;
+        }
+
+        .schedule-count {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
+        .schedule-table {
+            min-width: 550px;
+        }
+
+        .schedule-table thead th {
+            font-size: 0.8rem;
+            padding: 14px 12px;
+        }
+
+        .schedule-table tbody td {
+            padding: 14px 12px;
+            font-size: 0.85rem;
+        }
+
+        .doctor-avatar {
+            width: 42px;
+            height: 42px;
+            font-size: 16px;
+            border-width: 2px;
+        }
+
+        .number-badge {
+            min-width: 36px;
+            height: 36px;
+            font-size: 0.9rem;
         }
 
         .btn-action {
             width: 36px;
             height: 36px;
+            font-size: 0.9rem;
+        }
+
+        .empty-schedule {
+            padding: 50px 16px;
+        }
+
+        .empty-schedule i {
+            font-size: 3.5rem;
+        }
+
+        .empty-schedule p {
+            font-size: 1rem;
+        }
+
+        .empty-schedule small {
+            font-size: 0.85rem;
+        }
+
+        .modal-content {
+            padding: 24px 20px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+        }
+
+        .modal-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 28px;
+        }
+
+        .btn-primary,
+        .btn-secondary,
+        .btn-danger {
+            padding: 14px 24px;
+            font-size: 0.95rem;
+        }
+    }
+
+    /* Ultra Small Mobile (< 400px) */
+    @media (max-width: 400px) {
+        .page-title {
+            font-size: 1.35rem;
+        }
+
+        .schedule-table {
+            min-width: 500px;
         }
     }
 </style>
@@ -933,75 +1127,76 @@
     <div class="schedule-container-modern">
         <div class="table-card-header">
             <h3 class="table-title"><i class="fas fa-list"></i> Daftar Tenaga Medis</h3>
-            {{-- Added ID for Auto Refresh --}}
             <span class="schedule-count" id="total-count"><i class="fas fa-users"></i> {{ $tenagaMedis->count() }} Akun Aktif</span>
         </div>
 
-        <table class="schedule-table" id="tableTenaga">
-            <thead>
-                <tr>
-                    <th><i class="fas fa-hashtag"></i> No</th>
-                    <th><i class="fas fa-user-circle"></i> Foto</th>
-                    <th><i class="fas fa-user"></i> Nama</th>
-                    <th><i class="fas fa-envelope"></i> Email</th>
-                    <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
-                </tr>
-            </thead>
-            {{-- Added ID for Auto Refresh --}}
-            <tbody id="table-body">
-                @forelse($tenagaMedis as $index => $akun)
-                    <tr class="schedule-row"> {{-- Animation removed --}}
-                        <td>
-                            <span class="number-badge" style="display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; background: linear-gradient(135deg, #6c757d, #5a6268); color: white; border-radius: 12px; font-weight: 700; font-size: 1rem; padding: 0 10px; box-shadow: 0 2px 8px rgba(108, 117, 125, 0.25);">
-                                {{ $index + 1 }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="doctor-avatar">
-                                {{ strtoupper(substr($akun->name,0,1)) }}
-                            </div>
-                        </td>
-                        <td>
-                            <span class="doctor-name" style="font-weight: 600; color: var(--text-primary);">
-                                {{ $akun->name }}
-                            </span>
-                        </td>
-                        <td>
-                            <span style="color: var(--text-secondary);">{{ $akun->email }}</span>
-                        </td>
-                        <td class="text-center">
-                            <div class="action-buttons">
-                                <button class="btn-action btn-edit"
-                                        data-id="{{ $akun->id }}"
-                                        data-name="{{ $akun->name }}"
-                                        data-email="{{ $akun->email }}"
-                                        title="Edit Akun">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-
-                                <form action="{{ route('admin.tenaga-medis.destroy', $akun->id) }}" method="POST" class="delete-form" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" class="btn-action btn-hapus btn-delete" title="Hapus Akun">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
+        {{-- WRAPPER RESPONSIVE DENGAN HORIZONTAL SCROLL --}}
+        <div class="table-responsive">
+            <table class="schedule-table" id="tableTenaga">
+                <thead>
                     <tr>
-                        <td colspan="5">
-                            <div class="empty-schedule">
-                                <i class="fas fa-user-slash"></i>
-                                <p>Belum ada akun tenaga medis.</p>
-                                <small>Klik tombol "Tambah Akun" untuk membuat akun baru</small>
-                            </div>
-                        </td>
+                        <th><i class="fas fa-hashtag"></i> No</th>
+                        <th><i class="fas fa-user-circle"></i> Foto</th>
+                        <th><i class="fas fa-user"></i> Nama</th>
+                        <th><i class="fas fa-envelope"></i> Email</th>
+                        <th class="text-center"><i class="fas fa-cog"></i> Aksi</th>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody id="table-body">
+                    @forelse($tenagaMedis as $index => $akun)
+                        <tr class="schedule-row">
+                            <td>
+                                <span class="number-badge">
+                                    {{ $index + 1 }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="doctor-avatar">
+                                    {{ strtoupper(substr($akun->name,0,1)) }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="doctor-name">
+                                    {{ $akun->name }}
+                                </span>
+                            </td>
+                            <td>
+                                <span style="color: var(--text-secondary);">{{ $akun->email }}</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-edit"
+                                            data-id="{{ $akun->id }}"
+                                            data-name="{{ $akun->name }}"
+                                            data-email="{{ $akun->email }}"
+                                            title="Edit Akun">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+
+                                    <form action="{{ route('admin.tenaga-medis.destroy', $akun->id) }}" method="POST" class="delete-form" style="display:inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="btn-action btn-hapus btn-delete" title="Hapus Akun">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-schedule">
+                                    <i class="fas fa-user-slash"></i>
+                                    <p>Belum ada akun tenaga medis.</p>
+                                    <small>Klik tombol "Tambah Akun" untuk membuat akun baru</small>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
 {{-- MODAL FORM (CREATE / EDIT) --}}

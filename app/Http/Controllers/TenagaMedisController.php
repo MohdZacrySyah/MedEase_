@@ -280,9 +280,9 @@ class TenagaMedisController extends Controller
         if (empty($layanansDitangani)) {
             $pendaftarans = collect();
         } else {
+            // [PERBAIKAN] Pastikan ->latest() SUDAH DIHAPUS agar tidak mengurutkan berdasarkan waktu input
             $query = Pendaftaran::whereIn('nama_layanan', $layanansDitangani)
-                            ->with('user')
-                            ->latest();
+                            ->with('user');
 
             // Terapkan filter yang sama persis dengan halaman utama
             if ($tanggal) {
@@ -291,7 +291,12 @@ class TenagaMedisController extends Controller
                 $query->where('status', '!=', 'Selesai');
             }
 
-            $pendaftarans = $query->get();
+            // [PERBAIKAN UTAMA] Urutkan hanya berdasarkan No Antrian (ASC) 
+            // agar urut 1, 2, 3... tanpa terpengaruh kapan data diinput.
+            // Jika ingin 'Hadir' tetap paling atas, kita pakai FIELD tapi prioritas antrian tetap utama.
+            
+            $pendaftarans = $query->orderBy('no_antrian', 'asc')
+                                  ->get();
         }
 
         // Render HTML tabel dari component
@@ -349,9 +354,9 @@ class TenagaMedisController extends Controller
         if (empty($layanansDitangani)) {
             $pendaftarans = collect();
         } else {
+            // [PERBAIKAN] Hapus ->latest()
             $query = Pendaftaran::whereIn('nama_layanan', $layanansDitangani)
-                            ->with('user')
-                            ->latest();
+                            ->with('user');
 
             // HANYA filter jika $tanggal ADA ISINYA
             if ($tanggal) {
@@ -361,7 +366,9 @@ class TenagaMedisController extends Controller
                 $query->where('status', '!=', 'Selesai');
             }
 
-            $pendaftarans = $query->get();
+            // [PERBAIKAN UTAMA] Sorting murni berdasarkan No Antrian (1, 2, 3...)
+            $pendaftarans = $query->orderBy('no_antrian', 'asc')
+                                  ->get();
         }
 
         return view('tenaga_medis.pasien.index', compact('pendaftarans', 'tanggal'));
