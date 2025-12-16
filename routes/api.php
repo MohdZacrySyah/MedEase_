@@ -98,6 +98,7 @@ Route::post('/login-mobile', function (Request $request) {
 
 // --- API HISTORY PENDAFTARAN ---
 Route::get('/pendaftaran/history', function (Request $request) {
+    // ... (Inisialisasi userId tetap sama) ...
     $userId = $request->query('user_id');
 
     if (!$userId || $userId == 0) {
@@ -108,7 +109,12 @@ Route::get('/pendaftaran/history', function (Request $request) {
         ->join('jadwal_prakteks', 'pendaftarans.jadwal_praktek_id', '=', 'jadwal_prakteks.id')
         ->join('tenaga_medis', 'jadwal_prakteks.tenaga_medis_id', '=', 'tenaga_medis.id')
         ->where('pendaftarans.user_id', '=', $userId) 
+        
+        // FIX KRITIS: Hanya ambil status yang aktif, JANGAN ambil 'selesai' atau 'batal'
+        ->whereIn('pendaftarans.status', ['menunggu', 'hadir', 'dilayani', 'periksa awal']) 
+        
         ->select(
+            // ... (Semua kolom select tetap sama) ...
             'pendaftarans.id',
             'pendaftarans.no_antrian',
             'pendaftarans.nama_layanan',
@@ -119,6 +125,8 @@ Route::get('/pendaftaran/history', function (Request $request) {
             'pendaftarans.status_panggilan',
             'pendaftarans.jumlah_panggilan'
         )
+        // Urutkan berdasarkan tanggal pendaftaran terbaru
+        ->orderBy('pendaftarans.jadwal_dipilih', 'desc') 
         ->orderBy('pendaftarans.created_at', 'desc')
         ->get();
 
@@ -127,7 +135,49 @@ Route::get('/pendaftaran/history', function (Request $request) {
         'data' => $data
     ]);
 });
+// --- API NOTIFIKASI PEMBATALAN JADWAL DOKTER (FIX KRITIS) ---
+Route::get('/notifikasi/pembatalan', function (Request $request) {
+    $userId = $request->query('user_id'); 
 
+    if (!$userId || $userId == 0) {
+        return response()->json(['status' => 'success', 'data' => [] ]);
+    }
+    
+    try {
+        $pembatalan = DB::table('pendaftarans as p')
+            ->join('jadwal_prakteks as j', 'p.jadwal_praktek_id', '=', 'j.id')
+            ->join('tenaga_medis as t', 'j.tenaga_medis_id', '=', 't.id')
+            
+            ->where('p.user_id', '=', $userId) 
+            // PERBAIKAN KRITIS: Mencakup kemungkinan status 'batal' atau 'Batal' atau 'BATAL'
+            ->whereIn('p.status', ['batal', 'Batal', 'BATAL']) 
+            
+            ->select(
+                'p.id',
+                't.name as dokter_name',          
+                'p.nama_layanan',                 
+                'p.jadwal_dipilih',               
+                'p.status',                       
+                // Kita gunakan 'p.keluhan' karena 'alasan_pembatalan' tidak ada di tabel pendaftarans
+                'p.keluhan as alasan_pembatalan'
+            )
+            ->orderBy('p.updated_at', 'desc') 
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Notifikasi pembatalan retrieved',
+            'data' => $pembatalan
+        ]);
+
+    } catch (\Exception $e) {
+        // Jika masih crash (500), berarti ada kolom lain yang salah
+        return response()->json([
+            'status' => 'error', 
+            'message' => 'Query crash di server. Error: ' . $e->getMessage()
+        ], 500);
+    }
+});
 // --- API PENDAFTARAN MOBILE (PERBAIKAN KRITIS: ESTIMASI WAKTU) ---
 Route::post('/pendaftaran/store', function (Request $request) {
     // 1. Validasi
@@ -151,7 +201,9 @@ Route::post('/pendaftaran/store', function (Request $request) {
     // 2. Simpan Data Awal
     $data = $request->all();
     $data['status'] = 'menunggu'; 
-    $data['status_panggilan'] = 'belum_dipanggil'; 
+    $data['status_panggilan'] = 'menunggu'; 
+    $data['status_periksa'] = 'belum'; 
+    $data['jumlah_panggilan'] = 0; 
     
     $pendaftaran = Pendaftaran::create($data); 
 
@@ -159,8 +211,9 @@ Route::post('/pendaftaran/store', function (Request $request) {
     $tanggalDipilih = Carbon::parse($request->jadwal_dipilih)->toDateString();
     $jadwalPraktekId = $request->jadwal_praktek_id;
     $namaLayanan = $request->nama_layanan;
+    $waktuPendaftaran = Carbon::now()->format('H:i:s'); // Waktu pendaftaran sekarang
 
-    // Hitung Nomor Antrian
+    // Hitung Nomor Antrian (Antrian berdasarkan layanan dan tanggal)
     $jumlahSebelumnya = Pendaftaran::where('nama_layanan', $namaLayanan)
         ->whereDate('jadwal_dipilih', $tanggalDipilih)
         ->where('id', '<', $pendaftaran->id)
@@ -170,7 +223,7 @@ Route::post('/pendaftaran/store', function (Request $request) {
     $pendaftaran->no_antrian = $noAntrianBaru;
     
     // =======================================================
-    // FIX KRITIS: LOGIC PERHITUNGAN ESTIMASI WAKTU
+    // FIX KRITIS LOGIC PERHITUNGAN ESTIMASI WAKTU
     // =======================================================
     
     // a. Ambil Jam Mulai Dokter
@@ -179,13 +232,33 @@ Route::post('/pendaftaran/store', function (Request $request) {
         ->select('jam_mulai')
         ->first();
         
-    $jamMulaiDokter = $jadwalDokter->jam_mulai ?? '08:00:00'; // Default jika gagal ambil
+    $jamMulaiDokter = $jadwalDokter->jam_mulai ?? '08:00:00'; 
     
-    // b. Hitung Estimasi: Jam Mulai + (Nomor Antrian * 15 Menit)
-    // Asumsi: Setiap pasien memakan waktu 15 menit
-    $waktuTambahanMenit = ($noAntrianBaru - 1) * 15; // Antrian pertama (No 1) berarti 0 menit tambahan
+    // Gabungkan tanggal pendaftaran dengan jam mulai dan jam sekarang (untuk perbandingan)
+    $waktuMulaiJadwalCarbon = Carbon::parse($tanggalDipilih . ' ' . $jamMulaiDokter);
+    $waktuSekarangCarbon = Carbon::parse($tanggalDipilih . ' ' . $waktuPendaftaran); // Hanya ambil jam pendaftaran hari ini
+
+    // Tentukan Waktu Basis (Waktu Awal Perhitungan): MAX (Jam Mulai Jadwal, Waktu Pendaftaran Sekarang)
+    // Jika Pasien adalah antrian pertama (No 1) yang mendaftar setelah jam mulai, 
+    // basisnya adalah waktu pendaftaran saat ini.
     
-    $estimasiWaktu = Carbon::parse($jamMulaiDokter)
+    if ($noAntrianBaru == 1) {
+        // Jika jam pendaftaran > jam mulai praktik, gunakan jam pendaftaran sebagai basis
+        if ($waktuSekarangCarbon->greaterThan($waktuMulaiJadwalCarbon)) {
+             $waktuBasis = $waktuSekarangCarbon;
+        } else {
+             $waktuBasis = $waktuMulaiJadwalCarbon; // Gunakan jam mulai jadwal
+        }
+    } else {
+        // Jika antrian > 1, kita asumsikan semua antrian sebelumnya diselesaikan sesuai estimasi
+        // dan kita mulai hitungan dari Jam Mulai Jadwal
+        $waktuBasis = $waktuMulaiJadwalCarbon;
+    }
+    
+    // b. Hitung Estimasi: Waktu Basis + (Nomor Antrian - 1) * 15 Menit
+    $waktuTambahanMenit = ($noAntrianBaru - 1) * 15; 
+    
+    $estimasiWaktu = $waktuBasis
         ->addMinutes($waktuTambahanMenit)
         ->format('H:i:s'); // Format ke jam:menit:detik
         
@@ -201,7 +274,7 @@ Route::post('/pendaftaran/store', function (Request $request) {
     ]);
 });
 
-// ROUTE: Cek Ketersediaan Dokter untuk Pasien Mobile (Jika Anda menggunakan BookingController)
+// ROUTE: Cek Ketersediaan Dokter untuk Pasien Mobile
 Route::get('/dokter/check-availability', [BookingController::class, 'checkDoctorAvailability']);
 
 Route::get('/jadwal-hari-ini', function () {
@@ -400,7 +473,7 @@ Route::get('/jadwal/detail', function (Request $request) {
         'status' => 'error',
         'message' => 'Jadwal tidak ditemukan',
         'data' => null
-    ], 200); // 200 karena Android cek status code 200
+    ], 200);
 });
 
 // ===============================================
@@ -422,9 +495,9 @@ Route::get('/dashboard-mobile', function (Request $request) {
         $query->where('user_id', $userId);
     })->distinct('tenaga_medis_id')->count('tenaga_medis_id');
 
-    // --- 2. ANTRIAN AKTIF PASIEN ---
+    // --- 2. ANTRIAN AKTIF PASIEN (Antrian pasien yang sedang login) ---
     $antrianAktif = Pendaftaran::where('user_id', $userId)
-        ->whereIn('status', ['menunggu', 'dilayani', 'periksa awal'])
+        ->whereIn('status', ['menunggu', 'hadir', 'dilayani', 'periksa awal']) // FIX: Tambah 'hadir'
         ->whereDate('jadwal_dipilih', '=', Carbon::today()) 
         ->join('jadwal_prakteks', 'pendaftarans.jadwal_praktek_id', '=', 'jadwal_prakteks.id')
         ->join('tenaga_medis', 'jadwal_prakteks.tenaga_medis_id', '=', 'tenaga_medis.id')
@@ -438,6 +511,7 @@ Route::get('/dashboard-mobile', function (Request $request) {
         ->orderBy('pendaftarans.jadwal_dipilih', 'asc') 
         ->first(); 
     
+    // Konversi Antrian Aktif Pasien ke array
     $antrianData = $antrianAktif ? [
         'status' => $antrianAktif->status,
         'dokter_name' => $antrianAktif->dokter_name,
@@ -447,10 +521,13 @@ Route::get('/dashboard-mobile', function (Request $request) {
     ] : null; 
 
     // =======================================================
-    // ANTRIAN YANG SEDANG DILAYANI GLOBAL
+    // FIX KRITIS: MENGAMBIL ANTRIAN YANG SEDANG DILAYANI/DIPROSES KLINIK (GLOBAL)
+    // Diambil dari antrian yang statusnya sudah 'hadir', 'periksa awal', atau 'dilayani'
+    // Tetapi belum 'Selesai'. Diambil yang paling baru diupdate/diproses.
     // =======================================================
     $antrianDilayaniGlobal = DB::table('pendaftarans')
-        ->where('pendaftarans.status_panggilan', 'dipanggil') 
+        // Cari antrian yang sedang diproses klinik (hadir, periksa awal, dilayani)
+        ->whereIn('pendaftarans.status', ['hadir', 'periksa awal', 'dilayani']) 
         ->whereDate('pendaftarans.jadwal_dipilih', '=', Carbon::today())
         ->join('jadwal_prakteks', 'pendaftarans.jadwal_praktek_id', '=', 'jadwal_prakteks.id')
         ->join('tenaga_medis', 'jadwal_prakteks.tenaga_medis_id', '=', 'tenaga_medis.id')
@@ -481,8 +558,13 @@ Route::get('/dashboard-mobile', function (Request $request) {
         'data' => [
             'pemeriksaan_selesai' => $pemeriksaanSelesai,
             'dokter_dikunjungi' => $dokterDikunjungi,
+            
+            // Antrian Pasien yang Sedang Login
             'antrian_aktif' => $antrianData,
+            
+            // Antrian Klinik yang Sedang Dilayani (Global)
             'antrian_global' => $antrianDilayaniGlobalData,
+            
             'jam_operasional' => $infoKlinik['jam_operasional'],
             'kontak_kami' => $infoKlinik['kontak_kami'],
             'alamat_klinik' => $infoKlinik['alamat_klinik'],

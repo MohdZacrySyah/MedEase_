@@ -9,7 +9,7 @@
 
 @section('content')
 
-    {{-- Header Banner (100% SAMA DENGAN DASHBOARD) --}}
+    {{-- Header Banner --}}
     <div class="dashboard-header-banner">
         <div class="header-content">
             <div class="header-icon">
@@ -101,7 +101,7 @@
         </div>
     </div>
 
-    {{-- Daftar Riwayat (100% SAMA DENGAN SCHEDULE SECTION) --}}
+    {{-- Daftar Riwayat --}}
     <div class="schedule-section">
         <div class="section-header">
             <h2><i class="fas fa-clipboard-list"></i> Daftar Riwayat Pemeriksaan</h2>
@@ -178,150 +178,150 @@
         </div>
     </div>
 
-{{-- MODAL DETAIL --}}
-<div id="detailModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 class="modal-title">
-                <i class="fas fa-file-medical"></i>
-                Detail Pemeriksaan
-            </h2>
-            <span class="close-btn" id="closeModalBtn">&times;</span>
-        </div>
-        
-        <div class="modal-body">
-            {{-- Info Header --}}
-            <div class="modal-info-header">
-                <div class="info-item">
-                    <i class="fas fa-user-injured"></i>
-                    <div class="info-content">
-                        <span class="info-label">Nama Pasien</span>
-                        <span class="info-value" id="modalPasien"></span>
-                    </div>
-                </div>
-
-                <div class="info-item">
-                    <i class="fas fa-calendar-check"></i>
-                    <div class="info-content">
-                        <span class="info-label">Tanggal Pemeriksaan</span>
-                        <span class="info-value" id="modalTanggal"></span>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <i class="fas fa-user-md"></i>
-                    <div class="info-content">
-                        <span class="info-label">Dokter Pemeriksa</span>
-                        <span class="info-value" id="modalDokter"></span>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Hasil Pemeriksaan --}}
-            <div class="detail-section diagnosis-section">
-                <div class="section-header">
-                    <i class="fas fa-stethoscope"></i>
-                    <h4 class="section-title">Hasil Pemeriksaan Dokter</h4>
-                </div>
-                <div class="detail-card">
-                    <div class="detail-item">
-                        <span class="label">
-                            <i class="fas fa-notes-medical"></i>
-                            Diagnosis (Assessment)
-                        </span>
-                        <div class="value diagnosis-value" id="modalDiagnosa"></div>
-                    </div>
-                    <div class="detail-item">
-                        <span class="label">
-                            <i class="fas fa-clipboard-list"></i>
-                            Rencana/Catatan (Plan)
-                        </span>
-                        <div class="value" id="modalPlan"></div>
-                    </div>
-                    
-                    <div class="detail-item" id="modalResepObatSection">
-                        <span class="label">
-                            <i class="fas fa-pills"></i>
-                            Resep Obat
-                        </span>
-                        <div class="value" id="modalResepObat"></div>
-                    </div>
-                </div>
+    {{-- MODAL DETAIL --}}
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-file-medical"></i>
+                    Detail Pemeriksaan
+                </h2>
+                <span class="close-btn" id="closeModalBtn">&times;</span>
             </div>
             
-            {{-- Keluhan Awal --}}
-            <div class="detail-section">
-                <div class="section-header">
-                    <i class="fas fa-comment-medical"></i>
-                    <h4 class="section-title">Keluhan Awal Pasien</h4>
-                </div>
-                <div class="detail-card">
-                    <div class="detail-item">
-                        <span class="label">
-                            <i class="fas fa-heartbeat"></i>
-                            Keluhan
-                        </span>
-                        <div class="value" id="modalKeluhan"></div>
+            <div class="modal-body">
+                {{-- Info Header --}}
+                <div class="modal-info-header">
+                    <div class="info-item">
+                        <i class="fas fa-user-injured"></i>
+                        <div class="info-content">
+                            <span class="info-label">Nama Pasien</span>
+                            <span class="info-value" id="modalPasien"></span>
+                        </div>
                     </div>
-                    <div class="detail-item">
-                        <span class="label">
-                            <i class="fas fa-hourglass-half"></i>
-                            Sejak Kapan
-                        </span>
-                        <div class="value" id="modalLamaKeluhan"></div>
-                    </div>
-                </div>
-            </div>
 
-            {{-- Pemeriksaan Vital --}}
-            <div class="detail-section" id="modalVitalsSection">
-                <div class="section-header">
-                    <i class="fas fa-thermometer-half"></i>
-                    <h4 class="section-title">Pemeriksaan Vital</h4>
-                </div>
-                <div class="vitals-grid">
-                    <div class="vital-card">
-                        <div class="vital-icon blood-pressure">
-                            <i class="fas fa-heartbeat"></i>
-                        </div>
-                        <div class="vital-info">
-                            <span class="vital-label">Tekanan Darah</span>
-                            <strong class="vital-value" id="modalTekananDarah"></strong>
+                    <div class="info-item">
+                        <i class="fas fa-calendar-check"></i>
+                        <div class="info-content">
+                            <span class="info-label">Tanggal Pemeriksaan</span>
+                            <span class="info-value" id="modalTanggal"></span>
                         </div>
                     </div>
-                    <div class="vital-card">
-                        <div class="vital-icon weight">
-                            <i class="fas fa-weight"></i>
-                        </div>
-                        <div class="vital-info">
-                            <span class="vital-label">Berat Badan</span>
-                            <strong class="vital-value" id="modalBeratBadan"></strong>
-                        </div>
-                    </div>
-                    <div class="vital-card">
-                        <div class="vital-icon temperature">
-                            <i class="fas fa-thermometer-half"></i>
-                        </div>
-                        <div class="vital-info">
-                            <span class="vital-label">Suhu Tubuh</span>
-                            <strong class="vital-value" id="modalSuhuTubuh"></strong>
+                    <div class="info-item">
+                        <i class="fas fa-user-md"></i>
+                        <div class="info-content">
+                            <span class="info-label">Dokter Pemeriksa</span>
+                            <span class="info-value" id="modalDokter"></span>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            {{-- Total Biaya --}}
-            <div class="harga-section" id="modalHargaSection">
-                <div class="harga-card">
-                    <div class="harga-info">
-                        <i class="fas fa-money-bill-wave"></i>
-                        <span class="harga-label">Total Biaya Pemeriksaan</span>
+
+                {{-- Hasil Pemeriksaan --}}
+                <div class="detail-section diagnosis-section">
+                    <div class="section-header">
+                        <i class="fas fa-stethoscope"></i>
+                        <h4 class="section-title">Hasil Pemeriksaan Dokter</h4>
                     </div>
-                    <span class="harga-value" id="modalHarga"></span>
+                    <div class="detail-card">
+                        <div class="detail-item">
+                            <span class="label">
+                                <i class="fas fa-notes-medical"></i>
+                                Diagnosis (Assessment)
+                            </span>
+                            <div class="value diagnosis-value" id="modalDiagnosa"></div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">
+                                <i class="fas fa-clipboard-list"></i>
+                                Rencana/Catatan (Plan)
+                            </span>
+                            <div class="value" id="modalPlan"></div>
+                        </div>
+                        
+                        <div class="detail-item" id="modalResepObatSection">
+                            <span class="label">
+                                <i class="fas fa-pills"></i>
+                                Resep Obat
+                            </span>
+                            <div class="value" id="modalResepObat"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                {{-- Keluhan Awal --}}
+                <div class="detail-section">
+                    <div class="section-header">
+                        <i class="fas fa-comment-medical"></i>
+                        <h4 class="section-title">Keluhan Awal Pasien</h4>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-item">
+                            <span class="label">
+                                <i class="fas fa-heartbeat"></i>
+                                Keluhan
+                            </span>
+                            <div class="value" id="modalKeluhan"></div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">
+                                <i class="fas fa-hourglass-half"></i>
+                                Sejak Kapan
+                            </span>
+                            <div class="value" id="modalLamaKeluhan"></div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Pemeriksaan Vital --}}
+                <div class="detail-section" id="modalVitalsSection">
+                    <div class="section-header">
+                        <i class="fas fa-thermometer-half"></i>
+                        <h4 class="section-title">Pemeriksaan Vital</h4>
+                    </div>
+                    <div class="vitals-grid">
+                        <div class="vital-card">
+                            <div class="vital-icon blood-pressure">
+                                <i class="fas fa-heartbeat"></i>
+                            </div>
+                            <div class="vital-info">
+                                <span class="vital-label">Tekanan Darah</span>
+                                <strong class="vital-value" id="modalTekananDarah"></strong>
+                            </div>
+                        </div>
+                        <div class="vital-card">
+                            <div class="vital-icon weight">
+                                <i class="fas fa-weight"></i>
+                            </div>
+                            <div class="vital-info">
+                                <span class="vital-label">Berat Badan</span>
+                                <strong class="vital-value" id="modalBeratBadan"></strong>
+                            </div>
+                        </div>
+                        <div class="vital-card">
+                            <div class="vital-icon temperature">
+                                <i class="fas fa-thermometer-half"></i>
+                            </div>
+                            <div class="vital-info">
+                                <span class="vital-label">Suhu Tubuh</span>
+                                <strong class="vital-value" id="modalSuhuTubuh"></strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {{-- Total Biaya --}}
+                <div class="harga-section" id="modalHargaSection">
+                    <div class="harga-card">
+                        <div class="harga-info">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span class="harga-label">Total Biaya Pemeriksaan</span>
+                        </div>
+                        <span class="harga-value" id="modalHarga"></span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 @endsection
 
 @push('styles')
@@ -384,7 +384,7 @@
         transition: background 0.3s ease, color 0.3s ease;
     }
 
-    /* ===== HEADER BANNER (100% SAMA DENGAN DASHBOARD) ===== */
+    /* ===== HEADER BANNER ===== */
     .dashboard-header-banner {
         margin-bottom: 40px;
         animation: fadeInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -980,7 +980,7 @@
         color: var(--text-muted);
     }
 
-    /* ===== MODAL STYLES ===== */
+    /* ===== MODAL STYLES (FIXED & CENTERED) ===== */
     .modal {
         display: none;
         position: fixed;
@@ -989,24 +989,24 @@
         top: 0;
         width: 100%;
         height: 100%;
-        overflow: auto;
         background-color: rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(8px);
         animation: fadeIn 0.3s;
-        padding: 20px;
+        overflow-y: auto;
+        padding: 40px 20px;
     }
 
     .modal-content {
         background-color: var(--bg-primary);
-        margin: 30px auto;
+        margin: 0 auto;
         border-radius: 24px;
         width: 90%;
         max-width: 900px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
         animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        max-height: calc(100vh - 60px);
         display: flex;
         flex-direction: column;
+        position: relative;
     }
 
     .modal-header {
@@ -1016,6 +1016,7 @@
         padding: 28px 32px;
         background: var(--grad);
         border-radius: 24px 24px 0 0;
+        flex-shrink: 0;
     }
 
     .modal-title {
@@ -1052,7 +1053,26 @@
     .modal-body {
         padding: 32px;
         overflow-y: auto;
-        max-height: calc(100vh - 200px);
+        flex: 1;
+    }
+
+    /* Scrollbar Styling untuk Modal */
+    .modal-body::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .modal-body::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+        border-radius: 10px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb {
+        background: var(--p1);
+        border-radius: 10px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb:hover {
+        background: var(--p2);
     }
 
     .modal-info-header {
@@ -1099,18 +1119,6 @@
 
     .detail-section {
         margin-bottom: 30px;
-    }
-
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-
-    .section-header i {
-        font-size: 1.3rem;
-        color: var(--p1);
     }
 
     .section-title {
@@ -1345,8 +1353,11 @@
             justify-content: center;
         }
 
+        .modal {
+            padding: 20px 10px;
+        }
+
         .modal-content {
-            margin: 10px auto;
             width: 95%;
         }
 
@@ -1377,6 +1388,18 @@
         .greeting-badge {
             font-size: 0.8rem;
             padding: 8px 16px;
+        }
+
+        .modal {
+            padding: 15px 5px;
+        }
+
+        .modal-header {
+            padding: 20px 16px;
+        }
+
+        .modal-body {
+            padding: 16px;
         }
     }
 </style>
@@ -1471,6 +1494,11 @@ document.addEventListener('DOMContentLoaded', function () {
             
             modal.style.display = 'block';
             document.body.style.overflow = 'hidden';
+            
+            // Scroll modal ke atas
+            setTimeout(() => {
+                modal.scrollTop = 0;
+            }, 50);
         });
     });
 
